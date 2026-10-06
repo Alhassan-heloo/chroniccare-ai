@@ -1,0 +1,129 @@
+import { lazy, Suspense } from "react";
+import {
+  HeartPulse,
+  Droplet,
+  Pill,
+  Footprints,
+  Plus,
+  CalendarDays,
+} from "lucide-react";
+import { usePatientDashboard } from "@/hooks/queries/usePatientDashboard";
+import { useDashboardActions } from "@/context/DashboardContext";
+import { HealthMetricCard } from "@/components/health/HealthMetricCard";
+import { MedicationCard } from "@/components/health/MedicationCard";
+import { HabitCard } from "@/components/health/HabitCard";
+import { AlertCard } from "@/components/health/AlertCard";
+import { AssistantCard } from "@/components/health/AssistantCard";
+const WeeklySummary = lazy(() =>
+  import("@/components/health/WeeklySummary").then((module) => ({
+    default: module.WeeklySummary,
+  })),
+);
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+export default function DashboardPage() {
+  const { data, isPending, isError, refetch } = usePatientDashboard();
+  const { openMeasurement } = useDashboardActions();
+  if (isPending) return <p role="status">جارٍ تحميل ملخص صحتك…</p>;
+  if (isError)
+    return (
+      <div role="alert">
+        تعذر تحميل البيانات{" "}
+        <Button onClick={() => void refetch()}>إعادة المحاولة</Button>
+      </div>
+    );
+  return (
+    <div className="dashboard-content">
+      <div className="welcome">
+        <div>
+          <span className="eyebrow">كل يوم، خطوة لصحة أفضل</span>
+          <h1>
+            مرحبًا {data.patient.name} <span className="wave">☀</span>
+          </h1>
+          <p>هذا ملخص صحتك اليوم</p>
+        </div>
+        <div className="date-label">
+          <CalendarDays size={18} />
+          {new Intl.DateTimeFormat("ar", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          }).format(new Date())}
+        </div>
+      </div>
+      <section className="metrics-grid" aria-label="ملخص القياسات اليومية">
+        <HealthMetricCard
+          label="ضغط الدم"
+          value={`${data.bloodPressure.systolic}/${data.bloodPressure.diastolic}`}
+          unit="mmHg"
+          icon={HeartPulse}
+          tone="danger"
+          status={data.bloodPressure.isExample ? "✓ طبيعي" : "قراءة مسجلة"}
+        />
+        <HealthMetricCard
+          label="سكر الدم"
+          value={String(data.glucose.value)}
+          unit="mg/dL"
+          icon={Droplet}
+          tone="info"
+          status={data.glucose.isExample ? "✓ طبيعي" : "قراءة مسجلة"}
+        />
+        <HealthMetricCard
+          label="الأدوية"
+          value={`${data.medication.taken}/${data.medication.total}`}
+          unit="جرعات تم تناولها"
+          icon={Pill}
+          tone="warning"
+          progress={
+            data.medication.total
+              ? Math.round(
+                  (data.medication.taken / data.medication.total) * 100,
+                )
+              : 0
+          }
+        />
+        <HealthMetricCard
+          label="النشاط"
+          value={data.steps.toLocaleString("en-US")}
+          unit={`خطوة من ${data.stepGoal.toLocaleString("en-US")}`}
+          icon={Footprints}
+          tone="success"
+          progress={Math.round((data.steps / data.stepGoal) * 100)}
+        />
+      </section>
+      <Button className="add-reading" onClick={openMeasurement}>
+        <Plus size={24} /> إضافة قراءة جديدة
+      </Button>
+      <div className="daily-grid">
+        <Card className="tasks-section">
+          <div className="section-heading">
+            <div>
+              <h2>ماذا علي أن أفعل اليوم؟</h2>
+              <p>روتين بسيط يصنع فرقًا</p>
+            </div>
+            <span className="count-label">مهام اليوم</span>
+          </div>
+          <MedicationCard medication={data.medication} />
+          <AlertCard notification={data.reminder} onAction={openMeasurement} />
+          {data.habits
+            .filter((habit) => habit.kind === "walk")
+            .map((habit) => (
+              <HabitCard key={habit.id} habit={habit} />
+            ))}
+        </Card>
+        <AssistantCard />
+      </div>
+      <Suspense
+        fallback={
+          <Card className="empty-state">جارٍ تحميل الملخص الأسبوعي…</Card>
+        }
+      >
+        <WeeklySummary data={data.weekly} />
+      </Suspense>
+      <p className="demo-note">
+        هذه نسخة تجريبية ببيانات توضيحية. وصف «طبيعي» يخص المثال فقط؛ القراءات
+        الجديدة لا تخضع لتقييم طبي.
+      </p>
+    </div>
+  );
+}

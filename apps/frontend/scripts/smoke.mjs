@@ -1,0 +1,24 @@
+import { build } from "esbuild";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+const dir = await mkdtemp(join(tmpdir(), "chronic-smoke-"));
+try {
+  const outfile = join(dir, "smoke.mjs");
+  await build({
+    entryPoints: ["scripts/smoke.tsx"],
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    banner: {
+      js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",
+    },
+    outfile,
+    tsconfig: "tsconfig.app.json",
+    logLevel: "warning",
+  });
+  await import(pathToFileURL(outfile).href);
+} finally {
+  await rm(dir, { recursive: true, force: true });
+}
