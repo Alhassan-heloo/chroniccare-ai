@@ -93,6 +93,7 @@ export default function ReportsPage() {
                 {data.measurements.slice(0, 5).map((item) => (
                   <li key={item.id}>
                     <span>{measurementLabel(item)}</span>
+                    {item.isExample && <small>بيانات مثال</small>}
                     <strong>
                       <bdi>{measurementValue(item)}</bdi>{" "}
                       <small>

@@ -73,12 +73,19 @@ for (const path of paths) {
   if (path === "/patient/dashboard")
     for (const value of ["120/80", "98", "2/3", "4,500", "مرحبًا", "ماذا علي"])
       assert(html.includes(value), `Missing dashboard value: ${value}`);
+  if (path === "/patient/dashboard") {
+    assert(html.includes("بيانات مثال"));
+    assert(!html.includes("طبيعي"));
+  }
+  if (path === "/patient/measurements")
+    assert(html.includes("بيانات مثال"));
   router.dispose();
   client.clear();
 }
 // Demo week shares the same log used by measurements and reports.
 const seededReadings = await getMeasurements();
 assert.equal(seededReadings.length, 14);
+assert(seededReadings.every((item) => item.isExample === true));
 const { getPatientReport: getSeedReport } = await import(
   "../src/lib/api/reports"
 );
@@ -86,6 +93,12 @@ const seededReport = await getSeedReport(7);
 assert.equal(seededReport.points.length, 7);
 assert.equal(seededReport.pressure.count, 7);
 assert.equal(seededReport.glucose.count, 7);
+assert(seededReport.points.every((point) => point.isExample === true));
+const seededDashboard = await getPatientDashboard();
+assert.equal(seededDashboard.weekly.length, seededReport.points.length);
+assert.deepEqual(seededDashboard.weekly, seededReport.points);
+assert.equal(seededDashboard.bloodPressure?.isExample, true);
+assert.equal(seededDashboard.glucose?.isExample, true);
 assert(
   seededReadings.every(
     (item) => new Date(item.recordedAt).getTime() <= Date.now(),
@@ -110,8 +123,9 @@ assert(
 assert(!measurementSchema.safeParse({ kind: "glucose", value: NaN }).success);
 assert(!measurementSchema.safeParse({ kind: "glucose", value: -1 }).success);
 await addMeasurement({ kind: "glucose", value: 110 });
-assert.equal((await getPatientDashboard()).glucose.value, 110);
-assert.equal((await getPatientDashboard()).glucose.isExample, false);
+assert.equal((await getPatientDashboard()).glucose?.value, 110);
+assert.equal((await getPatientDashboard()).glucose?.isExample, false);
+assert.equal((await getPatientDashboard()).weekly.at(-1)?.glucose, 110);
 assert.equal((await getMeasurements()).length, 1);
 await setDoseTaken({ id: "demo-pressure", time: "20:00", taken: true });
 assert.equal((await getPatientDashboard()).medication.taken, 3);
@@ -129,23 +143,26 @@ await updateMeasurement({
   id: older.id,
   input: { kind: "glucose", value: 99 },
 });
-assert.equal((await getPatientDashboard()).glucose.value, 115);
+assert.equal((await getPatientDashboard()).glucose?.value, 115);
 const edited = await updateMeasurement({
   id: latest.id,
   input: { kind: "glucose", value: 108 },
 });
 assert.equal(edited.recordedAt, latest.recordedAt);
-assert.equal((await getPatientDashboard()).glucose.value, 108);
+assert.equal((await getPatientDashboard()).glucose?.value, 108);
+assert.equal((await getPatientDashboard()).weekly.at(-1)?.glucose, 103.5);
 await deleteMeasurement(latest.id);
-assert.equal((await getPatientDashboard()).glucose.value, 99);
+assert.equal((await getPatientDashboard()).glucose?.value, 99);
 await updateMeasurement({
   id: older.id,
   input: { kind: "bloodPressure", systolic: 130, diastolic: 85 },
 });
-assert.equal((await getPatientDashboard()).glucose.isExample, true);
-assert.equal((await getPatientDashboard()).bloodPressure.systolic, 130);
+assert.equal((await getPatientDashboard()).glucose, null);
+assert.equal((await getPatientDashboard()).bloodPressure?.systolic, 130);
 await deleteMeasurement(older.id);
-assert.equal((await getPatientDashboard()).bloodPressure.isExample, true);
+assert.equal((await getPatientDashboard()).bloodPressure, null);
+assert.equal((await getPatientDashboard()).glucose, null);
+assert.equal((await getPatientDashboard()).weekly.length, 0);
 assert.equal((await getMeasurements()).length, 0);
 await assert.rejects(() => deleteMeasurement("missing"));
 await assert.rejects(() =>

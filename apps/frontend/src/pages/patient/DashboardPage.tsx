@@ -60,19 +60,35 @@ export default function DashboardPage() {
       <section className="metrics-grid" aria-label="ملخص القياسات اليومية">
         <HealthMetricCard
           label="ضغط الدم"
-          value={`${data.bloodPressure.systolic}/${data.bloodPressure.diastolic}`}
-          unit="mmHg"
+          value={
+            data.bloodPressure
+              ? `${data.bloodPressure.systolic}/${data.bloodPressure.diastolic}`
+              : "—"
+          }
+          unit={data.bloodPressure ? "mmHg" : "لا توجد قراءة مسجلة"}
           icon={HeartPulse}
           tone="danger"
-          status={data.bloodPressure.isExample ? "✓ طبيعي" : "قراءة مسجلة"}
+          status={
+            data.bloodPressure
+              ? data.bloodPressure.isExample
+                ? "بيانات مثال"
+                : "قراءة مسجلة"
+              : "لا توجد بيانات"
+          }
         />
         <HealthMetricCard
           label="سكر الدم"
-          value={String(data.glucose.value)}
-          unit="mg/dL"
+          value={data.glucose ? String(data.glucose.value) : "—"}
+          unit={data.glucose ? "mg/dL" : "لا توجد قراءة مسجلة"}
           icon={Droplet}
           tone="info"
-          status={data.glucose.isExample ? "✓ طبيعي" : "قراءة مسجلة"}
+          status={
+            data.glucose
+              ? data.glucose.isExample
+                ? "بيانات مثال"
+                : "قراءة مسجلة"
+              : "لا توجد بيانات"
+          }
         />
         <HealthMetricCard
           label="الأدوية"
@@ -127,8 +143,8 @@ export default function DashboardPage() {
         <WeeklySummary data={data.weekly} />
       </Suspense>
       <p className="demo-note">
-        هذه نسخة تجريبية ببيانات توضيحية. وصف «طبيعي» يخص المثال فقط؛ القراءات
-        الجديدة لا تخضع لتقييم طبي.
+        هذه نسخة تجريبية ببيانات توضيحية مميزة بوسم «بيانات مثال». لا تخضع
+        القراءات لتقييم طبي.
       </p>
     </div>
   );

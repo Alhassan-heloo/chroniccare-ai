@@ -6,6 +6,7 @@ import {
 } from "@/lib/utils/measurementFilters";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 export function MeasurementListCard({
   item,
   onEdit,
@@ -30,6 +31,7 @@ export function MeasurementListCard({
         <div>
           <h3>{measurementLabel(item)}</h3>
           <time dateTime={item.recordedAt}>{timestamp}</time>
+          {item.isExample && <Badge tone="info">بيانات مثال</Badge>}
         </div>
       </div>
       <div className="measurement-entry-value">

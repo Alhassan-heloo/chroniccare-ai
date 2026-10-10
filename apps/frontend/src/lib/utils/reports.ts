@@ -35,6 +35,7 @@ export function summarizeReport(
       const sugar = readings.filter((item) => item.kind === "glucose");
       return {
         day,
+        isExample: readings.some((item) => item.isExample),
         ...(bp.length
           ? {
               systolic: average(bp.map((item) => item.systolic))!,

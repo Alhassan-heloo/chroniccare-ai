@@ -31,9 +31,7 @@ export function HealthMetricCard({
       </div>
       <div className="metric-unit">{unit}</div>
       {status ? (
-        <Badge tone={status.includes("طبيعي") ? "success" : "info"}>
-          {status}
-        </Badge>
+        <Badge tone="info">{status}</Badge>
       ) : (
         <div className="metric-progress">
           <progress value={progress} max={100} aria-label={`تقدم ${label}`} />

@@ -6,6 +6,7 @@ export interface ReportPoint {
   systolic?: number;
   diastolic?: number;
   glucose?: number;
+  isExample?: boolean;
 }
 export interface PatientReport {
   from: string;

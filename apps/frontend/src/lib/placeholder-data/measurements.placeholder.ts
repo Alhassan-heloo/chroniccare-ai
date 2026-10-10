@@ -1,11 +1,11 @@
 import type { Measurement } from "@/lib/types/measurement";
-import { patientDashboardPlaceholder } from "./patientDashboard.placeholder";
+import { demoWeeklyMeasurements } from "./patientDashboard.placeholder";
 
 // Temporary examples for previewing reports. Set false to start with an empty log.
 export const DEMO_WEEK_ENABLED = true;
 export function createMeasurementPlaceholders(now = new Date()): Measurement[] {
   if (!DEMO_WEEK_ENABLED) return [];
-  return patientDashboardPlaceholder.weekly
+  return demoWeeklyMeasurements
     .flatMap((point, index): Measurement[] => {
       const date = new Date(now);
       date.setDate(date.getDate() - (6 - index));
@@ -17,12 +17,14 @@ export function createMeasurementPlaceholders(now = new Date()): Measurement[] {
           systolic: point.systolic,
           diastolic: point.diastolic,
           recordedAt,
+          isExample: true,
         },
         {
           id: `demo-glucose-${index}`,
           kind: "glucose",
           value: point.glucose,
           recordedAt,
+          isExample: true,
         },
       ];
     })

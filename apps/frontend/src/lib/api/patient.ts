@@ -3,13 +3,30 @@ import { getHabitsSnapshot } from "./habits";
 import { getMedicationSummary } from "./medications";
 import { patientDashboardPlaceholder } from "@/lib/placeholder-data/patientDashboard.placeholder";
 import type { Measurement, MeasurementInput } from "@/lib/types/measurement";
+import { summarizeReport } from "@/lib/utils/reports";
 // Session-only mock adapter. Replace these functions with apiClient requests when the contract is ready.
-const dashboard = structuredClone(patientDashboardPlaceholder);
 const measurements: Measurement[] = createMeasurementPlaceholders();
-syncLatestMeasurements();
 export async function getPatientDashboard() {
+  const ordered = [...measurements].sort((a, b) =>
+    b.recordedAt.localeCompare(a.recordedAt),
+  );
+  const pressure = ordered.find((item) => item.kind === "bloodPressure");
+  const glucose = ordered.find((item) => item.kind === "glucose");
   return {
-    ...structuredClone(dashboard),
+    ...structuredClone(patientDashboardPlaceholder),
+    bloodPressure:
+      pressure?.kind === "bloodPressure"
+        ? {
+            systolic: pressure.systolic,
+            diastolic: pressure.diastolic,
+            isExample: pressure.isExample === true,
+          }
+        : null,
+    glucose:
+      glucose?.kind === "glucose"
+        ? { value: glucose.value, isExample: glucose.isExample === true }
+        : null,
+    weekly: summarizeReport(ordered, 7).points,
     medication: getMedicationSummary(),
     habits: getHabitsSnapshot(),
   };
@@ -24,27 +41,10 @@ export async function addMeasurement(
     ...input,
     id: crypto.randomUUID(),
     recordedAt: new Date().toISOString(),
+    isExample: false,
   };
   measurements.unshift(item);
-  syncLatestMeasurements();
   return structuredClone(item);
-}
-// Derive both cards after every change, including a type change or deleting the latest reading.
-function syncLatestMeasurements() {
-  const pressure = measurements.find((item) => item.kind === "bloodPressure");
-  const glucose = measurements.find((item) => item.kind === "glucose");
-  dashboard.bloodPressure =
-    pressure?.kind === "bloodPressure"
-      ? {
-          systolic: pressure.systolic,
-          diastolic: pressure.diastolic,
-          isExample: false,
-        }
-      : structuredClone(patientDashboardPlaceholder.bloodPressure);
-  dashboard.glucose =
-    glucose?.kind === "glucose"
-      ? { value: glucose.value, isExample: false }
-      : structuredClone(patientDashboardPlaceholder.glucose);
 }
 export async function updateMeasurement({
   id,
@@ -60,14 +60,13 @@ export async function updateMeasurement({
     ...input,
     id,
     recordedAt: previous.recordedAt,
+    isExample: previous.isExample === true,
   };
   measurements[index] = updated;
-  syncLatestMeasurements();
   return structuredClone(updated);
 }
 export async function deleteMeasurement(id: string): Promise<void> {
   const index = measurements.findIndex((item) => item.id === id);
   if (index === -1) throw new Error("القراءة غير موجودة");
   measurements.splice(index, 1);
-  syncLatestMeasurements();
 }

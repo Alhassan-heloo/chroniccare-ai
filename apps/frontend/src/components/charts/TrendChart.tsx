@@ -22,8 +22,8 @@ export function TrendChart({
       role="img"
       aria-label={
         kind === "pressure"
-          ? "اتجاه قراءات الضغط التجريبية خلال الأسبوع، بوحدة mmHg"
-          : "اتجاه قراءات السكر التجريبية خلال الأسبوع، بوحدة mg/dL"
+          ? "اتجاه قراءات الضغط المسجلة خلال آخر 7 أيام، بوحدة mmHg"
+          : "اتجاه قراءات السكر المسجلة خلال آخر 7 أيام، بوحدة mg/dL"
       }
     >
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
