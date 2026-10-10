@@ -1370,3 +1370,25 @@ dialog::backdrop {
     padding-inline: 10px;
   }
 }
+
+.habit-detail {
+  padding: 22px;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.habit-detail h2 {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.habit-value {
+  font-size: 16px;
+  color: var(--muted);
+}
+.habit-value strong {
+  font-size: 30px;
+  color: var(--navy);
+}
+.habit-detail progress {
+  height: 9px;
+}

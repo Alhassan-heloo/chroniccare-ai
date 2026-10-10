@@ -1,4 +1,17 @@
 import {
+  getHabits,
+  addHabit,
+  updateHabit,
+  deleteHabit,
+  setHabitProgress,
+} from "../src/lib/api/habits";
+import {
+  habitSchema,
+  habitProgressSchema,
+  progressToday,
+  habitPercent,
+} from "../src/lib/utils/habits";
+import {
   getMedications,
   addMedication,
   updateMedication,
@@ -17,7 +30,6 @@ import {
   getPatientDashboard,
   addMeasurement,
   getMeasurements,
-  toggleHabit,
   updateMeasurement,
   deleteMeasurement,
 } from "../src/lib/api/patient";
@@ -49,6 +61,7 @@ for (const path of paths) {
   client.setQueryData(queryKeys.dashboard, await getPatientDashboard());
   client.setQueryData(queryKeys.measurements, []);
   client.setQueryData(queryKeys.medications, await getMedications());
+  client.setQueryData(queryKeys.habits, await getHabits());
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   const html = renderToString(
     <QueryClientProvider client={client}>
@@ -85,8 +98,8 @@ assert.equal((await getPatientDashboard()).glucose.isExample, false);
 assert.equal((await getMeasurements()).length, 1);
 await setDoseTaken({ id: "demo-pressure", time: "20:00", taken: true });
 assert.equal((await getPatientDashboard()).medication.taken, 3);
-await toggleHabit("walk");
-assert.equal((await getPatientDashboard()).habits[0]?.completed, true);
+await setHabitProgress({ id: "steps", value: 10000 });
+assert.equal((await getPatientDashboard()).habits[0]?.progress, 10000);
 console.log(
   "PASS: 14 route renders, dashboard content, schema validation, mock updates. Browser layout and interactions not covered.",
 );
@@ -243,4 +256,46 @@ assert.equal((await getPatientDashboard()).medication.taken, 0);
 assert.equal((await getPatientDashboard()).medication.nextDose, null);
 console.log(
   "PASS: Medication CRUD, validation, dose registration/undo, idempotency, retained times, new-day reset and empty summaries.",
+);
+
+const habitInput = {
+  title: "تمرين يومي",
+  unit: "minutes" as const,
+  target: 20,
+};
+const habit = await addHabit(habitInput);
+assert.equal(habit.progress, 0);
+await setHabitProgress({ id: habit.id, value: 12 });
+assert.equal(
+  (await getPatientDashboard()).habits.find((h) => h.id === habit.id)?.progress,
+  12,
+);
+let changedHabit = await updateHabit({
+  id: habit.id,
+  input: { ...habitInput, target: 10 },
+});
+assert.equal(changedHabit.progress, 12);
+assert.equal(habitPercent(changedHabit), 100);
+assert.equal(progressToday(changedHabit, "2099-01-01"), 0);
+changedHabit = await updateHabit({
+  id: habit.id,
+  input: { ...habitInput, unit: "times" },
+});
+assert.equal(changedHabit.progress, 0);
+await setHabitProgress({ id: habit.id, value: 4 });
+await setHabitProgress({ id: habit.id, value: 4 });
+assert.equal((await getHabits()).find((h) => h.id === habit.id)?.progress, 4);
+assert(!habitSchema.safeParse({ ...habitInput, target: 0 }).success);
+assert(!habitSchema.safeParse({ ...habitInput, title: " " }).success);
+assert(!habitProgressSchema.safeParse(-1).success);
+assert(!habitProgressSchema.safeParse(NaN).success);
+assert(!habitProgressSchema.safeParse(1.5).success);
+await assert.rejects(() => setHabitProgress({ id: habit.id, value: -2 }));
+await deleteHabit(habit.id);
+assert(!(await getPatientDashboard()).habits.some((h) => h.id === habit.id));
+await assert.rejects(() => deleteHabit(habit.id));
+for (const h of await getHabits()) await deleteHabit(h.id);
+assert.equal((await getPatientDashboard()).habits.length, 0);
+console.log(
+  "PASS: habit CRUD, target changes, unit reset, validation, new day and dashboard sync.",
 );

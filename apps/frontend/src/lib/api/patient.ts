@@ -1,3 +1,4 @@
+import { getHabitsSnapshot } from "./habits";
 import { getMedicationSummary } from "./medications";
 import { patientDashboardPlaceholder } from "@/lib/placeholder-data/patientDashboard.placeholder";
 import type { Measurement, MeasurementInput } from "@/lib/types/measurement";
@@ -5,7 +6,11 @@ import type { Measurement, MeasurementInput } from "@/lib/types/measurement";
 const dashboard = structuredClone(patientDashboardPlaceholder);
 const measurements: Measurement[] = [];
 export async function getPatientDashboard() {
-  return { ...structuredClone(dashboard), medication: getMedicationSummary() };
+  return {
+    ...structuredClone(dashboard),
+    medication: getMedicationSummary(),
+    habits: getHabitsSnapshot(),
+  };
 }
 export async function getMeasurements() {
   return structuredClone(measurements);
@@ -63,9 +68,4 @@ export async function deleteMeasurement(id: string): Promise<void> {
   if (index === -1) throw new Error("القراءة غير موجودة");
   measurements.splice(index, 1);
   syncLatestMeasurements();
-}
-export async function toggleHabit(id: string) {
-  const habit = dashboard.habits.find((item) => item.id === id);
-  if (!habit) throw new Error("العادات غير متاحة");
-  habit.completed = !habit.completed;
 }

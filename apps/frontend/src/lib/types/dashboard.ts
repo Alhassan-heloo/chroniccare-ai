@@ -12,8 +12,6 @@ export interface PatientDashboard {
   patient: Patient;
   bloodPressure: { systolic: number; diastolic: number; isExample: boolean };
   glucose: { value: number; isExample: boolean };
-  steps: number;
-  stepGoal: number;
   medication: MedicationSummary;
   habits: Habit[];
   reminder: Notification;

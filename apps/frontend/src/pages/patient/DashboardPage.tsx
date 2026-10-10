@@ -32,6 +32,12 @@ export default function DashboardPage() {
         <Button onClick={() => void refetch()}>إعادة المحاولة</Button>
       </div>
     );
+  const steps = data.habits
+    .filter((h) => h.unit === "steps")
+    .reduce((sum, h) => sum + h.progress, 0);
+  const stepGoal = data.habits
+    .filter((h) => h.unit === "steps")
+    .reduce((sum, h) => sum + h.target, 0);
   return (
     <div className="dashboard-content">
       <div className="welcome">
@@ -84,11 +90,13 @@ export default function DashboardPage() {
         />
         <HealthMetricCard
           label="النشاط"
-          value={data.steps.toLocaleString("en-US")}
-          unit={`خطوة من ${data.stepGoal.toLocaleString("en-US")}`}
+          value={steps.toLocaleString("en-US")}
+          unit={`خطوة من ${stepGoal.toLocaleString("en-US")}`}
           icon={Footprints}
           tone="success"
-          progress={Math.round((data.steps / data.stepGoal) * 100)}
+          progress={
+            stepGoal ? Math.min(100, Math.round((steps / stepGoal) * 100)) : 0
+          }
         />
       </section>
       <Button className="add-reading" onClick={openMeasurement}>
@@ -105,11 +113,9 @@ export default function DashboardPage() {
           </div>
           <MedicationCard medication={data.medication} />
           <AlertCard notification={data.reminder} onAction={openMeasurement} />
-          {data.habits
-            .filter((habit) => habit.kind === "walk")
-            .map((habit) => (
-              <HabitCard key={habit.id} habit={habit} />
-            ))}
+          {data.habits.map((habit) => (
+            <HabitCard key={habit.id} habit={habit} />
+          ))}
         </Card>
         <AssistantCard />
       </div>

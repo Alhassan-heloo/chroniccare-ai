@@ -1,12 +1,4 @@
 import { PlaceholderPage } from "@/components/ui/PlaceholderPage";
-export function HabitsPage() {
-  return (
-    <PlaceholderPage
-      title="عاداتي اليومية"
-      description="هنا ستتابع عاداتك وأهدافك اليومية. مهمة المشي التجريبية متاحة في الرئيسية."
-    />
-  );
-}
 export function ReportsPage() {
   return (
     <PlaceholderPage
