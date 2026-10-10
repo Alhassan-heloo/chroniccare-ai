@@ -59,7 +59,7 @@ for (const path of paths) {
     defaultOptions: { queries: { retry: false } },
   });
   client.setQueryData(queryKeys.dashboard, await getPatientDashboard());
-  client.setQueryData(queryKeys.measurements, []);
+  client.setQueryData(queryKeys.measurements, await getMeasurements());
   client.setQueryData(queryKeys.medications, await getMedications());
   client.setQueryData(queryKeys.habits, await getHabits());
   const router = createMemoryRouter(routes, { initialEntries: [path] });
@@ -76,6 +76,23 @@ for (const path of paths) {
   router.dispose();
   client.clear();
 }
+// Demo week shares the same log used by measurements and reports.
+const seededReadings = await getMeasurements();
+assert.equal(seededReadings.length, 14);
+const { getPatientReport: getSeedReport } = await import(
+  "../src/lib/api/reports"
+);
+const seededReport = await getSeedReport(7);
+assert.equal(seededReport.points.length, 7);
+assert.equal(seededReport.pressure.count, 7);
+assert.equal(seededReport.glucose.count, 7);
+assert(
+  seededReadings.every(
+    (item) => new Date(item.recordedAt).getTime() <= Date.now(),
+  ),
+);
+for (const item of seededReadings) await deleteMeasurement(item.id);
+
 assert(
   measurementSchema.safeParse({
     kind: "bloodPressure",
@@ -298,4 +315,50 @@ for (const h of await getHabits()) await deleteHabit(h.id);
 assert.equal((await getPatientDashboard()).habits.length, 0);
 console.log(
   "PASS: habit CRUD, target changes, unit reset, validation, new day and dashboard sync.",
+);
+
+// Report period boundaries and daily averages use recorded measurements only.
+const { summarizeReport } = await import("../src/lib/utils/reports");
+const now = new Date(2026, 9, 10, 12);
+const recorded = (day: number, hour = 12) =>
+  new Date(2026, 9, day, hour).toISOString();
+const reportReadings: Measurement[] = [
+  { id: "start", kind: "glucose", value: 100, recordedAt: recorded(4, 0) },
+  { id: "same-day", kind: "glucose", value: 120, recordedAt: recorded(4, 10) },
+  { id: "old", kind: "glucose", value: 500, recordedAt: recorded(3) },
+  { id: "future", kind: "glucose", value: 500, recordedAt: recorded(10, 13) },
+  {
+    id: "pressure",
+    kind: "bloodPressure",
+    systolic: 130,
+    diastolic: 80,
+    recordedAt: recorded(10, 10),
+  },
+];
+const report = summarizeReport(reportReadings, 7, now);
+assert.equal(report.measurements.length, 3);
+assert.equal(report.glucose.average, 110);
+assert.equal(report.pressure.systolic, 130);
+assert.equal(report.points[0]?.glucose, 110);
+assert.equal(report.points[0]?.systolic, undefined);
+assert.equal(report.points[1]?.glucose, undefined);
+assert.equal(summarizeReport([], 30, now).glucose.average, null);
+assert.equal(summarizeReport(reportReadings, 30, now).measurements.length, 4);
+assert.equal(summarizeReport([], 90, now).points.length, 0);
+console.log(
+  "Reports: period boundaries, averages, empty data and missing series passed",
+);
+
+const { getPatientReport } = await import("../src/lib/api/reports");
+const reportMeasurement = await addMeasurement({ kind: "glucose", value: 123 });
+assert.equal((await getPatientReport(7)).glucose.average, 123);
+await updateMeasurement({
+  id: reportMeasurement.id,
+  input: { kind: "glucose", value: 145 },
+});
+assert.equal((await getPatientReport(30)).glucose.average, 145);
+await deleteMeasurement(reportMeasurement.id);
+assert.equal((await getPatientReport(7)).glucose.average, null);
+console.log(
+  "Reports: live adapter reflects measurement add/edit/delete passed",
 );

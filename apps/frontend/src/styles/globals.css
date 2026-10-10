@@ -1392,3 +1392,189 @@ dialog::backdrop {
 .habit-detail progress {
   height: 9px;
 }
+
+/* Patient reports */
+.report-periods {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.report-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.report-summary .card,
+.report-charts .card,
+.report-readings {
+  padding: 20px;
+  min-width: 0;
+}
+.report-summary strong {
+  display: block;
+  font-size: 28px;
+  color: var(--primary);
+  margin-block: 10px;
+}
+.report-summary p {
+  color: var(--muted);
+  font-size: 14px;
+}
+.report-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.report-readings ul {
+  list-style: none;
+  padding: 0;
+  margin-block-end: 0;
+}
+.report-readings li {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-block: 14px;
+  border-block-end: 1px solid var(--border);
+}
+.report-readings time {
+  color: var(--muted);
+  font-size: 14px;
+}
+@media (max-width: 1000px) {
+  .report-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .report-charts {
+    grid-template-columns: 1fr;
+  }
+  .report-summary .card {
+    padding: 14px;
+  }
+  .report-summary h2 {
+    font-size: 16px;
+  }
+  .report-readings time {
+    flex-basis: 100%;
+  }
+}
+
+.report-single-day {
+  margin-block-start: 20px;
+  padding: 22px;
+  background: var(--canvas);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.report-day-date {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.report-day-date span {
+  color: var(--primary-hover);
+  font-weight: 700;
+}
+.report-single-values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 18px;
+  margin-block: 22px;
+}
+.report-single-values dt {
+  color: var(--text);
+  font-weight: 700;
+}
+.report-single-values dd {
+  margin: 6px 0 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.report-single-values bdi {
+  color: var(--navy);
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.report-single-values small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.report-single-note,
+.report-chart-note {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.report-chart-key {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin-block: 18px 4px;
+  font-size: 14px;
+}
+.report-chart-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.report-chart-key i {
+  display: inline-block;
+  width: 22px;
+  border-block-start: 3px solid var(--primary);
+}
+.report-chart-key .report-key-secondary {
+  border-color: var(--info);
+  border-block-start-style: dashed;
+}
+.report-chart-unit {
+  color: var(--muted);
+  margin-inline-start: auto;
+  font-size: 13px;
+}
+.report-day-details {
+  margin-block-start: 14px;
+  border-block-start: 1px solid var(--border);
+  padding-block-start: 12px;
+}
+.report-day-details summary {
+  color: var(--primary-hover);
+  font-weight: 700;
+  min-height: 44px;
+  display: list-item;
+  padding-block: 8px;
+}
+.report-day-details ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.report-day-details li {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  border-block-end: 1px solid var(--border);
+  padding-block: 12px;
+  font-size: 14px;
+}
+@media (max-width: 600px) {
+  .report-single-day {
+    padding: 16px;
+  }
+  .report-single-values bdi {
+    font-size: 32px;
+  }
+  .report-day-details li span {
+    flex-basis: 100%;
+  }
+}

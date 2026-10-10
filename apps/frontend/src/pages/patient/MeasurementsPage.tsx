@@ -45,8 +45,8 @@ export default function MeasurementsPage() {
         </Button>
       </div>
       <p className="measurements-notice">
-        نسخة تجريبية: تُحفظ القراءات خلال الجلسة فقط وتُمسح عند تحديث الصفحة. لا
-        يتم تقييمها طبيًا.
+        نسخة تجريبية: يبدأ السجل بأمثلة لآخر 7 أيام. التغييرات مؤقتة وتعود أمثلة
+        البداية عند تحديث الصفحة. لا يتم تقييم القراءات طبيًا.
       </p>
       <MeasurementFilters value={filters} onChange={setFilters} />
       {isPending ? (

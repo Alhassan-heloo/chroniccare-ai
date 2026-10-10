@@ -12,6 +12,7 @@ function useFeedback(message: string) {
   return {
     onSuccess: async () => {
       await Promise.all([
+        client.invalidateQueries({ queryKey: queryKeys.reports }),
         client.invalidateQueries({ queryKey: queryKeys.habits }),
         client.invalidateQueries({ queryKey: queryKeys.dashboard }),
       ]);

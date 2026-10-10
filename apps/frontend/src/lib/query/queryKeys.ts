@@ -1,4 +1,5 @@
 export const queryKeys = {
+  reports: ["patient", "reports"] as const,
   dashboard: ["patient", "dashboard"] as const,
   measurements: ["patient", "measurements"] as const,
   medications: ["patient", "medications"] as const,

@@ -11,6 +11,7 @@ function useMeasurementFeedback(successMessage: string) {
   return {
     onSuccess: async () => {
       await Promise.all([
+        client.invalidateQueries({ queryKey: queryKeys.reports }),
         client.invalidateQueries({ queryKey: queryKeys.dashboard }),
         client.invalidateQueries({ queryKey: queryKeys.measurements }),
       ]);

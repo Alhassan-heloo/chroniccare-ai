@@ -1,10 +1,12 @@
+import { createMeasurementPlaceholders } from "@/lib/placeholder-data/measurements.placeholder";
 import { getHabitsSnapshot } from "./habits";
 import { getMedicationSummary } from "./medications";
 import { patientDashboardPlaceholder } from "@/lib/placeholder-data/patientDashboard.placeholder";
 import type { Measurement, MeasurementInput } from "@/lib/types/measurement";
 // Session-only mock adapter. Replace these functions with apiClient requests when the contract is ready.
 const dashboard = structuredClone(patientDashboardPlaceholder);
-const measurements: Measurement[] = [];
+const measurements: Measurement[] = createMeasurementPlaceholders();
+syncLatestMeasurements();
 export async function getPatientDashboard() {
   return {
     ...structuredClone(dashboard),

@@ -1,3 +1,4 @@
+import ReportsPage from "@/pages/patient/ReportsPage";
 import HabitsPage from "@/pages/patient/HabitsPage";
 import MedicationsPage from "@/pages/patient/MedicationsPage";
 import { Outlet, type RouteObject } from "react-router";
@@ -8,7 +9,6 @@ import AuthPage from "@/pages/auth/AuthPage";
 import DashboardPage from "@/pages/patient/DashboardPage";
 import MeasurementsPage from "@/pages/patient/MeasurementsPage";
 import {
-  ReportsPage,
   AssistantPage,
   ProfilePage,
 } from "@/pages/patient/PlaceholderPages";

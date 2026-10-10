@@ -1,12 +1,4 @@
 import { PlaceholderPage } from "@/components/ui/PlaceholderPage";
-export function ReportsPage() {
-  return (
-    <PlaceholderPage
-      title="التقارير الصحية"
-      description="التقارير التفصيلية والتصدير غير مفعلة بعد. يمكنك الاطلاع على الملخص الأسبوعي في الرئيسية."
-    />
-  );
-}
 export function AssistantPage() {
   return (
     <PlaceholderPage
