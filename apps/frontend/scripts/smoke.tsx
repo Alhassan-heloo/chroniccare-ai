@@ -39,6 +39,79 @@ import { filterMeasurements } from "../src/lib/utils/measurementFilters";
 import type { Measurement } from "../src/lib/types/measurement";
 import { translateToEnglish } from "../src/i18n/translate";
 import { updateTextIfChanged } from "../src/i18n/domTranslation";
+import { readLanguage, persistLanguage, localeSettings, applyDocumentLanguage } from "../src/i18n/locale";
+import { createFormatters } from "../src/i18n/formatters";
+
+const languageStore = new Map<string, string>();
+const testStorage = { getItem: (key: string) => languageStore.get(key) ?? null, setItem: (key: string, value: string) => { languageStore.set(key, value); } };
+assert.equal(readLanguage(testStorage), "ar");
+persistLanguage(testStorage, "en");
+assert.equal(readLanguage(testStorage), "en");
+persistLanguage(testStorage, "ar");
+assert.equal(readLanguage(testStorage), "ar");
+const blockedStorage = { getItem: () => { throw new Error("blocked"); }, setItem: () => { throw new Error("blocked"); } };
+assert.equal(readLanguage(blockedStorage), "ar");
+assert.doesNotThrow(() => persistLanguage(blockedStorage, "en"));
+const documentLanguage = { lang: "", dir: "" };
+for (const language of ["ar", "en"] as const) {
+  applyDocumentLanguage(documentLanguage, language);
+  assert.equal(documentLanguage.lang, language);
+  assert.equal(documentLanguage.dir, language === "ar" ? "rtl" : "ltr");
+  assert.equal(localeSettings(language).isRtl, language === "ar");
+  const formatter = createFormatters(language);
+  assert.equal(formatter.formatNumber(1234), new Intl.NumberFormat(localeSettings(language).locale).format(1234));
+  assert.equal(formatter.formatUnit("mmHg"), "mmHg");
+  assert.equal(formatter.formatUnit("mg/dL"), "mg/dL");
+  const input = new Date("2026-01-02T13:04:00Z");
+  assert(formatter.formatDate(input, { timeZone: "UTC", year: "numeric" }).includes("2026"));
+  assert(formatter.formatTime(input, { timeZone: "UTC", hour12: false }).includes("13:04"));
+  assert(formatter.formatDateTime(input, { timeZone: "UTC" }).length > 0);
+}
+import { inspectMessage, placeholders, reportTranslationIssue } from "../src/i18n/safety";
+
+assert.deepEqual(inspectMessage(undefined), ["missing-key"]);
+assert.deepEqual(inspectMessage("Welcome {{name}}"), ["missing-value:name"]);
+assert.deepEqual(inspectMessage("{{count}}", { count: 0 }), []);
+assert.deepEqual(inspectMessage("{{name}}", { name: "" }), []);
+assert.deepEqual(inspectMessage("Welcome {{name}"), ["malformed-placeholder"]);
+assert.equal(placeholders("{{bad-name}}").malformed, true);
+assert.deepEqual(placeholders("{{name}} {{name}}").names, ["name"]);
+assert.doesNotThrow(() => reportTranslationIssue("missing", ["missing-key"], false));
+import {
+  auditTranslationCatalogs,
+  findMissingTranslationKeys,
+  findUnusedTranslationKeys,
+  getCatalogKeys,
+  isTranslationKey,
+  translateCatalogMessage,
+} from "../src/i18n/catalog";
+
+assert.deepEqual(getCatalogKeys("ar"), getCatalogKeys("en"));
+assert.deepEqual(findMissingTranslationKeys("ar", "en"), []);
+assert.deepEqual(findMissingTranslationKeys("en", "ar"), []);
+assert.equal(isTranslationKey("patient.dashboard.welcome"), true);
+assert.equal(isTranslationKey("patient.dashboard.missing"), false);
+assert.equal(
+  translateCatalogMessage("ar", "patient.dashboard.welcome", { name: "سارة" }),
+  "مرحبًا سارة",
+);
+assert.equal(
+  translateCatalogMessage("en", "patient.dashboard.welcome", { name: "Sarah" }),
+  "Welcome Sarah",
+);
+const unusedFixtureKeys = findUnusedTranslationKeys([
+  "common.actions.cancel",
+  "patient.dashboard.welcome",
+]);
+assert(!unusedFixtureKeys.includes("common.actions.cancel"));
+assert(unusedFixtureKeys.includes("reports.period"));
+assert.deepEqual(
+  auditTranslationCatalogs(["common.actions.cancel"]).missingInEnglish,
+  [],
+);
+console.log(
+  "PASS: Arabic/English catalog parity, missing-key detection, unused-key detection and interpolation.",
+);
 
 const translatedChartLabel = translateToEnglish(
   "اتجاه قراءات الضغط المسجلة خلال آخر 7 أيام، بوحدة mmHg",

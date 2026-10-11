@@ -2,18 +2,30 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { I18nContext, type I18nValue, type Language } from "./context";
 import { translateToEnglish } from "./translate";
 import { isInsideChart, updateTextIfChanged } from "./domTranslation";
+import { isTranslationKey, translateCatalogMessage } from "./catalog";
+import type { TranslationVariables } from "./catalogTypes";
+import { reportTranslationIssue } from "./safety";
+import { applyDocumentLanguage, localeSettings, restoreBrowserLanguage, saveBrowserLanguage } from "./locale";
+import { createFormatters } from "./formatters";
 type TranslationRecord = { source: string; translated: string };
 const originalText = new WeakMap<Node, TranslationRecord>();
 const originalAttributes = new WeakMap<Element, Map<string, TranslationRecord>>();
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => typeof window !== "undefined" && localStorage.getItem("cc-language") === "en" ? "en" : "ar");
-  const setLanguage = useCallback((next: Language) => { localStorage.setItem("cc-language", next); setLanguageState(next); }, []);
-  const t = useCallback((value: string) => language === "ar" ? value : translateToEnglish(value), [language]);
+  const [language, setLanguageState] = useState<Language>(restoreBrowserLanguage);
+  const setLanguage = useCallback((next: Language) => { saveBrowserLanguage(next); setLanguageState(next); }, []);
+  const t = useCallback((value: string, variables?: TranslationVariables) => {
+    if (isTranslationKey(value)) {
+      return translateCatalogMessage(language, value, variables);
+    }
+    if (/^[a-z]+\.[\w.]+$/.test(value)) {
+      reportTranslationIssue(value, ["missing-key"], import.meta.env?.DEV === true);
+    }
+    return language === "ar" ? value : translateToEnglish(value);
+  }, [language]);
   useEffect(() => {
     const root = document.documentElement;
-    root.lang = language;
-    root.dir = language === "ar" ? "rtl" : "ltr";
+    applyDocumentLanguage(root, language);
     document.title = language === "ar" ? "ChronicCare AI | رعاية صحية يومية" : "ChronicCare AI | Daily health care";
     const translateNode = (node: Node) => {
       // Recharts owns and frequently reconciles this subtree in response to
@@ -50,7 +62,6 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, [language]);
-  const locale = language === "ar" ? "ar-SA-u-nu-latn" : "en-US";
-  const value = useMemo<I18nValue>(() => ({ language, setLanguage, t, locale, formatNumber: (number) => new Intl.NumberFormat(locale).format(number), formatDate: (input, options) => new Intl.DateTimeFormat(locale, { calendar: "gregory", ...options }).format(new Date(input)) }), [language, locale, setLanguage, t]);
+  const value = useMemo<I18nValue>(() => ({ language, setLanguage, t, ...localeSettings(language), ...createFormatters(language) }), [language, setLanguage, t]);
   return <I18nContext value={value}>{children}</I18nContext>;
 }

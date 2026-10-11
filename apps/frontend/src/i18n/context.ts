@@ -1,23 +1,29 @@
 import { createContext, useContext } from "react";
+import type { TranslationKey } from "./catalog";
+import type { Language, TranslationVariables } from "./catalogTypes";
+import { createFormatters } from "./formatters";
+import { localeSettings } from "./locale";
 
-export type Language = "ar" | "en";
-export type I18nValue = {
+export type { Language } from "./catalogTypes";
+export type Translate = {
+  (key: TranslationKey, variables?: TranslationVariables): string;
+  (legacyArabicText: string): string;
+};
+export type I18nValue = ReturnType<typeof createFormatters> & {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (value: string) => string;
+  t: Translate;
   locale: string;
-  formatNumber: (value: number) => string;
-  formatDate: (value: Date | string | number, options?: Intl.DateTimeFormatOptions) => string;
+  direction: "rtl" | "ltr";
+  isRtl: boolean;
 };
 
-const fallbackLocale = "ar-SA-u-nu-latn";
 const fallbackI18n: I18nValue = {
   language: "ar",
   setLanguage: () => undefined,
   t: (value) => value,
-  locale: fallbackLocale,
-  formatNumber: (value) => new Intl.NumberFormat(fallbackLocale).format(value),
-  formatDate: (value, options) => new Intl.DateTimeFormat(fallbackLocale, { calendar: "gregory", ...options }).format(new Date(value)),
+  ...localeSettings("ar"),
+  ...createFormatters("ar"),
 };
 
 export const I18nContext = createContext<I18nValue | null>(null);
