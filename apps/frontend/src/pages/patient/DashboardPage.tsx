@@ -21,7 +21,9 @@ const WeeklySummary = lazy(() =>
 );
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { useI18n } from "@/i18n/context";
 export default function DashboardPage() {
+  const { locale, formatNumber } = useI18n();
   const { data, isPending, isError, refetch } = usePatientDashboard();
   const { openMeasurement } = useDashboardActions();
   if (isPending) return <p role="status">جارٍ تحميل ملخص صحتك…</p>;
@@ -32,6 +34,12 @@ export default function DashboardPage() {
         <Button onClick={() => void refetch()}>إعادة المحاولة</Button>
       </div>
     );
+  const steps = data.habits
+    .filter((h) => h.unit === "steps")
+    .reduce((sum, h) => sum + h.progress, 0);
+  const stepGoal = data.habits
+    .filter((h) => h.unit === "steps")
+    .reduce((sum, h) => sum + h.target, 0);
   return (
     <div className="dashboard-content">
       <div className="welcome">
@@ -44,7 +52,7 @@ export default function DashboardPage() {
         </div>
         <div className="date-label">
           <CalendarDays size={18} />
-          {new Intl.DateTimeFormat("ar", {
+          {new Intl.DateTimeFormat(locale, {
             weekday: "long",
             day: "numeric",
             month: "long",
@@ -54,19 +62,35 @@ export default function DashboardPage() {
       <section className="metrics-grid" aria-label="ملخص القياسات اليومية">
         <HealthMetricCard
           label="ضغط الدم"
-          value={`${data.bloodPressure.systolic}/${data.bloodPressure.diastolic}`}
-          unit="mmHg"
+          value={
+            data.bloodPressure
+              ? `${data.bloodPressure.systolic}/${data.bloodPressure.diastolic}`
+              : "—"
+          }
+          unit={data.bloodPressure ? "mmHg" : "لا توجد قراءة مسجلة"}
           icon={HeartPulse}
           tone="danger"
-          status={data.bloodPressure.isExample ? "✓ طبيعي" : "قراءة مسجلة"}
+          status={
+            data.bloodPressure
+              ? data.bloodPressure.isExample
+                ? "بيانات مثال"
+                : "قراءة مسجلة"
+              : "لا توجد بيانات"
+          }
         />
         <HealthMetricCard
           label="سكر الدم"
-          value={String(data.glucose.value)}
-          unit="mg/dL"
+          value={data.glucose ? String(data.glucose.value) : "—"}
+          unit={data.glucose ? "mg/dL" : "لا توجد قراءة مسجلة"}
           icon={Droplet}
           tone="info"
-          status={data.glucose.isExample ? "✓ طبيعي" : "قراءة مسجلة"}
+          status={
+            data.glucose
+              ? data.glucose.isExample
+                ? "بيانات مثال"
+                : "قراءة مسجلة"
+              : "لا توجد بيانات"
+          }
         />
         <HealthMetricCard
           label="الأدوية"
@@ -84,11 +108,13 @@ export default function DashboardPage() {
         />
         <HealthMetricCard
           label="النشاط"
-          value={data.steps.toLocaleString("en-US")}
-          unit={`خطوة من ${data.stepGoal.toLocaleString("en-US")}`}
+          value={formatNumber(steps)}
+          unit={`خطوة من ${formatNumber(stepGoal)}`}
           icon={Footprints}
           tone="success"
-          progress={Math.round((data.steps / data.stepGoal) * 100)}
+          progress={
+            stepGoal ? Math.min(100, Math.round((steps / stepGoal) * 100)) : 0
+          }
         />
       </section>
       <Button className="add-reading" onClick={openMeasurement}>
@@ -105,11 +131,9 @@ export default function DashboardPage() {
           </div>
           <MedicationCard medication={data.medication} />
           <AlertCard notification={data.reminder} onAction={openMeasurement} />
-          {data.habits
-            .filter((habit) => habit.kind === "walk")
-            .map((habit) => (
-              <HabitCard key={habit.id} habit={habit} />
-            ))}
+          {data.habits.map((habit) => (
+            <HabitCard key={habit.id} habit={habit} />
+          ))}
         </Card>
         <AssistantCard />
       </div>
@@ -121,8 +145,8 @@ export default function DashboardPage() {
         <WeeklySummary data={data.weekly} />
       </Suspense>
       <p className="demo-note">
-        هذه نسخة تجريبية ببيانات توضيحية. وصف «طبيعي» يخص المثال فقط؛ القراءات
-        الجديدة لا تخضع لتقييم طبي.
+        هذه نسخة تجريبية ببيانات توضيحية مميزة بوسم «بيانات مثال». لا تخضع
+        القراءات لتقييم طبي.
       </p>
     </div>
   );

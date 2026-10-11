@@ -5,9 +5,12 @@ import { Brand } from "./Brand";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { usePatientDashboard } from "@/hooks/queries/usePatientDashboard";
+import { Preferences } from "./Preferences";
+import { useI18n } from "@/i18n/context";
 export function Header() {
   const [open, setOpen] = useState(false);
   const { data } = usePatientDashboard();
+  const { language } = useI18n();
   return (
     <header className="header">
       <div className="header-breadcrumb">
@@ -17,6 +20,7 @@ export function Header() {
         <Brand />
       </div>
       <div className="header-actions">
+        <Preferences />
         <span className="demo-label">عرض تجريبي</span>
         <Button
           variant="ghost"
@@ -26,7 +30,7 @@ export function Header() {
           <Bell size={22} />
         </Button>
         <Link to="/patient/profile" className="profile-link">
-          <span className="avatar">م</span>
+          <span className="avatar">{language === "ar" ? "م" : "M"}</span>
           <span className="profile-name">
             {data?.patient.name ?? "حسابي"}
             <small>حساب المريض</small>

@@ -12,6 +12,7 @@ function useMedicationFeedback(message: string) {
   return {
     onSuccess: async () => {
       await Promise.all([
+        client.invalidateQueries({ queryKey: queryKeys.reports }),
         client.invalidateQueries({ queryKey: queryKeys.medications }),
         client.invalidateQueries({ queryKey: queryKeys.dashboard }),
       ]);

@@ -6,12 +6,21 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 export function WeeklySummary({ data }: { data: WeeklyPoint[] }) {
   const [kind, setKind] = useState<"pressure" | "glucose">("pressure");
+  const visible = data.filter((point) =>
+    kind === "pressure"
+      ? point.systolic !== undefined
+      : point.glucose !== undefined,
+  );
+  const includesExamples = visible.some((point) => point.isExample);
   return (
     <Card className="weekly-section">
       <div className="section-heading">
         <div>
           <h2>صحتك خلال الأسبوع</h2>
-          <p>نظرة على قراءاتك · بيانات توضيحية</p>
+          <p>
+            نظرة على قراءاتك
+            {includesExamples ? " · يتضمن بيانات مثال" : ""}
+          </p>
         </div>
         <div className="segmented" role="group" aria-label="نوع مخطط الملخص">
           <Button
@@ -30,12 +39,14 @@ export function WeeklySummary({ data }: { data: WeeklyPoint[] }) {
           </Button>
         </div>
       </div>
-      {kind === "pressure" ? (
+      {!visible.length ? (
+        <p className="empty-state">لا توجد قراءات من هذا النوع خلال آخر 7 أيام.</p>
+      ) : kind === "pressure" ? (
         <BloodPressureChart data={data} />
       ) : (
         <GlucoseChart data={data} />
       )}
-      <div className="chart-legend">
+      {visible.length > 0 && <div className="chart-legend">
         {kind === "pressure" ? (
           <>
             <span>
@@ -51,11 +62,11 @@ export function WeeklySummary({ data }: { data: WeeklyPoint[] }) {
             <i /> سكر الدم · mg/dL
           </span>
         )}
-      </div>
-      <details className="chart-data">
+      </div>}
+      {visible.length > 0 && <details className="chart-data">
         <summary>عرض القراءات كنص</summary>
         <ul>
-          {data.map((point) => (
+          {visible.map((point) => (
             <li key={point.day}>
               {point.day}:{" "}
               <bdi>
@@ -63,10 +74,11 @@ export function WeeklySummary({ data }: { data: WeeklyPoint[] }) {
                   ? `${point.systolic}/${point.diastolic} mmHg`
                   : `${point.glucose} mg/dL`}
               </bdi>
+              {point.isExample ? " · بيانات مثال" : ""}
             </li>
           ))}
         </ul>
-      </details>
+      </details>}
     </Card>
   );
 }
