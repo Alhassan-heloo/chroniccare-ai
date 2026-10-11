@@ -3,11 +3,13 @@ import { Link } from "react-router";
 import type { MedicationSummary } from "@/lib/types/medication";
 import { Button } from "@/components/ui/Button";
 import { useSetDoseTaken } from "@/hooks/mutations/useMedicationMutations";
+import { useI18n } from "@/i18n/context";
 export function MedicationCard({
   medication,
 }: {
   medication: MedicationSummary;
 }) {
+  const { t } = useI18n();
   const mutation = useSetDoseTaken();
   const next = medication.nextDose;
   return (
@@ -17,20 +19,21 @@ export function MedicationCard({
       </span>
       <div className="task-copy">
         <h3>{medication.name}</h3>
-        <p>
+        <p data-i18n="declarative">
           {next ? (
             <>
-              أول موعد غير مسجل اليوم: <bdi>{medication.time}</bdi>
+              {t("patient.overview.nextDose", { time: medication.time })}
             </>
           ) : medication.total ? (
-            "تم تسجيل تناول جميع الجرعات"
+            t("patient.overview.allTaken")
           ) : (
-            "أضف دواءك ومواعيده من صفحة أدويتي"
+            t("patient.overview.addMedication")
           )}
         </p>
       </div>
       {next ? (
         <Button
+          data-i18n="declarative"
           variant="secondary"
           disabled={mutation.isPending}
           onClick={() =>
@@ -41,11 +44,11 @@ export function MedicationCard({
             })
           }
         >
-          تم التناول
+          {t("patient.overview.taken")}
         </Button>
       ) : (
-        <Link className="btn btn-secondary" to="/patient/medications">
-          أدويتي
+        <Link className="btn btn-secondary" to="/patient/medications" data-i18n="declarative">
+          {t("common.navigation.medications")}
         </Link>
       )}
     </div>

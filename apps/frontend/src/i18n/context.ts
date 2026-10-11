@@ -3,6 +3,7 @@ import type { TranslationKey } from "./catalog";
 import type { Language, TranslationVariables } from "./catalogTypes";
 import { createFormatters } from "./formatters";
 import { localeSettings } from "./locale";
+import { isTranslationKey, translateCatalogMessage } from "./catalog";
 
 export type { Language } from "./catalogTypes";
 export type Translate = {
@@ -21,7 +22,7 @@ export type I18nValue = ReturnType<typeof createFormatters> & {
 const fallbackI18n: I18nValue = {
   language: "ar",
   setLanguage: () => undefined,
-  t: (value) => value,
+  t: (value: string, variables?: TranslationVariables) => isTranslationKey(value) ? translateCatalogMessage("ar", value, variables) : value,
   ...localeSettings("ar"),
   ...createFormatters("ar"),
 };

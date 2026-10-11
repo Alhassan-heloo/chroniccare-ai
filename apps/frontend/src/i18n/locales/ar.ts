@@ -29,6 +29,8 @@ export const arCatalog = {
     register: "إنشاء حساب",
   },
   patient: {
+    metric: { progress: "تقدم {{label}}", goal: "{{value}}% من هدف اليوم", walking: "المشي اليومي", water: "شرب الماء" },
+    overview: { eyebrow: "كل يوم، خطوة لصحة أفضل", metrics: "ملخص القياسات اليومية", example: "بيانات مثال", recorded: "قراءة مسجلة", noReading: "لا توجد قراءة مسجلة", activity: "النشاط", steps: "خطوة من {{goal}}", tasks: "ماذا علي أن أفعل اليوم؟", routine: "روتين بسيط يصنع فرقًا", today: "مهام اليوم", weeklyLoading: "جارٍ تحميل الملخص الأسبوعي…", demo: "هذه نسخة تجريبية ببيانات توضيحية مميزة بوسم «بيانات مثال». لا تخضع القراءات لتقييم طبي.", weekly: "صحتك خلال الأسبوع", readings: "نظرة على قراءاتك", includesExamples: "يتضمن بيانات مثال", chartType: "نوع مخطط الملخص", weeklyEmpty: "لا توجد قراءات من هذا النوع خلال آخر 7 أيام.", textReadings: "عرض القراءات كنص", nextDose: "أول موعد غير مسجل اليوم: {{time}}", allTaken: "تم تسجيل تناول جميع الجرعات", addMedication: "أضف دواءك ومواعيده من صفحة أدويتي", taken: "تم التناول", update: "تحديث", inProgress: "قيد الإنجاز", habitProgress: "{{value}} / {{target}} {{unit}}", stepsUnit: "خطوة", cupsUnit: "كوب", minutesUnit: "دقيقة", timesUnit: "مرة", companion: "رفيق رحلتك الصحية", assistantQuestion: "كيف يمكنني مساعدتك اليوم؟", askAssistant: "اسأل المساعد", assistantUnavailable: "قريبًا · غير متصل بالذكاء الاصطناعي" },
     dashboard: {
       title: "الرئيسية",
       welcome: "مرحبًا {{name}}",

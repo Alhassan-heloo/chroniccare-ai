@@ -16,7 +16,7 @@ export function TrendChart({
   data: WeeklyPoint[];
   kind: "pressure" | "glucose";
 }) {
-  const { t, direction, formatNumber } = useI18n();
+  const { t, direction, formatNumber, formatDate } = useI18n();
   return (
     <div
       className="chart"
@@ -42,6 +42,7 @@ export function TrendChart({
           />
           <XAxis
             dataKey="day"
+            tickFormatter={(day: string) => formatDate(`${day}T12:00:00`, { day: "numeric", month: "short" })}
             tickLine={false}
             axisLine={false}
             tick={{ fill: "var(--muted)", fontSize: 11 }}
@@ -54,6 +55,7 @@ export function TrendChart({
             tick={{ fill: "var(--muted)", fontSize: 11 }}
           />
           <Tooltip
+            labelFormatter={(day) => formatDate(`${String(day)}T12:00:00`, { day: "numeric", month: "short" })}
             formatter={(value) => typeof value === "number" ? formatNumber(value) : String(value)}
             contentStyle={{
               borderRadius: 12,

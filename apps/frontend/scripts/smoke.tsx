@@ -173,6 +173,16 @@ const paths = [
   "/admin/dashboard",
   "/missing",
 ];
+for (const language of ["ar", "en", "ar", "en"] as const) {
+  const client = new QueryClient();
+  client.setQueryData(queryKeys.dashboard, await getPatientDashboard());
+  const context: I18nValue = { language, setLanguage: () => undefined, t: (key: string, values?: Readonly<Record<string, string | number>>) => isTranslationKey(key) ? translateCatalogMessage(language, key, values) : key, ...localeSettings(language), ...createFormatters(language) };
+  const html = renderToString(<I18nContext value={context}><QueryClientProvider client={client}><RouterProvider router={createMemoryRouter(routes, { initialEntries: ["/patient/dashboard?demo=1#main"] })} /></QueryClientProvider></I18nContext>);
+  assert(html.includes(translateCatalogMessage(language, "patient.dashboard.summary")));
+  assert(html.includes(translateCatalogMessage(language, "patient.overview.tasks")));
+  assert(!html.includes("patient.overview."));
+  client.clear();
+}
 for (const path of paths) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },

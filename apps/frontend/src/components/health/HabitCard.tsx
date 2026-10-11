@@ -17,7 +17,7 @@ export function HabitCard({
   onEdit?: (habit: Habit) => void;
   onDelete?: (habit: Habit) => void;
 }) {
-  const { formatNumber } = useI18n();
+  const { t, formatNumber } = useI18n();
   const value = progressToday(habit);
   const Icon =
     habit.unit === "steps"
@@ -32,14 +32,14 @@ export function HabitCard({
           <Icon />
         </span>
         <div className="task-copy">
-          <h3>{habit.title}</h3>
-          <p>
-            {value} / {habit.target} {habitUnits[habit.unit]} ·{" "}
-            {value >= habit.target ? "✓ مكتملة" : "قيد الإنجاز"}
+          <h3 data-i18n={(habit.id === "steps" && habit.title === "المشي اليومي") || (habit.id === "water" && habit.title === "شرب الماء") ? "declarative" : undefined}>{habit.id === "steps" && habit.title === "المشي اليومي" ? t("patient.metric.walking") : habit.id === "water" && habit.title === "شرب الماء" ? t("patient.metric.water") : habit.title}</h3>
+          <p data-i18n="declarative">
+            {t("patient.overview.habitProgress", { value: formatNumber(value), target: formatNumber(habit.target), unit: t(habit.unit === "steps" ? "patient.overview.stepsUnit" : habit.unit === "cups" ? "patient.overview.cupsUnit" : habit.unit === "minutes" ? "patient.overview.minutesUnit" : "patient.overview.timesUnit") })} ·{" "}
+            {value >= habit.target ? `✓ ${t("habits.completed")}` : t("patient.overview.inProgress")}
           </p>
         </div>
-        <Link className="btn btn-secondary" to="/patient/habits">
-          تحديث
+        <Link className="btn btn-secondary" to="/patient/habits" data-i18n="declarative">
+          {t("patient.overview.update")}
         </Link>
       </div>
     );

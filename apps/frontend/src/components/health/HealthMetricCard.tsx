@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { useI18n } from "@/i18n/context";
 export function HealthMetricCard({
   label,
   value,
@@ -18,6 +19,7 @@ export function HealthMetricCard({
   status?: string;
   progress?: number;
 }) {
+  const { t, formatNumber } = useI18n();
   return (
     <Card className="metric-card">
       <div className="metric-heading">
@@ -34,8 +36,8 @@ export function HealthMetricCard({
         <Badge tone="info">{status}</Badge>
       ) : (
         <div className="metric-progress">
-          <progress value={progress} max={100} aria-label={`تقدم ${label}`} />
-          <span>{progress}% من هدف اليوم</span>
+          <progress value={progress} max={100} aria-label={t("patient.metric.progress", { label })} />
+          <span>{t("patient.metric.goal", { value: formatNumber(progress ?? 0) })}</span>
         </div>
       )}
     </Card>

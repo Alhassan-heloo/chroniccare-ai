@@ -32,6 +32,8 @@ export const enCatalog = {
     register: "Create account",
   },
   patient: {
+    metric: { progress: "Progress: {{label}}", goal: "{{value}}% of today's goal", walking: "Daily walking", water: "Drink water" },
+    overview: { eyebrow: "Every day, one step toward better health", metrics: "Daily measurements summary", example: "Sample data", recorded: "Recorded reading", noReading: "No reading recorded", activity: "Activity", steps: "steps of {{goal}}", tasks: "What should I do today?", routine: "A simple routine makes a difference", today: "Today's tasks", weeklyLoading: "Loading weekly summary…", demo: "This is a demo with illustrative data marked as ‘Sample data’. Readings are not medically assessed.", weekly: "Your health this week", readings: "A view of your readings", includesExamples: "Includes sample data", chartType: "Summary chart type", weeklyEmpty: "No readings of this type in the last 7 days.", textReadings: "Show readings as text", nextDose: "First time not recorded today: {{time}}", allTaken: "All doses recorded as taken", addMedication: "Add your medication and times from the Medications page", taken: "Taken", update: "Update", inProgress: "In progress", habitProgress: "{{value}} / {{target}} {{unit}}", stepsUnit: "step", cupsUnit: "cup", minutesUnit: "minute", timesUnit: "time", companion: "Your health journey companion", assistantQuestion: "How can I help you today?", askAssistant: "Ask the assistant", assistantUnavailable: "Coming soon · Not connected to AI" },
     dashboard: {
       title: "Home",
       welcome: "Welcome {{name}}",
