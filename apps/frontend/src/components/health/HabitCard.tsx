@@ -5,6 +5,7 @@ import { habitUnits, progressToday, habitPercent } from "@/lib/utils/habits";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { useI18n } from "@/i18n/context";
 export function HabitCard({
   habit,
   onProgress,
@@ -16,6 +17,7 @@ export function HabitCard({
   onEdit?: (habit: Habit) => void;
   onDelete?: (habit: Habit) => void;
 }) {
+  const { formatNumber } = useI18n();
   const value = progressToday(habit);
   const Icon =
     habit.unit === "steps"
@@ -53,8 +55,8 @@ export function HabitCard({
         </Badge>
       </div>
       <p className="habit-value">
-        <strong>{value.toLocaleString("ar")}</strong> من{" "}
-        {habit.target.toLocaleString("ar")} {habitUnits[habit.unit]}
+        <strong>{formatNumber(value)}</strong> من{" "}
+        {formatNumber(habit.target)} {habitUnits[habit.unit]}
       </p>
       <progress
         value={Math.min(value, habit.target)}

@@ -8,17 +8,7 @@ import {
   Tooltip,
 } from "recharts";
 import type { ReportPoint } from "@/lib/types/report";
-const dateFormatter = new Intl.DateTimeFormat("ar", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  calendar: "gregory",
-});
-const axisFormatter = new Intl.DateTimeFormat("ar", {
-  day: "numeric",
-  month: "short",
-  calendar: "gregory",
-});
+import { useI18n } from "@/i18n/context";
 const formatValue = (value: number | undefined) =>
   value === undefined ? "—" : String(value);
 export default function ReportChart({
@@ -28,6 +18,9 @@ export default function ReportChart({
   points: ReportPoint[];
   kind: "pressure" | "glucose";
 }) {
+  const { t, locale, language } = useI18n();
+  const dateFormatter = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric", calendar: "gregory" });
+  const axisFormatter = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", calendar: "gregory" });
   const pressure = kind === "pressure";
   const unit = pressure ? "mmHg" : "mg/dL";
   const data = points
@@ -153,7 +146,7 @@ export default function ReportChart({
             <Tooltip
               labelFormatter={(value) => dateFormatter.format(Number(value))}
               contentStyle={{
-                direction: "rtl",
+                direction: language === "ar" ? "rtl" : "ltr", background: "var(--surface)", color: "var(--text)",
                 borderRadius: 12,
                 borderColor: "var(--border)",
               }}
@@ -161,7 +154,7 @@ export default function ReportChart({
             <Line
               type="linear"
               dataKey={pressure ? "systolic" : "glucose"}
-              name={pressure ? "الانقباضي (mmHg)" : "سكر الدم (mg/dL)"}
+              name={t(pressure ? "الانقباضي (mmHg)" : "سكر الدم (mg/dL)")}
               stroke="var(--primary)"
               strokeWidth={3}
               dot={{ r: 4 }}
@@ -172,7 +165,7 @@ export default function ReportChart({
               <Line
                 type="linear"
                 dataKey="diastolic"
-                name="الانبساطي (mmHg)"
+                name={t("الانبساطي (mmHg)")}
                 stroke="var(--info)"
                 strokeWidth={2}
                 strokeDasharray="6 4"

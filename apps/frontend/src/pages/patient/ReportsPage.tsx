@@ -4,6 +4,7 @@ import type { ReportPeriod } from "@/lib/types/report";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ReportSummary } from "@/components/health/ReportSummary";
+import { useI18n } from "@/i18n/context";
 import {
   measurementLabel,
   measurementValue,
@@ -15,6 +16,7 @@ const periods: { value: ReportPeriod; label: string }[] = [
   { value: 90, label: "3 أشهر" },
 ];
 export default function ReportsPage() {
+  const { locale, formatNumber } = useI18n();
   const [period, setPeriod] = useState<ReportPeriod>(7);
   const { data, isPending, isError, refetch } = usePatientReport(period);
   return (
@@ -40,7 +42,7 @@ export default function ReportsPage() {
       </div>
       <p className="measurements-notice">
         أمثلة تجريبية لآخر 7 أيام، وليست قراءات مريض حقيقية. البيانات مؤقتة.
-        الفترة آخر {period} يومًا شاملة اليوم حسب توقيت جهازك. لا يتضمن التقرير
+        الفترة آخر {formatNumber(period)} يومًا شاملة اليوم حسب توقيت جهازك. لا يتضمن التقرير
         تقييمًا طبيًا.
       </p>
       {isPending ? (
@@ -101,7 +103,7 @@ export default function ReportsPage() {
                       </small>
                     </strong>
                     <time dateTime={item.recordedAt}>
-                      {new Date(item.recordedAt).toLocaleString("ar")}
+                      {new Date(item.recordedAt).toLocaleString(locale)}
                     </time>
                   </li>
                 ))}

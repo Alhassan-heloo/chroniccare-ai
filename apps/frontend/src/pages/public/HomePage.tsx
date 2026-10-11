@@ -8,12 +8,14 @@ import {
 } from "lucide-react";
 import { Brand } from "@/components/layout/Brand";
 import { Card } from "@/components/ui/Card";
+import { Preferences } from "@/components/layout/Preferences";
 export default function HomePage() {
   return (
     <div className="home">
       <header className="public-header">
         <Brand />
         <nav aria-label="روابط الحساب">
+          <Preferences />
           <Link to="/login" className="btn btn-ghost">
             تسجيل الدخول
           </Link>

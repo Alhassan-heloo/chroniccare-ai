@@ -37,6 +37,26 @@ import { measurementSchema } from "../src/lib/utils/measurementSchema";
 
 import { filterMeasurements } from "../src/lib/utils/measurementFilters";
 import type { Measurement } from "../src/lib/types/measurement";
+import { translateToEnglish } from "../src/i18n/translate";
+import { updateTextIfChanged } from "../src/i18n/domTranslation";
+
+const translatedChartLabel = translateToEnglish(
+  "اتجاه قراءات الضغط المسجلة خلال آخر 7 أيام، بوحدة mmHg",
+);
+assert.equal(
+  translatedChartLabel,
+  "Trend of recorded blood pressure readings over the last 7 days, in mmHg",
+);
+assert(!/[\u0600-\u06ff]/.test(translatedChartLabel));
+assert.equal(
+  translateToEnglish("  متابعة يومية،\n بخطوات بسيطة.  "),
+  "Daily follow-up, in simple steps.",
+);
+const unchangedTextNode = { textContent: "Systolic" };
+assert.equal(updateTextIfChanged(unchangedTextNode, "Systolic"), false);
+assert.equal(unchangedTextNode.textContent, "Systolic");
+assert.equal(updateTextIfChanged(unchangedTextNode, "Diastolic"), true);
+assert.equal(unchangedTextNode.textContent, "Diastolic");
 
 const paths = [
   "/",

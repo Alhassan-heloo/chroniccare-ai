@@ -8,6 +8,7 @@ import {
   Tooltip,
 } from "recharts";
 import type { WeeklyPoint } from "@/lib/types/dashboard";
+import { useI18n } from "@/i18n/context";
 export function TrendChart({
   data,
   kind,
@@ -15,6 +16,7 @@ export function TrendChart({
   data: WeeklyPoint[];
   kind: "pressure" | "glucose";
 }) {
+  const { t, language } = useI18n();
   return (
     <div
       className="chart"
@@ -22,8 +24,8 @@ export function TrendChart({
       role="img"
       aria-label={
         kind === "pressure"
-          ? "اتجاه قراءات الضغط المسجلة خلال آخر 7 أيام، بوحدة mmHg"
-          : "اتجاه قراءات السكر المسجلة خلال آخر 7 أيام، بوحدة mg/dL"
+          ? t("اتجاه قراءات الضغط المسجلة خلال آخر 7 أيام، بوحدة mmHg")
+          : t("اتجاه قراءات السكر المسجلة خلال آخر 7 أيام، بوحدة mg/dL")
       }
     >
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -52,14 +54,15 @@ export function TrendChart({
           <Tooltip
             contentStyle={{
               borderRadius: 12,
-              direction: "rtl",
+              direction: language === "ar" ? "rtl" : "ltr",
+              background: "var(--surface)", color: "var(--text)",
               borderColor: "var(--border)",
             }}
           />
           <Line
             type="monotone"
             dataKey={kind === "pressure" ? "systolic" : "glucose"}
-            name={kind === "pressure" ? "الانقباضي" : "السكر"}
+            name={t(kind === "pressure" ? "الانقباضي" : "السكر")}
             stroke="var(--primary)"
             strokeWidth={3}
             dot={{ r: 3 }}
@@ -69,7 +72,7 @@ export function TrendChart({
             <Line
               type="monotone"
               dataKey="diastolic"
-              name="الانبساطي"
+              name={t("الانبساطي")}
               stroke="var(--info)"
               strokeWidth={2}
               dot={{ r: 3 }}

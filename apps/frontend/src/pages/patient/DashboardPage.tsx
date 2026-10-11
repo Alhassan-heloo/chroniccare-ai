@@ -21,7 +21,9 @@ const WeeklySummary = lazy(() =>
 );
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { useI18n } from "@/i18n/context";
 export default function DashboardPage() {
+  const { locale, formatNumber } = useI18n();
   const { data, isPending, isError, refetch } = usePatientDashboard();
   const { openMeasurement } = useDashboardActions();
   if (isPending) return <p role="status">جارٍ تحميل ملخص صحتك…</p>;
@@ -50,7 +52,7 @@ export default function DashboardPage() {
         </div>
         <div className="date-label">
           <CalendarDays size={18} />
-          {new Intl.DateTimeFormat("ar", {
+          {new Intl.DateTimeFormat(locale, {
             weekday: "long",
             day: "numeric",
             month: "long",
@@ -106,8 +108,8 @@ export default function DashboardPage() {
         />
         <HealthMetricCard
           label="النشاط"
-          value={steps.toLocaleString("en-US")}
-          unit={`خطوة من ${stepGoal.toLocaleString("en-US")}`}
+          value={formatNumber(steps)}
+          unit={`خطوة من ${formatNumber(stepGoal)}`}
           icon={Footprints}
           tone="success"
           progress={

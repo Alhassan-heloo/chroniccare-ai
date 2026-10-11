@@ -20,6 +20,27 @@
   --focus: #1976b5;
   --shadow: 0 4px 24px rgb(7 54 75 / 4%);
 }
+[data-theme="dark"] {
+  --canvas: #09161d;
+  --surface: #10242d;
+  --navy: #e8f5f7;
+  --text: #d8e8eb;
+  --primary: #42c7b4;
+  --primary-hover: #71dacb;
+  --primary-soft: #153c3b;
+  --muted: #a6bbc1;
+  --border: #29434c;
+  --success: #79d6a5;
+  --success-soft: #173a2d;
+  --warning: #f0bd70;
+  --warning-soft: #3f2e19;
+  --danger: #ff8d9a;
+  --danger-soft: #45242b;
+  --info: #7bc7f1;
+  --info-soft: #17364a;
+  --focus: #83d7ff;
+  --shadow: 0 6px 28px rgb(0 0 0 / 24%);
+}
 @theme inline {
   --color-primary: var(--primary);
   --color-navy: var(--navy);
@@ -39,6 +60,17 @@ body {
   font-size: 16px;
   line-height: 1.7;
 }
+html { background: var(--canvas); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.preferences { display: inline-flex; align-items: center; gap: 6px; }
+.theme-select, .language-toggle { min-height: 40px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); padding: 6px 9px; font: inherit; font-size: 12px; }
+.theme-toggle { min-height: 40px; padding: 8px 10px; }
+.language-toggle { display: inline-flex; align-items: center; gap: 5px; }
+.language-toggle .active { color: var(--primary-hover); font-weight: 800; }
+[data-theme="dark"] .hero-heart { box-shadow: 0 0 0 25px rgb(66 199 180 / 12%); }
+[data-theme="dark"] dialog::backdrop { background: rgb(0 7 12 / 72%); }
+[data-theme="dark"] .btn-primary, [data-theme="dark"] .btn-danger, [data-theme="dark"] .nav-link.active, [data-theme="dark"] .bottom-nav .add-nav { color: #061b1b; }
+[data-theme="dark"] .recharts-tooltip-wrapper .recharts-default-tooltip { background: var(--surface) !important; color: var(--text) !important; }
 button,
 input,
 select {
@@ -961,6 +993,9 @@ dialog::backdrop {
   .header-actions {
     gap: 2px;
   }
+  .theme-select { display: none; }
+  .language-toggle { padding-inline: 7px; }
+  .public-header .preferences { order: 3; }
   .header-actions .btn {
     padding: 10px;
   }

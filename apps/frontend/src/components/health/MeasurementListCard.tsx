@@ -7,6 +7,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { useI18n } from "@/i18n/context";
 export function MeasurementListCard({
   item,
   onEdit,
@@ -16,9 +17,10 @@ export function MeasurementListCard({
   onEdit: (item: Measurement) => void;
   onDelete: (item: Measurement) => void;
 }) {
+  const { locale } = useI18n();
   const pressure = item.kind === "bloodPressure";
   const Icon = pressure ? HeartPulse : Droplet;
-  const timestamp = new Date(item.recordedAt).toLocaleString("ar", {
+  const timestamp = new Date(item.recordedAt).toLocaleString(locale, {
     dateStyle: "medium",
     timeStyle: "short",
   });
