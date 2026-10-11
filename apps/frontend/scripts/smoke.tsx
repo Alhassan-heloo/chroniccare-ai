@@ -39,6 +39,32 @@ import { filterMeasurements } from "../src/lib/utils/measurementFilters";
 import type { Measurement } from "../src/lib/types/measurement";
 import { translateToEnglish } from "../src/i18n/translate";
 import { updateTextIfChanged } from "../src/i18n/domTranslation";
+import { Sidebar } from "../src/components/layout/Sidebar";
+import { Preferences } from "../src/components/layout/Preferences";
+import { I18nContext, type I18nValue } from "../src/i18n/context";
+import { ThemeContext } from "../src/theme/context";
+
+for (const language of ["ar", "en"] as const) {
+  const context: I18nValue = {
+    language, setLanguage: () => undefined,
+    t: (key) => isTranslationKey(key) ? translateCatalogMessage(language, key) : key,
+    ...localeSettings(language), ...createFormatters(language),
+  };
+  for (const mode of ["light", "dark", "system"] as const) {
+    const html = renderToString(
+      <I18nContext value={context}>
+        <ThemeContext value={{ mode, resolved: mode === "dark" ? "dark" : "light", setMode: () => undefined, toggle: () => undefined }}>
+          <RouterProvider router={createMemoryRouter([{ path: "/", element: <><Sidebar /><Preferences /></> }])} />
+        </ThemeContext>
+      </I18nContext>,
+    );
+    assert(html.includes(translateCatalogMessage(language, "common.navigation.measurements").replaceAll("&", "&amp;")));
+    assert(html.includes(`aria-label="${translateCatalogMessage(language, "common.layout.mainNav")}"`));
+    assert(html.includes(`aria-label="${translateCatalogMessage(language, "common.theme.label")}"`));
+    assert(html.includes("data-i18n=\"declarative\""));
+    assert(!html.includes("common.navigation."));
+  }
+}
 import { readLanguage, persistLanguage, localeSettings, applyDocumentLanguage } from "../src/i18n/locale";
 import { createFormatters } from "../src/i18n/formatters";
 

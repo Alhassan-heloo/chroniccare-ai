@@ -10,21 +10,22 @@ import { useI18n } from "@/i18n/context";
 export function Header() {
   const [open, setOpen] = useState(false);
   const { data } = usePatientDashboard();
-  const { language } = useI18n();
+  const { language, t } = useI18n();
   return (
     <header className="header">
-      <div className="header-breadcrumb">
-        مساحتي الصحية <span>/</span> متابعة يومية
+      <div className="header-breadcrumb" data-i18n="declarative">
+        {t("common.layout.space")} <span>/</span> {t("common.layout.daily")}
       </div>
       <div className="mobile-brand">
         <Brand />
       </div>
       <div className="header-actions">
         <Preferences />
-        <span className="demo-label">عرض تجريبي</span>
+        <span className="demo-label" data-i18n="declarative">{t("common.layout.demo")}</span>
         <Button
           variant="ghost"
-          aria-label="عرض التنبيهات"
+          data-i18n="declarative"
+          aria-label={t("common.layout.showNotifications")}
           onClick={() => setOpen(true)}
         >
           <Bell size={22} />
@@ -32,18 +33,18 @@ export function Header() {
         <Link to="/patient/profile" className="profile-link">
           <span className="avatar">{language === "ar" ? "م" : "M"}</span>
           <span className="profile-name">
-            {data?.patient.name ?? "حسابي"}
-            <small>حساب المريض</small>
+            {data?.patient.name ?? <span data-i18n="declarative">{t("common.navigation.profile")}</span>}
+            <small data-i18n="declarative">{t("common.layout.account")}</small>
           </span>
           <ChevronDown size={16} />
         </Link>
       </div>
-      <Modal open={open} onClose={() => setOpen(false)} title="التنبيهات">
-        <p>
-          {data?.reminder.title} — {data?.reminder.description}
+      <Modal open={open} onClose={() => setOpen(false)} title={t("common.layout.notifications")} declarativeTitle>
+        <p data-i18n={data?.reminder.id === "glucose-reminder" ? "declarative" : undefined}>
+          {data?.reminder.id === "glucose-reminder" ? <>{t("common.reminder.glucose")} — {t("common.reminder.evening")}</> : <>{data?.reminder.title} — {data?.reminder.description}</>}
         </p>
-        <p className="muted">
-          تنبيه تجريبي داخل التطبيق؛ الإشعارات الفعلية غير مفعلة.
+        <p className="muted" data-i18n="declarative">
+          {t("common.layout.notificationDemo")}
         </p>
       </Modal>
     </header>

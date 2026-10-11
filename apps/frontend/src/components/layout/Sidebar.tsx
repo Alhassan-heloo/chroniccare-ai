@@ -2,12 +2,14 @@ import { NavLink } from "react-router";
 import { ShieldCheck } from "lucide-react";
 import { Brand } from "./Brand";
 import { patientNavigation } from "./navigation";
+import { useI18n } from "@/i18n/context";
 export function Sidebar() {
+  const { t } = useI18n();
   return (
     <aside className="sidebar">
       <Brand />
-      <p className="nav-caption">مساحتك الصحية</p>
-      <nav aria-label="القائمة الرئيسية">
+      <p className="nav-caption" data-i18n="declarative">{t("common.layout.caption")}</p>
+      <nav aria-label={t("common.layout.mainNav")} data-i18n="declarative">
         {patientNavigation.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
@@ -17,20 +19,20 @@ export function Sidebar() {
             }
           >
             <Icon size={21} />
-            {label}
+            <span data-i18n="declarative">{t(label)}</span>
           </NavLink>
         ))}
       </nav>
-      <div className="sidebar-note">
+      <div className="sidebar-note" data-i18n="declarative">
         <ShieldCheck size={28} />
-        <strong>صحتك تبدأ بخطوة</strong>
+        <strong>{t("common.layout.start")}</strong>
         <p>
-          متابعة بسيطة كل يوم،
+          {t("common.layout.noteFirst")}
           <br />
-          واهتمام يدوم.
+          {t("common.layout.noteLast")}
         </p>
       </div>
-      <span className="sidebar-footer">ChronicCare AI · نسخة تجريبية</span>
+      <span className="sidebar-footer" data-i18n="declarative">ChronicCare AI · {t("common.layout.demoVersion")}</span>
     </aside>
   );
 }

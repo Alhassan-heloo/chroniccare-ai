@@ -4,44 +4,46 @@ import { House, HeartPulse, Plus, Bot, Menu } from "lucide-react";
 import { useDashboardActions } from "@/context/DashboardContext";
 import { Modal } from "@/components/ui/Modal";
 import { patientNavigation } from "./navigation";
+import { useI18n } from "@/i18n/context";
 export function BottomNav() {
+  const { t } = useI18n();
   const { openMeasurement } = useDashboardActions();
   const [open, setOpen] = useState(false);
   return (
     <>
-      <nav className="bottom-nav" aria-label="التنقل على الجوال">
+      <nav className="bottom-nav" aria-label={t("common.layout.mobileNav")} data-i18n="declarative">
         <NavLink to="/patient/dashboard">
           <House />
-          <span>الرئيسية</span>
+          <span>{t("common.navigation.home")}</span>
         </NavLink>
         <NavLink to="/patient/measurements">
           <HeartPulse />
-          <span>صحتي</span>
+          <span>{t("common.layout.health")}</span>
         </NavLink>
         <button
           className="add-nav"
           onClick={openMeasurement}
-          aria-label="إضافة قراءة جديدة"
+          aria-label={t("measurements.add")}
         >
           <Plus size={28} />
         </button>
         <NavLink to="/patient/assistant">
           <Bot />
-          <span>المساعد</span>
+          <span>{t("common.layout.assistant")}</span>
         </NavLink>
         <button
           onClick={() => setOpen(true)}
-          aria-label="عرض المزيد من الصفحات"
+          aria-label={t("common.layout.showMore")}
         >
           <Menu />
-          <span>المزيد</span>
+          <span>{t("common.layout.more")}</span>
         </button>
       </nav>
-      <Modal open={open} onClose={() => setOpen(false)} title="المزيد">
+      <Modal open={open} onClose={() => setOpen(false)} title={t("common.layout.more")} declarativeTitle>
         <nav className="more-nav">
           {patientNavigation.slice(2).map((item) => (
             <NavLink key={item.to} to={item.to} onClick={() => setOpen(false)}>
-              {item.label}
+              <span data-i18n="declarative">{t(item.label)}</span>
             </NavLink>
           ))}
         </nav>

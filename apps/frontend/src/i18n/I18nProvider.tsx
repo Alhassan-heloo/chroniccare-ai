@@ -28,6 +28,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     applyDocumentLanguage(root, language);
     document.title = language === "ar" ? "ChronicCare AI | رعاية صحية يومية" : "ChronicCare AI | Daily health care";
     const translateNode = (node: Node) => {
+      const element = node instanceof Element ? node : node.parentElement;
+      if (element?.closest('[data-i18n="declarative"]')) return;
       // Recharts owns and frequently reconciles this subtree in response to
       // ResizeObserver. Its labels are localized through React props instead.
       if (isInsideChart(node)) return;

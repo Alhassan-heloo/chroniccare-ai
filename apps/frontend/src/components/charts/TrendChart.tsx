@@ -16,16 +16,17 @@ export function TrendChart({
   data: WeeklyPoint[];
   kind: "pressure" | "glucose";
 }) {
-  const { t, language } = useI18n();
+  const { t, direction, formatNumber } = useI18n();
   return (
     <div
       className="chart"
+      data-i18n="declarative"
       dir="ltr"
       role="img"
       aria-label={
         kind === "pressure"
-          ? t("اتجاه قراءات الضغط المسجلة خلال آخر 7 أيام، بوحدة mmHg")
-          : t("اتجاه قراءات السكر المسجلة خلال آخر 7 أيام، بوحدة mg/dL")
+          ? t("common.chart.pressureDescription")
+          : t("common.chart.glucoseDescription")
       }
     >
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -47,14 +48,16 @@ export function TrendChart({
             interval="preserveStartEnd"
           />
           <YAxis
+            tickFormatter={(value: number) => formatNumber(value)}
             tickLine={false}
             axisLine={false}
             tick={{ fill: "var(--muted)", fontSize: 11 }}
           />
           <Tooltip
+            formatter={(value) => typeof value === "number" ? formatNumber(value) : String(value)}
             contentStyle={{
               borderRadius: 12,
-              direction: language === "ar" ? "rtl" : "ltr",
+              direction,
               background: "var(--surface)", color: "var(--text)",
               borderColor: "var(--border)",
             }}
@@ -62,7 +65,7 @@ export function TrendChart({
           <Line
             type="monotone"
             dataKey={kind === "pressure" ? "systolic" : "glucose"}
-            name={t(kind === "pressure" ? "الانقباضي" : "السكر")}
+            name={t(kind === "pressure" ? "common.chart.systolic" : "common.chart.glucose")}
             stroke="var(--primary)"
             strokeWidth={3}
             dot={{ r: 3 }}
@@ -72,7 +75,7 @@ export function TrendChart({
             <Line
               type="monotone"
               dataKey="diastolic"
-              name={t("الانبساطي")}
+              name={t("common.chart.diastolic")}
               stroke="var(--info)"
               strokeWidth={2}
               dot={{ r: 3 }}

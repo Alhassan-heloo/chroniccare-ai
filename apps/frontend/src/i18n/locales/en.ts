@@ -3,6 +3,11 @@ import type { arCatalog } from "./ar";
 
 export const enCatalog = {
   common: {
+    reminder: { glucose: "Measure blood glucose", evening: "Today, at 10 PM" },
+    layout: { space: "My health space", daily: "Daily follow-up", demo: "Demo", notifications: "Notifications", showNotifications: "Show notifications", account: "Patient account", caption: "Your health space", mainNav: "Main navigation", start: "Your health starts with one step", noteFirst: "Simple tracking every day,", noteLast: "and care that lasts.", demoVersion: "Demo version", mobileNav: "Mobile navigation", health: "My health", assistant: "Assistant", more: "More", showMore: "Show more pages", notificationDemo: "Demo reminder inside the app; real notifications are not enabled.", skip: "Skip to content", footer: "Daily follow-up, in simple steps.", brandHome: "ChronicCare AI, home page", brandTagline: "Together toward a healthier life" },
+    preferences: { enableLight: "Enable light mode", enableDark: "Enable dark mode", lightTooltip: "Light mode", darkTooltip: "Dark mode", switchEnglish: "Switch to English", switchArabic: "Switch to Arabic", arabic: "العربية", english: "EN" },
+    navigation: { home: "Home", measurements: "My health & measurements", medications: "My medications", habits: "Daily habits", reports: "Reports", assistant: "Health assistant", profile: "My account" },
+    chart: { pressureDescription: "Trend of recorded blood pressure readings over the last 7 days, in mmHg", glucoseDescription: "Trend of recorded blood glucose readings over the last 7 days, in mg/dL", systolic: "Systolic", diastolic: "Diastolic", glucose: "Glucose" },
     actions: {
       cancel: "Cancel",
       close: "Close",

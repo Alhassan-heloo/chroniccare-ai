@@ -1,5 +1,10 @@
 export const arCatalog = {
   common: {
+    reminder: { glucose: "قياس السكر", evening: "اليوم، الساعة 10 مساءً" },
+    layout: { space: "مساحتي الصحية", daily: "متابعة يومية", demo: "عرض تجريبي", notifications: "التنبيهات", showNotifications: "عرض التنبيهات", account: "حساب المريض", caption: "مساحتك الصحية", mainNav: "القائمة الرئيسية", start: "صحتك تبدأ بخطوة", noteFirst: "متابعة بسيطة كل يوم،", noteLast: "واهتمام يدوم.", demoVersion: "نسخة تجريبية", mobileNav: "التنقل على الجوال", health: "صحتي", assistant: "المساعد", more: "المزيد", showMore: "عرض المزيد من الصفحات", notificationDemo: "تنبيه تجريبي داخل التطبيق؛ الإشعارات الفعلية غير مفعلة.", skip: "تجاوز إلى المحتوى", footer: "متابعة يومية، بخطوات بسيطة.", brandHome: "ChronicCare AI، الصفحة الرئيسية", brandTagline: "معًا نحو حياة أكثر صحة" },
+    preferences: { enableLight: "تفعيل المظهر الفاتح", enableDark: "تفعيل المظهر الداكن", lightTooltip: "المظهر الفاتح", darkTooltip: "المظهر الداكن", switchEnglish: "Switch to English", switchArabic: "التبديل إلى العربية", arabic: "العربية", english: "EN" },
+    navigation: { home: "الرئيسية", measurements: "صحتي وقياساتي", medications: "أدويتي", habits: "عاداتي اليومية", reports: "التقارير", assistant: "المساعد الصحي", profile: "حسابي" },
+    chart: { pressureDescription: "اتجاه قراءات الضغط المسجلة خلال آخر 7 أيام، بوحدة mmHg", glucoseDescription: "اتجاه قراءات السكر المسجلة خلال آخر 7 أيام، بوحدة mg/dL", systolic: "الانقباضي", diastolic: "الانبساطي", glucose: "السكر" },
     actions: {
       cancel: "إلغاء",
       close: "إغلاق",
