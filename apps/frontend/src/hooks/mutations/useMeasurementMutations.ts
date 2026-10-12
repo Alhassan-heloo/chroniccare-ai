@@ -6,7 +6,10 @@ import {
   deleteMeasurement,
 } from "@/lib/api/patient";
 import { queryKeys } from "@/lib/query/queryKeys";
-function useMeasurementFeedback(successMessage: string) {
+import { useI18n } from "@/i18n/context";
+import type { TranslationKey } from "@/i18n/catalog";
+function useMeasurementFeedback(successMessage: TranslationKey) {
+  const { t } = useI18n();
   const client = useQueryClient();
   return {
     onSuccess: async () => {
@@ -15,26 +18,26 @@ function useMeasurementFeedback(successMessage: string) {
         client.invalidateQueries({ queryKey: queryKeys.dashboard }),
         client.invalidateQueries({ queryKey: queryKeys.measurements }),
       ]);
-      toast.success(successMessage);
+      toast.success(t(successMessage));
     },
-    onError: () => toast.error("تعذر تنفيذ العملية. حاول مرة أخرى."),
+    onError: () => toast.error(t("measurements.ui.failed")),
   };
 }
 export function useAddMeasurement() {
   return useMutation({
     mutationFn: addMeasurement,
-    ...useMeasurementFeedback("تم حفظ القراءة مؤقتًا"),
+    ...useMeasurementFeedback("measurements.ui.saved"),
   });
 }
 export function useUpdateMeasurement() {
   return useMutation({
     mutationFn: updateMeasurement,
-    ...useMeasurementFeedback("تم تعديل القراءة"),
+    ...useMeasurementFeedback("measurements.ui.updated"),
   });
 }
 export function useDeleteMeasurement() {
   return useMutation({
     mutationFn: deleteMeasurement,
-    ...useMeasurementFeedback("تم حذف القراءة"),
+    ...useMeasurementFeedback("measurements.ui.deleted"),
   });
 }

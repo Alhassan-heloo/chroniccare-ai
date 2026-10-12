@@ -10,7 +10,9 @@ import { HabitProgressForm } from "@/components/health/HabitProgressForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
+import { useI18n } from "@/i18n/context";
 export default function HabitsPage() {
+  const { t, formatNumber, direction, locale } = useI18n();
   const { data = [], isPending, isError, refetch } = useHabits();
   const [form, setForm] = useState<Habit | "new" | null>(null);
   const [progress, setProgress] = useState<Habit | null>(null);
@@ -20,42 +22,41 @@ export default function HabitsPage() {
     (item) => progressToday(item) >= item.target,
   ).length;
   return (
-    <div className="stack">
-      <div className="section-heading measurements-heading">
+    <div className="stack" dir={direction}>
+      <div className="section-heading measurements-heading" data-i18n="declarative">
         <div>
-          <span className="eyebrow">خطوات صغيرة، كل يوم</span>
-          <h1>عاداتي اليومية</h1>
-          <p>حدد أهدافك وسجّل ما أنجزته اليوم.</p>
+          <span className="eyebrow">{t("habits.ui.eyebrow")}</span>
+          <h1>{t("habits.title")}</h1>
+          <p>{t("habits.ui.description")}</p>
         </div>
         <Button onClick={() => setForm("new")}>
           <Plus size={20} />
-          إضافة عادة
+          {t("habits.add")}
         </Button>
       </div>
-      <p className="measurements-notice">
-        بيانات تجريبية مؤقتة. يبدأ تقدم يوم جديد من صفر حسب توقيت جهازك، وتعود
-        أمثلة البداية عند تحديث الصفحة.
+      <p className="measurements-notice" data-i18n="declarative">
+        {t("habits.ui.notice")}
       </p>
       {isPending ? (
-        <Card className="empty-state" role="status">
-          جارٍ تحميل العادات…
+        <Card className="empty-state" role="status" data-i18n="declarative">
+          {t("habits.ui.loading")}
         </Card>
       ) : isError ? (
-        <Card className="empty-state" role="alert">
-          <p>تعذر تحميل العادات</p>
-          <Button onClick={() => void refetch()}>إعادة المحاولة</Button>
+        <Card className="empty-state" role="alert" data-i18n="declarative">
+          <p>{t("habits.ui.error")}</p>
+          <Button onClick={() => void refetch()}>{t("common.actions.retry")}</Button>
         </Card>
       ) : (
         <>
-          <Card className="medication-summary">
-            <h2>إنجاز اليوم</h2>
+          <Card className="medication-summary" data-i18n="declarative">
+            <h2>{t("habits.ui.achievement")}</h2>
             <p aria-live="polite">
-              {completed} من {data.length} عادات مكتملة
+              {t(new Intl.PluralRules(locale).select(data.length) === "one" ? "habits.completedSingle" : "habits.ui.completedSummary", { completed: formatNumber(completed), total: formatNumber(data.length) })}
             </p>
             <progress
               value={completed}
               max={data.length || 1}
-              aria-label="العادات المكتملة اليوم"
+              aria-label={t("habits.ui.completedLabel")}
             />
           </Card>
           {data.length ? (
@@ -71,10 +72,10 @@ export default function HabitsPage() {
               ))}
             </div>
           ) : (
-            <Card className="empty-state measurement-empty">
-              <h2>ابدأ بعادتك الأولى</h2>
-              <p>اختر هدفًا يوميًا مناسبًا لك.</p>
-              <Button onClick={() => setForm("new")}>إضافة عادة</Button>
+            <Card className="empty-state measurement-empty" data-i18n="declarative">
+              <h2>{t("habits.empty")}</h2>
+              <p>{t("habits.ui.emptyDescription")}</p>
+              <Button onClick={() => setForm("new")}>{t("habits.add")}</Button>
             </Card>
           )}
         </>
@@ -82,7 +83,8 @@ export default function HabitsPage() {
       <Modal
         open={!!form}
         onClose={() => setForm(null)}
-        title={form === "new" ? "إضافة عادة" : "تعديل العادة"}
+        title={t(form === "new" ? "habits.add" : "habits.ui.edit")}
+        declarativeTitle
       >
         {form && (
           <HabitForm
@@ -95,7 +97,8 @@ export default function HabitsPage() {
       <Modal
         open={!!progress}
         onClose={() => setProgress(null)}
-        title="تسجيل تقدم اليوم"
+        title={t("habits.ui.record")}
+        declarativeTitle
       >
         {progress && (
           <HabitProgressForm
@@ -110,23 +113,26 @@ export default function HabitsPage() {
         onClose={() => {
           if (!deletion.isPending) setDeleting(null);
         }}
-        title="حذف العادة؟"
+        title={t("habits.ui.deleteTitle")}
+        declarativeTitle
       >
         {deleting && (
           <div className="stack">
-            <p>
-              هل تريد حذف «{deleting.title}» وتقدمها المسجل؟ لا يمكن التراجع.
+            <p data-i18n="declarative">
+              {t("habits.ui.deleteQuestion", { name: deleting.title })}
             </p>
             <div className="confirmation-actions">
               <Button
+                data-i18n="declarative"
                 autoFocus
                 variant="secondary"
                 disabled={deletion.isPending}
                 onClick={() => setDeleting(null)}
               >
-                إلغاء
+                {t("common.actions.cancel")}
               </Button>
               <Button
+                data-i18n="declarative"
                 className="btn-danger"
                 disabled={deletion.isPending}
                 onClick={() =>
@@ -135,7 +141,7 @@ export default function HabitsPage() {
                   })
                 }
               >
-                تأكيد الحذف
+                {t("habits.ui.confirmDelete")}
               </Button>
             </div>
           </div>

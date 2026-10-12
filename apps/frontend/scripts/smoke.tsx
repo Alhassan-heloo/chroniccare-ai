@@ -181,6 +181,41 @@ for (const language of ["ar", "en", "ar", "en"] as const) {
   assert(html.includes(translateCatalogMessage(language, "patient.dashboard.summary")));
   assert(html.includes(translateCatalogMessage(language, "patient.overview.tasks")));
   assert(!html.includes("patient.overview."));
+  assert(html.includes("<bdi>"), "Profile name must use bidi isolation");
+  assert(html.includes("\u2068") && html.includes("\u2069"), "Welcome name must be isolated from surrounding direction");
+  client.setQueryData(queryKeys.measurements, await getMeasurements());
+  const measurementHtml = renderToString(<I18nContext value={context}><QueryClientProvider client={client}><RouterProvider router={createMemoryRouter(routes, { initialEntries: ["/patient/measurements"] })} /></QueryClientProvider></I18nContext>);
+  assert(measurementHtml.includes(translateCatalogMessage(language, "measurements.ui.history")));
+  assert(measurementHtml.includes(translateCatalogMessage(language, "measurements.ui.example")));
+  assert(!measurementHtml.includes("measurements.ui."));
+  const invalidReading = measurementSchema.safeParse({ kind: "bloodPressure", systolic: 80, diastolic: 90 });
+  assert.equal(invalidReading.success, false);
+  if (!invalidReading.success) {
+    assert(invalidReading.error.issues.some((issue) => issue.message === "measurements.ui.diastolicOrder"));
+    assert(translateCatalogMessage(language, "measurements.ui.diastolicOrder").length > 0);
+  }
+  assert.notEqual(translateCatalogMessage(language, "measurements.ui.saved"), "measurements.ui.saved");
+  client.setQueryData(queryKeys.measurements, []);
+  const emptyHtml = renderToString(<I18nContext value={context}><QueryClientProvider client={client}><RouterProvider router={createMemoryRouter(routes, { initialEntries: ["/patient/measurements"] })} /></QueryClientProvider></I18nContext>);
+  assert(emptyHtml.includes(translateCatalogMessage(language, "measurements.ui.first")));
+  client.setQueryData(queryKeys.habits, await getHabits());
+  const habitsHtml = renderToString(<I18nContext value={context}><QueryClientProvider client={client}><RouterProvider router={createMemoryRouter(routes, { initialEntries: ["/patient/habits"] })} /></QueryClientProvider></I18nContext>);
+  const formatter = createFormatters(language);
+  const sentence = translateCatalogMessage(language, "habits.ui.progress", { value: formatter.formatNumber(4500), target: formatter.formatNumber(10000), unit: formatter.formatHabitUnit("steps", 10000) });
+  const cups = translateCatalogMessage(language, "habits.ui.progress", { value: formatter.formatNumber(6), target: formatter.formatNumber(8), unit: formatter.formatHabitUnit("cups", 8) });
+  assert(habitsHtml.includes(sentence));
+  assert(habitsHtml.includes(cups));
+  if (language === "en") {
+    assert.equal(sentence, "4,500 of 10,000 steps");
+    assert.equal(cups, "6 of 8 cups");
+    assert(habitsHtml.includes("0 of 2 completed habits"));
+    assert(!/[\u0600-\u06ff]/.test(sentence + cups));
+    assert.equal(formatter.formatHabitUnit("steps", 1), "step");
+    assert.equal(formatter.formatHabitUnit("cups", 0), "cups");
+  } else {
+    assert.equal(sentence, "4,500 من 10,000 خطوة");
+    assert.equal(cups, "6 من 8 أكواب");
+  }
   client.clear();
 }
 for (const path of paths) {

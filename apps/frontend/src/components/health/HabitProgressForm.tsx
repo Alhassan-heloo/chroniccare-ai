@@ -4,12 +4,13 @@ import { z } from "zod";
 import type { Habit } from "@/lib/types/habit";
 import {
   habitProgressSchema,
-  habitUnits,
   progressToday,
 } from "@/lib/utils/habits";
 import { useSetHabitProgress } from "@/hooks/mutations/useHabitMutations";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useI18n } from "@/i18n/context";
+import { habitValidationKey } from "@/i18n/habitValidation";
 const schema = z.object({ value: habitProgressSchema });
 export function HabitProgressForm({
   habit,
@@ -18,6 +19,7 @@ export function HabitProgressForm({
   habit: Habit;
   onSaved: () => void;
 }) {
+  const { t, formatHabitUnit } = useI18n();
   const {
     register,
     handleSubmit,
@@ -29,6 +31,7 @@ export function HabitProgressForm({
   const mutation = useSetHabitProgress();
   return (
     <form
+      data-i18n="declarative"
       className="stack"
       noValidate
       onSubmit={handleSubmit(({ value }) =>
@@ -37,18 +40,17 @@ export function HabitProgressForm({
     >
       <p>{habit.title}</p>
       <Input
-        label={`إجمالي ما أنجزته اليوم (${habitUnits[habit.unit]})`}
+        label={t("habits.ui.totalToday", { unit: formatHabitUnit(habit.unit) })}
         type="number"
         inputMode="numeric"
         {...register("value", { valueAsNumber: true })}
-        error={errors.value?.message}
+        error={errors.value?.message ? t(habitValidationKey(errors.value.message)) : undefined}
       />
       <p className="muted medication-form-note">
-        هذه القيمة تستبدل إجمالي اليوم، ولا تضاف إليه. يمكنك إدخال صفر لإلغاء
-        تقدم اليوم.
+        {t("habits.ui.progressHint")}
       </p>
       <Button type="submit" disabled={mutation.isPending}>
-        حفظ التقدم
+        {t("habits.ui.saveProgress")}
       </Button>
     </form>
   );

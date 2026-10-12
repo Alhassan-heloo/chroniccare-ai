@@ -13,6 +13,8 @@ import {
 } from "@/hooks/mutations/useMeasurementMutations";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useI18n } from "@/i18n/context";
+import { isTranslationKey } from "@/i18n/catalog";
 export function MeasurementForm({
   onSaved,
   initial,
@@ -20,6 +22,8 @@ export function MeasurementForm({
   onSaved: () => void;
   initial?: Measurement;
 }) {
+  const { t, formatUnit } = useI18n();
+  const errorMessage = (message?: string) => message ? isTranslationKey(message) ? t(message) : t("measurements.ui.checkReading") : undefined;
   const [kind, setKind] = useState<MeasurementKind>(
     initial?.kind ?? "bloodPressure",
   );
@@ -33,6 +37,7 @@ export function MeasurementForm({
   const isPending = add.isPending || update.isPending;
   return (
     <form
+      data-i18n="declarative"
       className="stack"
       onSubmit={handleSubmit((values) => {
         if (initial)
@@ -44,9 +49,9 @@ export function MeasurementForm({
       })}
       noValidate
     >
-      <p className="muted">قراءة تجريبية، تحفظ حتى إعادة تحميل الصفحة.</p>
+      <p className="muted">{t("measurements.ui.formNotice")}</p>
       <div className="field">
-        <label htmlFor="reading-kind">نوع القراءة</label>
+        <label htmlFor="reading-kind">{t("measurements.ui.readingKind")}</label>
         <select
           id="reading-kind"
           value={kind}
@@ -60,39 +65,39 @@ export function MeasurementForm({
             );
           }}
         >
-          <option value="bloodPressure">ضغط الدم — mmHg</option>
-          <option value="glucose">سكر الدم — mg/dL</option>
+          <option value="bloodPressure">{t("measurements.bloodPressure")} — {formatUnit("mmHg")}</option>
+          <option value="glucose">{t("measurements.bloodGlucose")} — {formatUnit("mg/dL")}</option>
         </select>
       </div>
       {kind === "bloodPressure" ? (
         <div className="form-grid">
           <Input
-            label="الضغط الانقباضي"
+            label={t("measurements.ui.systolic")}
             type="number"
             inputMode="numeric"
             {...register("systolic", { valueAsNumber: true })}
-            error={getFieldState("systolic", formState).error?.message}
+            error={errorMessage(getFieldState("systolic", formState).error?.message)}
           />
           <Input
-            label="الضغط الانبساطي"
+            label={t("measurements.ui.diastolic")}
             type="number"
             inputMode="numeric"
             {...register("diastolic", { valueAsNumber: true })}
-            error={getFieldState("diastolic", formState).error?.message}
+            error={errorMessage(getFieldState("diastolic", formState).error?.message)}
           />
         </div>
       ) : (
         <Input
-          label="سكر الدم"
+          label={t("measurements.bloodGlucose")}
           type="number"
           step="any"
           inputMode="decimal"
           {...register("value", { valueAsNumber: true })}
-          error={getFieldState("value", formState).error?.message}
+          error={errorMessage(getFieldState("value", formState).error?.message)}
         />
       )}
       <Button type="submit" disabled={isPending}>
-        {isPending ? "جارٍ الحفظ…" : initial ? "حفظ التعديلات" : "حفظ القراءة"}
+        {t(isPending ? "measurements.ui.saving" : initial ? "measurements.ui.saveChanges" : "measurements.ui.saveReading")}
       </Button>
     </form>
   );

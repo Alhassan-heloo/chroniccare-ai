@@ -8,6 +8,9 @@ import {
 } from "@/hooks/mutations/useHabitMutations";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useI18n } from "@/i18n/context";
+import { habitValidationKey } from "@/i18n/habitValidation";
+import type { HabitUnit } from "@/i18n/formatters";
 export function HabitForm({
   initial,
   onSaved,
@@ -15,6 +18,7 @@ export function HabitForm({
   initial?: Habit;
   onSaved: () => void;
 }) {
+  const { t, formatHabitUnit } = useI18n();
   const {
     register,
     handleSubmit,
@@ -27,6 +31,7 @@ export function HabitForm({
   const update = useUpdateHabit();
   return (
     <form
+      data-i18n="declarative"
       className="stack"
       noValidate
       onSubmit={handleSubmit((input) =>
@@ -36,35 +41,35 @@ export function HabitForm({
       )}
     >
       <Input
-        label="اسم العادة"
+        label={t("habits.ui.name")}
         {...register("title")}
-        error={errors.title?.message}
+        error={errors.title?.message ? t(habitValidationKey(errors.title.message)) : undefined}
       />
       <div className="field">
-        <label htmlFor="habit-unit">وحدة القياس</label>
+        <label htmlFor="habit-unit">{t("habits.ui.unit")}</label>
         <select id="habit-unit" {...register("unit")}>
-          {Object.entries(habitUnits).map(([key, label]) => (
+          {Object.keys(habitUnits).map((key) => (
             <option key={key} value={key}>
-              {label}
+              {formatHabitUnit(key as HabitUnit)}
             </option>
           ))}
         </select>
       </div>
       <Input
-        label="الهدف اليومي"
+        label={t("habits.ui.target")}
         type="number"
         inputMode="numeric"
         {...register("target", { valueAsNumber: true })}
-        error={errors.target?.message}
+        error={errors.target?.message ? t(habitValidationKey(errors.target.message)) : undefined}
       />
       <p className="muted medication-form-note">
-        حدد الهدف المناسب لك. الأهداف الافتراضية أمثلة وليست توصيات صحية.
+        {t("habits.ui.advice")}
         {initial
-          ? " تغيير الوحدة يصفر تقدم اليوم؛ تغيير الهدف يبقي المقدار المسجل."
+          ? ` ${t("habits.ui.changeHint")}`
           : ""}
       </p>
       <Button type="submit" disabled={add.isPending || update.isPending}>
-        حفظ العادة
+        {t("habits.ui.save")}
       </Button>
     </form>
   );

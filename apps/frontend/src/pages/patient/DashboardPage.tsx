@@ -46,7 +46,7 @@ export default function DashboardPage() {
         <div>
           <span className="eyebrow" data-i18n="declarative">{t("patient.overview.eyebrow")}</span>
           <h1>
-            <span data-i18n="declarative">{t("patient.dashboard.welcome", { name: data.patient.name })}</span> <span className="wave">☀</span>
+            <span data-i18n="declarative">{t("patient.dashboard.welcome", { name: `\u2068${data.patient.name}\u2069` })}</span> <span className="wave">☀</span>
           </h1>
           <p data-i18n="declarative">{t("patient.dashboard.summary")}</p>
         </div>

@@ -7,7 +7,10 @@ import {
   setHabitProgress,
 } from "@/lib/api/habits";
 import { queryKeys } from "@/lib/query/queryKeys";
-function useFeedback(message: string) {
+import { useI18n } from "@/i18n/context";
+import type { TranslationKey } from "@/i18n/catalog";
+function useFeedback(message: TranslationKey) {
+  const { t } = useI18n();
   const client = useQueryClient();
   return {
     onSuccess: async () => {
@@ -16,32 +19,32 @@ function useFeedback(message: string) {
         client.invalidateQueries({ queryKey: queryKeys.habits }),
         client.invalidateQueries({ queryKey: queryKeys.dashboard }),
       ]);
-      toast.success(message);
+      toast.success(t(message));
     },
-    onError: () => toast.error("تعذر تحديث العادة. حاول مرة أخرى."),
+    onError: () => toast.error(t("habits.ui.failed")),
   };
 }
 export function useAddHabit() {
   return useMutation({
     mutationFn: addHabit,
-    ...useFeedback("تمت إضافة العادة"),
+    ...useFeedback("habits.ui.added"),
   });
 }
 export function useUpdateHabit() {
   return useMutation({
     mutationFn: updateHabit,
-    ...useFeedback("تم تعديل العادة"),
+    ...useFeedback("habits.ui.updated"),
   });
 }
 export function useDeleteHabit() {
   return useMutation({
     mutationFn: deleteHabit,
-    ...useFeedback("تم حذف العادة"),
+    ...useFeedback("habits.ui.deleted"),
   });
 }
 export function useSetHabitProgress() {
   return useMutation({
     mutationFn: setHabitProgress,
-    ...useFeedback("تم تحديث تقدم اليوم"),
+    ...useFeedback("habits.ui.progressUpdated"),
   });
 }

@@ -10,6 +10,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc -b && tsc -p scripts/tsconfig.json",
     "test:smoke": "node scripts/smoke.mjs",
+    "test:responsive": "node scripts/responsive.mjs",
     "check:translations": "node scripts/check-translations.mjs",
     "test": "npm run test:smoke",
     "check": "npm run check:translations"

@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { MeasurementFilters as Filters } from "@/lib/types/measurementFilters";
+import { useI18n } from "@/i18n/context";
 export function MeasurementFilters({
   value,
   onChange,
@@ -9,12 +10,13 @@ export function MeasurementFilters({
   value: Filters;
   onChange: (value: Filters) => void;
 }) {
+  const { t } = useI18n();
   const invalidRange = !!value.from && !!value.to && value.from > value.to;
   return (
-    <Card className="measurements-filters">
+    <Card className="measurements-filters" data-i18n="declarative">
       <div className="filter-fields">
         <div className="field">
-          <label htmlFor="filter-kind">نوع القياس</label>
+          <label htmlFor="filter-kind">{t("measurements.ui.filterKind")}</label>
           <select
             id="filter-kind"
             value={value.kind}
@@ -25,24 +27,24 @@ export function MeasurementFilters({
               })
             }
           >
-            <option value="all">كل القياسات</option>
-            <option value="bloodPressure">ضغط الدم</option>
-            <option value="glucose">سكر الدم</option>
+            <option value="all">{t("measurements.ui.all")}</option>
+            <option value="bloodPressure">{t("measurements.bloodPressure")}</option>
+            <option value="glucose">{t("measurements.bloodGlucose")}</option>
           </select>
         </div>
         <Input
-          label="من تاريخ"
+          label={t("measurements.ui.from")}
           type="date"
           value={value.from}
           onChange={(event) => onChange({ ...value, from: event.target.value })}
         />
         <Input
-          label="إلى تاريخ"
+          label={t("measurements.ui.to")}
           type="date"
           value={value.to}
           error={
             invalidRange
-              ? "اختر تاريخًا يساوي تاريخ البداية أو يأتي بعده"
+              ? t("measurements.ui.invalidRange")
               : undefined
           }
           onChange={(event) => onChange({ ...value, to: event.target.value })}
@@ -51,11 +53,11 @@ export function MeasurementFilters({
           variant="secondary"
           onClick={() => onChange({ kind: "all", from: "", to: "" })}
         >
-          مسح الفلاتر
+          {t("measurements.ui.clear")}
         </Button>
       </div>
       <p className="filter-caption">
-        يشمل البحث يوم البداية والنهاية حسب توقيت جهازك.
+        {t("measurements.ui.rangeHint")}
       </p>
     </Card>
   );

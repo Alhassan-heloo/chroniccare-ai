@@ -33,7 +33,7 @@ export function Header() {
         <Link to="/patient/profile" className="profile-link">
           <span className="avatar">{language === "ar" ? "م" : "M"}</span>
           <span className="profile-name">
-            {data?.patient.name ?? <span data-i18n="declarative">{t("common.navigation.profile")}</span>}
+            {data?.patient.name ? <bdi>{data.patient.name}</bdi> : <span data-i18n="declarative">{t("common.navigation.profile")}</span>}
             <small data-i18n="declarative">{t("common.layout.account")}</small>
           </span>
           <ChevronDown size={16} />

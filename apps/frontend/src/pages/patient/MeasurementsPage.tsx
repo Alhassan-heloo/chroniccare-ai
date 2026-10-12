@@ -7,8 +7,6 @@ import type { Measurement } from "@/lib/types/measurement";
 import type { MeasurementFilters as Filters } from "@/lib/types/measurementFilters";
 import {
   filterMeasurements,
-  measurementLabel,
-  measurementValue,
 } from "@/lib/utils/measurementFilters";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -16,8 +14,10 @@ import { Modal } from "@/components/ui/Modal";
 import { MeasurementFilters } from "@/components/health/MeasurementFilters";
 import { MeasurementListCard } from "@/components/health/MeasurementListCard";
 import { MeasurementForm } from "@/components/health/MeasurementForm";
+import { useI18n } from "@/i18n/context";
 
 export default function MeasurementsPage() {
+  const { t, formatNumber } = useI18n();
   const { data = [], isPending, isError, refetch } = useMeasurements();
   const { openMeasurement } = useDashboardActions();
   const [filters, setFilters] = useState<Filters>({
@@ -32,60 +32,59 @@ export default function MeasurementsPage() {
     !!filters.from && !!filters.to && filters.from > filters.to;
   const filtered = invalidRange ? [] : filterMeasurements(data, filters);
   return (
-    <div className="stack measurements-page">
+    <div className="stack measurements-page" data-i18n="declarative">
       <div className="section-heading measurements-heading">
         <div>
-          <span className="eyebrow">خطوة بخطوة، تابع صحتك</span>
-          <h1>صحتي وقياساتي</h1>
-          <p>سجل قراءاتك وراجعها في مكان واحد.</p>
+          <span className="eyebrow">{t("measurements.ui.eyebrow")}</span>
+          <h1>{t("measurements.title")}</h1>
+          <p>{t("measurements.ui.description")}</p>
         </div>
         <Button onClick={openMeasurement}>
           <Plus size={21} />
-          إضافة قراءة جديدة
+          {t("measurements.add")}
         </Button>
       </div>
       <p className="measurements-notice">
-        نسخة تجريبية: يبدأ السجل بأمثلة لآخر 7 أيام. التغييرات مؤقتة وتعود أمثلة
-        البداية عند تحديث الصفحة. لا يتم تقييم القراءات طبيًا.
+        {t("measurements.ui.notice")}
       </p>
       <MeasurementFilters value={filters} onChange={setFilters} />
       {isPending ? (
         <Card className="empty-state" role="status">
-          جارٍ تحميل القياسات…
+          {t("measurements.ui.loading")}
         </Card>
       ) : isError ? (
         <Card className="empty-state" role="alert">
-          <p>تعذر تحميل سجل القياسات.</p>
-          <Button onClick={() => void refetch()}>إعادة المحاولة</Button>
+          <p>{t("measurements.ui.loadError")}</p>
+          <Button onClick={() => void refetch()}>{t("common.actions.retry")}</Button>
         </Card>
       ) : (
         <>
           <div className="section-heading">
-            <h2>سجل القراءات</h2>
+            <h2>{t("measurements.ui.history")}</h2>
             <p role="status" aria-live="polite">
-              {filtered.length} من {data.length} قراءة
+              {t("measurements.ui.count", { shown: formatNumber(filtered.length), total: formatNumber(data.length) })}
             </p>
           </div>
           {invalidRange ? (
             <Card className="empty-state">
-              عدّل الفترة الزمنية لعرض النتائج.
+              {t("measurements.ui.adjustRange")}
             </Card>
           ) : data.length === 0 ? (
             <Card className="empty-state measurement-empty">
               <Activity size={36} />
-              <h2>ابدأ بأول قراءة</h2>
-              <p>أضف قياس الضغط أو السكر ليظهر هنا وفي لوحة المريض.</p>
-              <Button onClick={openMeasurement}>إضافة قراءة</Button>
+              <h2>{t("measurements.ui.first")}</h2>
+              <p>{t("measurements.ui.firstDescription")}</p>
+              <Button onClick={openMeasurement}>{t("measurements.add")}</Button>
             </Card>
           ) : filtered.length === 0 ? (
             <Card className="empty-state measurement-empty">
-              <h2>لا توجد قراءات مطابقة</h2>
-              <p>جرّب نوعًا آخر أو وسّع الفترة الزمنية.</p>
+              <h2>{t("measurements.ui.noMatches")}</h2>
+              <p>{t("measurements.ui.broaden")}</p>
               <Button
                 variant="secondary"
                 onClick={() => setFilters({ kind: "all", from: "", to: "" })}
               >
-                عرض جميع القراءات
+                {t("measurements.ui.showAll")}
               </Button>
             </Card>
           ) : (
@@ -105,7 +104,8 @@ export default function MeasurementsPage() {
       <Modal
         open={!!editing}
         onClose={() => setEditing(null)}
-        title="تعديل القراءة"
+        title={t("measurements.ui.edit")}
+        declarativeTitle
       >
         {editing && (
           <MeasurementForm
@@ -120,17 +120,16 @@ export default function MeasurementsPage() {
         onClose={() => {
           if (!deletion.isPending) setDeleting(null);
         }}
-        title="حذف القراءة؟"
+        title={t("measurements.ui.deleteTitle")}
+        declarativeTitle
       >
         {deleting && (
           <div className="stack">
             <p>
-              هل تريد حذف قراءة {measurementLabel(deleting)}{" "}
-              <bdi>{measurementValue(deleting)}</bdi>؟ لا يمكن التراجع عن الحذف.
+              {t("measurements.ui.deleteQuestion", { kind: t(deleting.kind === "bloodPressure" ? "measurements.bloodPressure" : "measurements.bloodGlucose"), value: deleting.kind === "bloodPressure" ? `${formatNumber(deleting.systolic)}/${formatNumber(deleting.diastolic)}` : formatNumber(deleting.value) })}
             </p>
             <p className="muted">
-              ستعرض لوحة المريض القراءة السابقة من نفس النوع، أو المثال
-              الافتراضي إذا أصبح السجل فارغًا.
+              {t("measurements.ui.deleteHint")}
             </p>
             <div className="confirmation-actions">
               <Button
@@ -139,7 +138,7 @@ export default function MeasurementsPage() {
                 disabled={deletion.isPending}
                 onClick={() => setDeleting(null)}
               >
-                إلغاء
+                {t("common.actions.cancel")}
               </Button>
               <Button
                 className="btn-danger"
@@ -150,7 +149,7 @@ export default function MeasurementsPage() {
                   })
                 }
               >
-                {deletion.isPending ? "جارٍ الحذف…" : "تأكيد الحذف"}
+                {t(deletion.isPending ? "measurements.ui.deleting" : "measurements.ui.confirmDelete")}
               </Button>
             </div>
           </div>
