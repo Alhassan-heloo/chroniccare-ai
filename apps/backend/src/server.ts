@@ -1,11 +1,12 @@
 import { createApp } from "./app.js";
 import { readEnvironment } from "./config/env.js";
 import { checkDatabase, createDatabasePool } from "./db/pool.js";
+import { postgresAuthStore } from "./auth/store.js";
 
 async function start() {
   const config = readEnvironment();
   const pool = createDatabasePool(config);
-  const app = createApp({ corsOrigins: config.corsOrigins, checkDatabase: () => checkDatabase(pool) });
+  const app = createApp({ corsOrigins: config.corsOrigins, checkDatabase: () => checkDatabase(pool), authStore: postgresAuthStore(pool) });
   const server = app.listen(config.port, config.host, () => {
     console.log(`ChronicCare API listening on http://${config.host}:${config.port}`);
   });

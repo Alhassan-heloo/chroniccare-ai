@@ -29,8 +29,9 @@ test("real PostgreSQL: connectivity, migrations, idempotence, checksums, rollbac
     await checkDatabase(pool);
     const tables = await pool.query<{ tablename: string }>(`SELECT tablename FROM pg_tables
       WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+      AND NOT (schemaname = 'chroniccare' AND tablename IN ('users', 'sessions'))
       AND NOT (schemaname = 'public' AND tablename = 'chroniccare_schema_migrations')`);
-    assert.equal(tables.rows.length, 0, "Use an empty dedicated test database; existing application tables are not allowed.");
+    assert.equal(tables.rows.length, 0, "Use a dedicated test database with only known migration-owned tables.");
     const migrations = await loadMigrations();
     await applyMigrations(pool, migrations);
     assert.deepEqual(await applyMigrations(pool, migrations), []);

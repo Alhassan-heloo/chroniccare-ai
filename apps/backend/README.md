@@ -1,8 +1,9 @@
-# ChronicCare AI — Backend foundation (Task 1A)
+# ChronicCare AI — Backend (Tasks 1A and 1B)
 
 This is a separate Node.js + Express + TypeScript package. The frontend remains
-unchanged and continues using its existing in-memory demo adapters. There is no
-login, patient CRUD, AI, FCM, or patient-data endpoint in this task.
+unchanged and continues using its existing in-memory demo adapters. Real backend
+authentication is available; no login UI, patient CRUD, AI, FCM, or patient-data
+endpoints are added in Task 1B.
 
 ## Requirements and Windows setup
 
@@ -102,10 +103,10 @@ a real connection attempt and logs only a generic success/unavailable message.
 All other routes return JSON 404. Errors use `{ error: { code, message } }`.
 Helmet headers, no-store responses, a 32 KB JSON limit, bounded pool/query/socket
 timeouts, and an explicit CORS allowlist form the initial security baseline.
-Only GET/HEAD/OPTIONS are advertised by CORS in this phase. Requests with a
+GET/HEAD/POST/OPTIONS and Content-Type/Authorization are advertised by CORS. Requests with a
 disallowed Origin receive 403; requests without Origin are allowed. **CORS is
-not authentication**. Cookies, authentication, rate limits for sensitive flows,
-and authorization policies belong to the relevant future tasks. Do not expose
+not authentication**. Authentication and role guards are described below;
+feature-specific authorization policies belong to their future tasks. Do not expose
 patient data by adding routes before those protections exist.
 
 `trust proxy` is false. Production deployment must configure trusted proxy hops,
@@ -174,17 +175,140 @@ apps/backend/
   .env.example
   package.json, package-lock.json
   tsconfig.json, tsconfig.test.json, eslint.config.js
-  migrations/001_backend_foundation.sql
+  migrations/001_backend_foundation.sql, 002_authentication.sql
   src/
     app.ts, server.ts
+    auth/store.ts, security.ts, middleware.ts, provision.ts
     config/env.ts
     db/pool.ts, check.ts, migrations.ts, migrate.ts
     middleware/errors.ts
-    routes/index.ts, health.ts
-  tests/app.test.ts, env.test.ts, database.test.ts
+    routes/index.ts, health.ts, auth.ts
+  tests/app.test.ts, env.test.ts, database.test.ts, auth.test.ts
 ```
 
 Runtime: Express (HTTP/routing), pg (PostgreSQL pool), Helmet (security headers),
-cors (explicit browser-origin policy). Development: TypeScript and type packages,
-tsx (development/test execution), ESLint with TypeScript support. No ORM, auth,
+cors (explicit browser-origin policy), argon2 (password hashing), and
+express-rate-limit (bounded authentication attempts). Development: TypeScript and type packages,
+tsx (development/test execution), ESLint with TypeScript support. No ORM,
 AI, Firebase, frontend dependency changes, or root-workspace restructuring.
+
+## Task 1B: Authentication and authorization
+
+Apply the new versioned migration (do not edit `001` or reset the database):
+
+```powershell
+Set-Location C:\Users\msi\Desktop\chroniccare-ai\apps\backend
+npm.cmd ci
+npm.cmd run db:check
+npm.cmd run db:migrate
+npm.cmd run dev
+```
+
+`002_authentication.sql` adds `chroniccare.users` and `chroniccare.sessions`,
+with UUID account IDs, unique lowercase emails, Argon2id password hashes,
+constrained patient/doctor/admin roles, timestamps, expiring session hashes,
+foreign keys, and session indexes. Existing application data is not changed.
+
+### API contract
+
+| Endpoint | Request / authorization | Success |
+| --- | --- | --- |
+| POST `/api/auth/register` | JSON `{ "name": "Demo", "email": "demo@example.test", "password": "a-long-unique-password" }` | 201 `{ user }`, patient only; does not log in automatically |
+| POST `/api/auth/login` | JSON `{ email, password }` | 200 `{ user, token, expiresAt }` |
+| GET `/api/auth/me` | `Authorization: Bearer <token>` | 200 `{ user }` |
+| POST `/api/auth/logout` | Same bearer header | 204, current session deleted |
+
+User objects contain **only** `id`, `name`, `email`, `role`. Passwords/hashes are
+never returned. Inputs reject unknown properties (including role/id/isAdmin).
+Name: trimmed 1–100 characters. Email: trimmed, lowercase, basic email shape,
+up to 254 characters. Password: 12–128 characters, never trimmed or normalized.
+Invalid input: 400 `INVALID_INPUT`; duplicate email: 409 `ACCOUNT_EXISTS`;
+wrong/unknown credentials: same 401 `INVALID_CREDENTIALS`; missing, revoked,
+malformed, expired tokens: 401 `UNAUTHENTICATED`; wrong role: 403 `FORBIDDEN`.
+Duplicate registration discloses account existence; no other account details
+are exposed. This deliberate behavior supports a straightforward sign-up flow.
+
+Passwords use Argon2id (19 MiB, two iterations, one lane, random per-hash salt).
+Session tokens use 32 cryptographically random bytes. Only SHA-256 digests are
+stored; tokens expire after eight hours, with no sliding refresh. Login creates
+a new independent session. Logout revokes that session immediately server-side;
+other devices remain logged in. Expired rows do not authenticate; operators can
+periodically execute `DELETE FROM chroniccare.sessions WHERE expires_at <= now()`
+to reclaim storage. No plaintext token or authentication signing secret is stored
+in configuration. Never log Authorization headers or login response bodies.
+
+For future React integration, send the bearer header explicitly, keep the token
+in memory (not localStorage/URLs), and clear it on logout/401. Reload requires
+login again. This task adds no browser persistence or UI. Cookies are not used,
+so no ambient-cookie CSRF flow is introduced. CORS credentials remain disabled;
+CORS is not authorization. Use HTTPS for all non-loopback deployments.
+
+`requireAuth(store)` resolves a live session and current account from PostgreSQL
+on every request. Follow it with `requireRoles("patient")`, `requireRoles("doctor")`,
+or `requireRoles("admin")` (explicit allowlists, no implicit admin bypass). Guards
+are tested using test-only routes; no artificial role/data endpoints are exposed.
+There is no role-update endpoint. Role changes require a later reviewed workflow.
+
+### Initial administrator and doctor provisioning (local operator only)
+
+Public registration never accepts a role and always creates a patient. Doctors
+are created by a trusted operator after offline identity verification; self-
+declared doctor registration is deliberately not permitted. This avoids granting
+clinical privileges to an unverified user. No doctor approval workflow is added.
+
+Provisioning requires local shell access and database credentials. It only inserts
+new accounts; it never changes an existing account or password. Initial admin
+creation is serialized using a transaction lock and refuses if any admin exists.
+No default admin credentials are supplied or created automatically.
+
+Run in a private PowerShell terminal (not in chat, scripts committed to Git, or
+command arguments). `Read-Host -AsSecureString` masks the password. The plaintext
+exists briefly in this shell's process environment for the child command, and is
+removed in `finally`; do not use `setx`, print the environment, or save the value
+in `.env`. Use a unique password of 12–128 characters.
+
+```powershell
+$accountPassword = Read-Host 'New account password' -AsSecureString
+$passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($accountPassword)
+try {
+  $env:AUTH_PROVISION_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($passwordPointer)
+  npm.cmd run auth:provision -- admin admin@example.test 'Initial Admin'
+  # To provision a verified doctor instead, replace the preceding command with:
+  # npm.cmd run auth:provision -- doctor doctor@example.test 'Verified Doctor'
+} finally {
+  Remove-Item Env:AUTH_PROVISION_PASSWORD -ErrorAction SilentlyContinue
+  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordPointer)
+  $accountPassword.Dispose()
+}
+```
+
+Replace the example email/name locally. Do not run both commands with one
+password. The provisioner reports generic failures only, including duplicate
+email, existing admin, invalid inputs, connectivity, or missing migrations.
+
+### Verification and deployment boundaries
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run lint
+npm.cmd test
+npm.cmd run build
+git diff --check
+```
+
+Authentication regression tests run real HTTP requests with an in-memory store
+and the real password hashing library. With `TEST_DATABASE_URL` pointing at a
+separate database ending in `_test`, the same scenario also runs against real
+PostgreSQL, with unique accounts inside a transaction rolled back at the end.
+Migration-owned tables/ledger remain in that dedicated test database. Migration
+tests reject unknown tables. Never point tests at the application database.
+Without a test database the PostgreSQL integration tests explicitly skip.
+
+Login and registration share a per-process/IP limit of 20 requests per 15 minutes,
+including validation failures (429 `RATE_LIMITED`). `trust proxy` remains false:
+configure trusted proxy hops and a shared/edge rate limit before deploying behind
+a proxy or using multiple instances. A restart resets the in-memory limiter.
+Production also requires HTTPS, backups, least-privilege DB access, log redaction,
+and secret management. Email verification, password reset/change, MFA, session
+management UI, and role administration are not implemented in Task 1B. Do not
+treat the current foundation as a complete production identity platform.

@@ -3,8 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": "^22.13.0 || >=24" },
+  "engines": {
+    "node": "^22.13.0 || >=24"
+  },
   "scripts": {
+    "auth:provision": "node --env-file-if-exists=.env --import tsx src/auth/provision.ts",
     "dev": "node --env-file-if-exists=.env --import tsx --watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node --env-file-if-exists=.env dist/server.js",
@@ -15,8 +18,10 @@
     "db:migrate": "node --env-file-if-exists=.env --import tsx src/db/migrate.ts"
   },
   "dependencies": {
+    "argon2": "^0.44.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.7.1",
     "helmet": "^8.1.0",
     "pg": "^8.16.0"
   },
