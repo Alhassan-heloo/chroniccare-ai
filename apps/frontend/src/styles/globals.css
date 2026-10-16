@@ -1598,6 +1598,18 @@ dialog::backdrop {
   font-size: 14px;
   line-height: 1.8;
 }
+.auth-shell { max-width: 900px; margin-inline: auto; }
+.auth-heading, .session-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.auth-heading { margin-block-end: 24px; }
+.auth-card { width: 100%; max-width: 480px; margin: 0 auto 24px; padding: clamp(16px, 4vw, 32px); overflow-wrap: anywhere; }
+.auth-card h1 { font-size: clamp(26px, 5vw, 36px); }
+.auth-card fieldset { border: 0; padding: 0; margin: 20px 0; min-width: 0; display: grid; gap: 14px; }
+.auth-card .field, .auth-card input { min-width: 0; width: 100%; }
+.auth-card p { margin-block: 14px; }
+.auth-card .btn { white-space: normal; }
+.session-bar { padding: 8px 20px; background: var(--surface); border-block-end: 1px solid var(--border); overflow-wrap: anywhere; }
+.session-bar > * { min-width: 0; }
+@media (max-width: 430px) { .auth-heading { flex-direction: column; align-items: stretch; } .auth-heading .preferences { justify-content: center; } .session-bar { font-size: 13px; gap: 8px; } }
 .report-chart-key {
   display: flex;
   align-items: center;

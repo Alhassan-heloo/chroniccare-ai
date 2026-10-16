@@ -22,9 +22,23 @@ import { medicationSchema } from "../src/lib/utils/medicationSchema";
 import { summarizeMedications } from "../src/lib/utils/medications";
 import assert from "node:assert/strict";
 import { renderToString } from "react-dom/server";
-import { createMemoryRouter, RouterProvider } from "react-router";
+import { createMemoryRouter, RouterProvider, Outlet, useLocation } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { routes } from "../src/app/routes";
+import { routes as applicationRoutes } from "../src/app/routes";
+import { AuthContext, type AuthValue } from "../src/auth/context";
+import { safeReturnTo } from "../src/auth/api";
+const testAuth: AuthValue = { user: null, demo: true, expired: false, login: async () => { throw new Error("Not used in SSR"); }, register: async () => {}, logout: async () => {}, enterDemo: async () => {} };
+// Keep existing demo page checks explicit; production routes default to unauthenticated.
+export function DemoFixture() {
+  const { pathname } = useLocation();
+  const role = pathname.startsWith("/doctor/") ? "doctor" : pathname.startsWith("/admin/") ? "admin" : null;
+  return <AuthContext value={role ? { ...testAuth, demo: false, user: { id: "fixture", name: "Fixture", email: "fixture@example.test", role } } : testAuth}><Outlet /></AuthContext>;
+}
+const routes = [{ element: <DemoFixture />, children: applicationRoutes }];
+assert.equal(safeReturnTo("https://example.com", "patient"), "/patient/dashboard");
+assert.equal(safeReturnTo("//example.com", "patient"), "/patient/dashboard");
+assert.equal(safeReturnTo("/admin/dashboard", "patient"), "/patient/dashboard");
+assert.equal(safeReturnTo("/patient/measurements?a=1#history", "patient"), "/patient/measurements?a=1#history");
 import { queryKeys } from "../src/lib/query/queryKeys";
 import {
   getPatientDashboard,

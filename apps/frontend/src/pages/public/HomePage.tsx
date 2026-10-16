@@ -9,7 +9,11 @@ import {
 import { Brand } from "@/components/layout/Brand";
 import { Card } from "@/components/ui/Card";
 import { Preferences } from "@/components/layout/Preferences";
+import { useAuth } from "@/auth/context";
+import { useNavigate } from "react-router";
 export default function HomePage() {
+  const { enterDemo } = useAuth();
+  const navigate = useNavigate();
   return (
     <div className="home">
       <header className="public-header">
@@ -37,7 +41,10 @@ export default function HomePage() {
               مساحتك اليومية لمتابعة القياسات والأدوية والعادات الصحية، بخطوات
               بسيطة وواضحة.
             </p>
-            <Link to="/patient/dashboard" className="btn btn-primary hero-cta">
+            <Link to="/patient/dashboard" className="btn btn-primary hero-cta" onClick={(event) => {
+              event.preventDefault();
+              void enterDemo().then(() => navigate("/patient/dashboard")).catch(() => navigate("/login"));
+            }}>
               استكشف لوحة المريض <ArrowLeft size={21} />
             </Link>
             <small>نسخة تجريبية · لا تحتاج إلى حساب</small>

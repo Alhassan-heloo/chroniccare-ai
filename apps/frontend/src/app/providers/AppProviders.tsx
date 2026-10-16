@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/theme/ThemeProvider";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import { useI18n } from "@/i18n/context";
 import { useTheme } from "@/theme/context";
+import { AuthProvider } from "@/auth/AuthProvider";
 function Feedback({ children }: { children: ReactNode }) {
   const { language } = useI18n();
   const { resolved } = useTheme();
@@ -14,7 +15,7 @@ function Feedback({ children }: { children: ReactNode }) {
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider><I18nProvider><QueryClientProvider client={queryClient}>
-      <Feedback>{children}</Feedback>
+      <AuthProvider><Feedback>{children}</Feedback></AuthProvider>
     </QueryClientProvider></I18nProvider></ThemeProvider>
   );
 }

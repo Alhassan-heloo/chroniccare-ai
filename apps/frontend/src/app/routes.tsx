@@ -14,9 +14,10 @@ import {
 } from "@/pages/patient/PlaceholderPages";
 import { DoctorDashboard, DoctorPatients } from "@/pages/doctor/DoctorPages";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+import { ProtectedRoute, SessionBar } from "@/auth/RouteAccess";
 export const routes: RouteObject[] = [
   {
-    element: <Outlet />,
+    element: <><SessionBar /><Outlet /></>,
     errorElement: (
       <main className="public-shell">
         <PlaceholderPage
@@ -27,12 +28,12 @@ export const routes: RouteObject[] = [
     ),
     children: [
       { path: "/", element: <HomePage /> },
-      { path: "/login", element: <AuthPage mode="login" /> },
-      { path: "/register", element: <AuthPage mode="register" /> },
+      { path: "/login", element: <AuthPage key="login" mode="login" /> },
+      { path: "/register", element: <AuthPage key="register" mode="register" /> },
       {
         path: "/patient",
-        element: <DashboardLayout />,
-        children: [
+        element: <ProtectedRoute role="patient" />,
+        children: [{ element: <DashboardLayout />, children: [
           { path: "dashboard", element: <DashboardPage /> },
           { path: "measurements", element: <MeasurementsPage /> },
           { path: "medications", element: <MedicationsPage /> },
@@ -40,31 +41,34 @@ export const routes: RouteObject[] = [
           { path: "reports", element: <ReportsPage /> },
           { path: "assistant", element: <AssistantPage /> },
           { path: "profile", element: <ProfilePage /> },
-        ],
+        ] }],
       },
       {
         path: "/doctor/dashboard",
-        element: (
+        element: <ProtectedRoute role="doctor" />,
+        children: [{ index: true, element: (
           <main className="public-shell">
             <DoctorDashboard />
           </main>
-        ),
+        ) }],
       },
       {
         path: "/doctor/patients",
-        element: (
+        element: <ProtectedRoute role="doctor" />,
+        children: [{ index: true, element: (
           <main className="public-shell">
             <DoctorPatients />
           </main>
-        ),
+        ) }],
       },
       {
         path: "/admin/dashboard",
-        element: (
+        element: <ProtectedRoute role="admin" />,
+        children: [{ index: true, element: (
           <main className="public-shell">
             <AdminDashboard />
           </main>
-        ),
+        ) }],
       },
       {
         path: "*",

@@ -7,7 +7,9 @@ import { Modal } from "@/components/ui/Modal";
 import { usePatientDashboard } from "@/hooks/queries/usePatientDashboard";
 import { Preferences } from "./Preferences";
 import { useI18n } from "@/i18n/context";
+import { useAuth } from "@/auth/context";
 export function Header() {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const { data } = usePatientDashboard();
   const { language, t } = useI18n();
@@ -32,8 +34,8 @@ export function Header() {
         </Button>
         <Link to="/patient/profile" className="profile-link">
           <span className="avatar">{language === "ar" ? "م" : "M"}</span>
-          <span className="profile-name">
-            {data?.patient.name ? <bdi>{data.patient.name}</bdi> : <span data-i18n="declarative">{t("common.navigation.profile")}</span>}
+          <span className="profile-name" data-i18n="declarative">
+            {user?.name || data?.patient.name ? <bdi>{user?.name ?? data?.patient.name}</bdi> : <span data-i18n="declarative">{t("common.navigation.profile")}</span>}
             <small data-i18n="declarative">{t("common.layout.account")}</small>
           </span>
           <ChevronDown size={16} />
