@@ -9,7 +9,9 @@ import { MedicationScheduleCard } from "@/components/health/MedicationScheduleCa
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { useI18n } from "@/i18n/context";
 export default function MedicationsPage() {
+  const { t, formatNumber } = useI18n();
   const { data = [], isPending, isError, refetch } = useMedications();
   const [form, setForm] = useState<Medication | "new" | null>(null);
   const [deleting, setDeleting] = useState<Medication | null>(null);
@@ -23,9 +25,9 @@ export default function MedicationsPage() {
           <h1>أدويتي</h1>
           <p>نظّم مواعيدك وسجّل الجرعات التي تناولتها.</p>
         </div>
-        <Button onClick={() => setForm("new")}>
+        <Button onClick={() => setForm("new")} data-i18n="declarative">
           <Plus size={21} />
-          إضافة دواء
+          {t("medications.add")}
         </Button>
       </div>
       <p className="measurements-notice">
@@ -43,12 +45,11 @@ export default function MedicationsPage() {
         </Card>
       ) : (
         <>
-          <Card className="medication-summary">
+          <div className="feature-workbench"><Card className="medication-summary">
             <div>
               <h2>متابعة جرعات اليوم</h2>
-              <p aria-live="polite">
-                تم تسجيل {summary.taken} من {summary.total} جرعات ·{" "}
-                {data.length} أدوية
+              <p aria-live="polite" data-i18n="declarative">
+                {t("medications.summary", { taken: formatNumber(summary.taken), total: formatNumber(summary.total), medications: formatNumber(data.length) })}
               </p>
             </div>
             <progress
@@ -75,13 +76,14 @@ export default function MedicationsPage() {
               <p>أضف دواءك ومواعيده وفق الوصفة.</p>
               <Button onClick={() => setForm("new")}>إضافة أول دواء</Button>
             </Card>
-          )}
+          )}</div>
         </>
       )}
       <Modal
         open={form !== null}
         onClose={() => setForm(null)}
-        title={form === "new" ? "إضافة دواء" : "تعديل الدواء"}
+        title={t(form === "new" ? "medications.add" : "medications.edit")}
+        declarativeTitle
       >
         {form && (
           <MedicationForm
@@ -96,24 +98,26 @@ export default function MedicationsPage() {
         onClose={() => {
           if (!deletion.isPending) setDeleting(null);
         }}
-        title="حذف الدواء؟"
+        title={t("medications.deleteTitle")}
+        declarativeTitle
       >
         {deleting && (
           <div className="stack">
-            <p>
-              هل تريد حذف «{deleting.name}»؟ ستُحذف مواعيده وسجل تناوله
-              التجريبي، ولا يمكن التراجع.
+            <p data-i18n="declarative">
+              {t("medications.deleteQuestion", { name: deleting.name })}
             </p>
             <div className="confirmation-actions">
               <Button
+                data-i18n="declarative"
                 autoFocus
                 variant="secondary"
                 disabled={deletion.isPending}
                 onClick={() => setDeleting(null)}
               >
-                إلغاء
+                {t("common.actions.cancel")}
               </Button>
               <Button
+                data-i18n="declarative"
                 className="btn-danger"
                 disabled={deletion.isPending}
                 onClick={() =>
@@ -122,7 +126,7 @@ export default function MedicationsPage() {
                   })
                 }
               >
-                {deletion.isPending ? "جارٍ الحذف…" : "تأكيد الحذف"}
+                {t(deletion.isPending ? "measurements.ui.deleting" : "measurements.ui.confirmDelete")}
               </Button>
             </div>
           </div>

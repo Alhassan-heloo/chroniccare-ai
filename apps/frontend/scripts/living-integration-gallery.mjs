@@ -1,0 +1,13 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+const output = resolve('artifacts/phase1d');
+await mkdir(output, { recursive: true });
+const html = `<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><title>Phase 1D — Living 3.3 comparison</title><style>
+body{margin:0;padding:24px;background:#0b1320;color:#f7faff;font:16px/1.8 Arial}h1{font-size:26px}p{max-width:100ch;color:#bac8da}label{display:inline-block;margin:8px}select{padding:10px;background:#162437;color:inherit;border:1px solid #50647b;border-radius:8px}main{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}figure{margin:0;background:#162437;padding:12px;border-radius:14px}figcaption{margin-bottom:12px}img{width:100%;display:block}a{color:#69e1d7}@media(max-width:800px){main{grid-template-columns:1fr}}</style>
+<h1>Living 3.3 → التطبيق الحقيقي — Phase 1D</h1><p>صور فعلية من Edge. العمود المرجعي يعرض نموذج Living المعتمد، لا التطبيق القديم. الدخول والتسجيل في المرجع نوافذ إفصاح تجريبية فقط؛ الصفحات الجديدة نماذج مصادقة حقيقية مُكيّفة وليست نسخًا مطابقة لصفحات مرجعية غير موجودة.</p>
+<label>الصفحة <select id="route"><option value="home">الرئيسية</option><option value="login">الدخول</option><option value="register">التسجيل</option></select></label>
+<label>العرض <select id="width"><option>1440</option><option>390</option></select></label><label>اللغة <select id="lang"><option>ar</option><option>en</option></select></label><label>المظهر <select id="theme"><option>dark</option><option>light</option></select></label>
+<main><figure><figcaption>Living 3.3 — المرجع المعتمد</figcaption><a id="refLink"><img id="reference" alt="التصميم المرجعي" /></a></figure><figure><figcaption>التطبيق قبل الدمج</figcaption><a id="beforeLink"><img id="before" alt="التطبيق السابق" /></a></figure><figure><figcaption>التطبيق بعد الدمج</figcaption><a id="afterLink"><img id="after" alt="التطبيق الفعلي الجديد" /></a></figure></main>
+<script>function update(){const r=document.querySelector('#route').value,w=document.querySelector('#width').value,l=document.querySelector('#lang').value,t=document.querySelector('#theme').value;for(const [id,src]of [['reference','before/reference-'+r+'-'+w+'-'+l+'-'+t+'.png'],['before','before/'+r+'-'+w+'-'+l+'-'+t+'.png'],['after','after/'+r+'-'+w+'-'+l+'-'+t+'.png']]){document.getElementById(id).src=src;document.getElementById(id==='reference'?'refLink':id+'Link').href=src}}document.querySelectorAll('select').forEach(e=>e.onchange=update);update();</script></html>`;
+await writeFile(resolve(output, 'comparison.html'), html);
+console.log('PASS: offline three-way comparison gallery generated.');

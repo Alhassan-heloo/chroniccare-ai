@@ -16,7 +16,7 @@ const periods: { value: ReportPeriod; label: string }[] = [
   { value: 90, label: "3 أشهر" },
 ];
 export default function ReportsPage() {
-  const { locale, formatNumber } = useI18n();
+  const { locale, t, formatNumber } = useI18n();
   const [period, setPeriod] = useState<ReportPeriod>(7);
   const { data, isPending, isError, refetch } = usePatientReport(period);
   return (
@@ -42,7 +42,7 @@ export default function ReportsPage() {
       </div>
       <p className="measurements-notice">
         أمثلة تجريبية لآخر 7 أيام، وليست قراءات مريض حقيقية. البيانات مؤقتة.
-        الفترة آخر {formatNumber(period)} يومًا شاملة اليوم حسب توقيت جهازك. لا يتضمن التقرير
+        <span data-i18n="declarative">{t("reports.window", { days: formatNumber(period) })}</span>{" "}لا يتضمن التقرير
         تقييمًا طبيًا.
       </p>
       {isPending ? (
@@ -56,11 +56,10 @@ export default function ReportsPage() {
         </Card>
       ) : (
         <>
-          <p className="muted" role="status">
-            الفترة: <bdi>{data.from}</bdi> إلى <bdi>{data.to}</bdi> ·{" "}
-            {data.measurements.length} قراءات
+          <p className="muted" role="status" data-i18n="declarative">
+            {t("reports.range", { from: `\u2068${data.from}\u2069`, to: `\u2068${data.to}\u2069`, count: formatNumber(data.measurements.length) })}
           </p>
-          <ReportSummary data={data} />
+          <div className="report-workbench"><ReportSummary data={data} /><div className="report-body">
           <p className="measurements-notice">
             الأدوية والعادات تعرضان حالة اليوم فقط من البيانات التجريبية
             الحالية؛ لا يتوفر سجل تاريخي لحساب الالتزام خلال الفترة.
@@ -115,6 +114,7 @@ export default function ReportsPage() {
               </p>
             )}
           </Card>
+          </div></div>
         </>
       )}
     </div>

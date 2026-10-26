@@ -47,7 +47,9 @@ export default function MeasurementsPage() {
       <p className="measurements-notice">
         {t("measurements.ui.notice")}
       </p>
-      <MeasurementFilters value={filters} onChange={setFilters} />
+      <div className="measurements-workbench">
+      <aside className="measurement-filter-panel"><MeasurementFilters value={filters} onChange={setFilters} /></aside>
+      <section className="measurement-results" aria-label={t("measurements.ui.history")}>
       {isPending ? (
         <Card className="empty-state" role="status">
           {t("measurements.ui.loading")}
@@ -101,6 +103,8 @@ export default function MeasurementsPage() {
           )}
         </>
       )}
+      </section>
+      </div>
       <Modal
         open={!!editing}
         onClose={() => setEditing(null)}

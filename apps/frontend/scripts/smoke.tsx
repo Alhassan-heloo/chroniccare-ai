@@ -55,15 +55,66 @@ import { translateToEnglish } from "../src/i18n/translate";
 import { updateTextIfChanged } from "../src/i18n/domTranslation";
 import { Sidebar } from "../src/components/layout/Sidebar";
 import { Preferences } from "../src/components/layout/Preferences";
+import { PublicHeader } from "../src/components/public/PublicHeader";
+import { roleNavigation } from "../src/components/layout/navigation";
+import HomePage from "../src/pages/public/HomePage";
+import AuthPage from "../src/pages/auth/AuthPage";
+import { Feedback } from "../src/components/ui/Feedback";
+import { SectionHeading } from "../src/components/ui/SectionHeading";
+import { Button } from "../src/components/ui/Button";
 import { I18nContext, type I18nValue } from "../src/i18n/context";
+import type { TranslationVariables } from "../src/i18n/catalogTypes";
 import { ThemeContext } from "../src/theme/context";
+
+const busyButton = renderToString(<Button loading>Working</Button>);
+assert(busyButton.includes('aria-busy="true"') && busyButton.includes('disabled=""'));
+assert(!renderToString(<Button>Ready</Button>).includes('aria-busy="true"'));
+assert(renderToString(<Feedback kind="error">Error</Feedback>).includes('role="alert"'));
+assert(renderToString(<Feedback kind="success">Saved</Feedback>).includes('role="status"'));
+assert(!renderToString(<Feedback kind="empty">Empty</Feedback>).includes('role='));
+assert(renderToString(<SectionHeading id="example-heading" title="Example" />).includes('<h2 id="example-heading">Example</h2>'));
+
+for (const role of ["patient", "doctor", "admin"] as const) {
+  assert(roleNavigation(role).every(item => item.to.startsWith(`/${role}/`)), "Navigation stays within its role");
+}
 
 for (const language of ["ar", "en"] as const) {
   const context: I18nValue = {
     language, setLanguage: () => undefined,
-    t: (key) => isTranslationKey(key) ? translateCatalogMessage(language, key) : key,
+    t: (key: string, variables?: TranslationVariables) => isTranslationKey(key) ? translateCatalogMessage(language, key, variables) : key,
     ...localeSettings(language), ...createFormatters(language),
   };
+  const guest = { ...testAuth, demo: false };
+  for (const [path, element] of [["/", <HomePage />], ["/login", <AuthPage mode="login" />], ["/register", <AuthPage mode="register" />]] as const) {
+    const html = renderToString(<I18nContext value={context}><AuthContext value={guest}><RouterProvider router={createMemoryRouter([{ path, element }], { initialEntries: [path] })} /></AuthContext></I18nContext>);
+    assert.equal((html.match(/class="topbar glass"/g) ?? []).length, 1, "One shared public masthead; nested chart headings are semantic headers");
+    assert.equal((html.match(/<footer/g) ?? []).length, 1, "One shared public footer on home and account pages");
+    assert(html.includes('href="/#features"') && html.includes('href="/login"'));
+    assert(html.includes(translateCatalogMessage(language, "public.navigation")));
+    assert(html.includes('id="public-content"'));
+    assert(html.includes('data-i18n="declarative"'));
+    assert(!html.includes("public.heroTitle"));
+    assert(html.includes(translateCatalogMessage(language, path === "/" ? "public.living.heroTitle" : path === "/login" ? "auth.signIn" : "auth.register")));
+    if (path !== "/") {
+      assert(html.includes('aria-controls="auth-password"'));
+      assert(html.includes('aria-describedby="password-hint"'));
+      assert(/\bautocomplete="username"/i.test(html), "Email keeps its username autocomplete hint");
+    } else {
+      for (const section of ["immersive-intro", "signature-artwork", "health-canvas", "story-sequence", "weekly-scene", "medication-scene", "habits-scene", "report-scene", "assistant-scene"]) assert(html.includes(section), `Living homepage renders ${section}`);
+      for (const obsolete of ['class="launch-hero"', 'class="public-hero"', 'class="bento-grid"', 'class="product-window"']) assert(!html.includes(obsolete), "Previous visual compositions are not mounted");
+      assert.equal((html.match(/class="chart-point/g) ?? []).length, 7, "Seven real sample-day controls");
+      assert(html.includes('aria-label="' + translateCatalogMessage(language, "public.living.chooseType") + '"'));
+      assert(html.includes(translateCatalogMessage(language, "public.living.fictional")));
+      assert(html.includes('aria-controls="public-navigation"'));
+    }
+  }
+  for (const role of ["patient", "doctor", "admin"] as const) {
+    const html = renderToString(<I18nContext value={context}><AuthContext value={{ ...guest, user: { id: "fixture", name: "Fixture", email: "fixture@example.test", role } }}><RouterProvider router={createMemoryRouter([{ path: "/", element: <PublicHeader /> }])} /></AuthContext></I18nContext>);
+    assert(html.includes(`href="/${role}/dashboard"`));
+    assert(!html.includes('href="/login"'));
+    assert(!html.includes('href="/register"'));
+    assert(html.includes(translateCatalogMessage(language, "auth.logout")));
+  }
   for (const mode of ["light", "dark", "system"] as const) {
     const html = renderToString(
       <I18nContext value={context}>
@@ -75,6 +126,8 @@ for (const language of ["ar", "en"] as const) {
     assert(html.includes(translateCatalogMessage(language, "common.navigation.measurements").replaceAll("&", "&amp;")));
     assert(html.includes(`aria-label="${translateCatalogMessage(language, "common.layout.mainNav")}"`));
     assert(html.includes(`aria-label="${translateCatalogMessage(language, "common.theme.label")}"`));
+    const nextMode = mode === "light" ? "dark" : mode === "dark" ? "system" : "light";
+    assert(html.includes('title="' + translateCatalogMessage(language, "common.preferences.nextTheme", { theme: translateCatalogMessage(language, `common.theme.${nextMode}`) }) + '"'));
     assert(html.includes("data-i18n=\"declarative\""));
     assert(!html.includes("common.navigation."));
   }
@@ -192,7 +245,7 @@ for (const language of ["ar", "en", "ar", "en"] as const) {
   client.setQueryData(queryKeys.dashboard, await getPatientDashboard());
   const context: I18nValue = { language, setLanguage: () => undefined, t: (key: string, values?: Readonly<Record<string, string | number>>) => isTranslationKey(key) ? translateCatalogMessage(language, key, values) : key, ...localeSettings(language), ...createFormatters(language) };
   const html = renderToString(<I18nContext value={context}><QueryClientProvider client={client}><RouterProvider router={createMemoryRouter(routes, { initialEntries: ["/patient/dashboard?demo=1#main"] })} /></QueryClientProvider></I18nContext>);
-  assert(html.includes(translateCatalogMessage(language, "patient.dashboard.summary")));
+  assert(html.includes(translateCatalogMessage(language, "patient.clinical.subtitle")));
   assert(html.includes(translateCatalogMessage(language, "patient.overview.tasks")));
   assert(!html.includes("patient.overview."));
   assert(html.includes("<bdi>"), "Profile name must use bidi isolation");
@@ -252,12 +305,22 @@ for (const path of paths) {
     for (const value of ["120/80", "98", "2/3", "4,500", "مرحبًا", "ماذا علي"])
       assert(html.includes(value), `Missing dashboard value: ${value}`);
   if (path === "/patient/dashboard") {
+    assert(html.includes('class="clinical-day-grid"'), "Daily actions and readings form the primary workspace");
+    assert(html.includes('class="clinical-today"') && html.includes('class="clinical-readings"'), "Routine and record have distinct presentation");
+    assert(html.indexOf('class="clinical-today"') < html.indexOf('class="clinical-history"'), "Today's tasks precede weekly review");
+    assert(!html.includes('class="dashboard-board"') && !html.includes('class="routine-strip metrics-grid"'), "Previous dashboard composition is not mounted");
+    assert(html.includes('class="clinical-app-body"') && html.includes('class="app-stage"'), "One shared shell with a quiet navigation rail");
+    assert.equal((html.match(/<header/g) ?? []).length, 1, "One application header");
     assert(html.includes("بيانات مثال"));
     assert(!html.includes("طبيعي"));
   }
   if (path === "/patient/measurements")
     assert(html.includes("بيانات مثال"));
   router.dispose();
+  if (path.startsWith("/doctor/") || path.startsWith("/admin/")) {
+    assert(html.includes("app-frame role-"), "Staff pages share the application shell");
+    assert(!html.includes('href="/patient/measurements"'), "No patient navigation in staff workspace");
+  }
   client.clear();
 }
 // Demo week shares the same log used by measurements and reports.

@@ -39,7 +39,11 @@ async function scan(directory) {
       const source = await readFile(path, "utf8");
       const file = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
       function visit(node) {
-        if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "t") {
+        const call = ts.isCallExpression(node) ? node.expression : undefined;
+        const direct = call && ts.isIdentifier(call) && call.text === "t";
+        const adapter = call && ts.isPropertyAccessExpression(call) && ts.isIdentifier(call.expression) &&
+          ((call.expression.text === "i18n" && call.name.text === "t") || (call.expression.text === "l" && call.name.text === "message"));
+        if (ts.isCallExpression(node) && (direct || adapter)) {
           const argument = node.arguments[0];
           if (argument && ts.isStringLiteralLike(argument)) {
             if (ar.has(argument.text)) used.add(argument.text);
@@ -57,4 +61,4 @@ assert.deepEqual(missing, [], "Unknown static translation keys");
 console.log(`PASS: ${ar.size} matching keys and compatible placeholders.`);
 console.log("Potentially unused keys (advisory; Phase A keys are not migrated yet):", [...ar.keys()].filter((key) => !used.has(key)));
 console.log("Dynamic calls requiring manual review:", [...new Set(dynamic)]);
-console.log("Scanner recognizes direct t(...) calls; aliases and dynamic keys may cause false positives. No keys are deleted automatically.");
+console.log("Scanner recognizes t(...), i18n.t(...) and the typed Living l.message(...) adapter; dynamic keys may cause false positives. No keys are deleted automatically.");

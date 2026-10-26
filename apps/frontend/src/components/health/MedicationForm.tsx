@@ -9,6 +9,7 @@ import {
 } from "@/hooks/mutations/useMedicationMutations";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useI18n } from "@/i18n/context";
 export function MedicationForm({
   initial,
   onSaved,
@@ -16,6 +17,7 @@ export function MedicationForm({
   initial?: Medication;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const {
     register,
     control,
@@ -52,14 +54,14 @@ export function MedicationForm({
         label="اسم الدواء"
         maxLength={100}
         {...register("name")}
-        error={errors.name?.message}
+        error={errors.name?.message && t(errors.name.message)}
       />
       <Input
         label="الجرعة حسب الوصفة"
         placeholder="اكتب الجرعة الموصوفة لك"
         maxLength={100}
         {...register("dosage")}
-        error={errors.dosage?.message}
+        error={errors.dosage?.message && t(errors.dosage.message)}
       />
       <fieldset className="dose-fieldset">
         <legend>مواعيد يومية متكررة</legend>
@@ -110,8 +112,8 @@ export function MedicationForm({
           والموعد الجديد يبدأ دون تسجيل.
         </p>
       )}
-      <Button type="submit" disabled={pending}>
-        {pending ? "جارٍ الحفظ…" : initial ? "حفظ التعديلات" : "إضافة الدواء"}
+      <Button type="submit" disabled={pending} data-i18n="declarative">
+        {t(pending ? "measurements.ui.saving" : initial ? "measurements.ui.saveChanges" : "medications.add")}
       </Button>
     </form>
   );

@@ -22,7 +22,7 @@ export default function HabitsPage() {
     (item) => progressToday(item) >= item.target,
   ).length;
   return (
-    <div className="stack" dir={direction}>
+    <div className="stack habits-page" dir={direction}>
       <div className="section-heading measurements-heading" data-i18n="declarative">
         <div>
           <span className="eyebrow">{t("habits.ui.eyebrow")}</span>
@@ -48,7 +48,7 @@ export default function HabitsPage() {
         </Card>
       ) : (
         <>
-          <Card className="medication-summary" data-i18n="declarative">
+          <div className="feature-workbench"><Card className="medication-summary habit-summary" data-i18n="declarative">
             <h2>{t("habits.ui.achievement")}</h2>
             <p aria-live="polite">
               {t(new Intl.PluralRules(locale).select(data.length) === "one" ? "habits.completedSingle" : "habits.ui.completedSummary", { completed: formatNumber(completed), total: formatNumber(data.length) })}
@@ -77,7 +77,7 @@ export default function HabitsPage() {
               <p>{t("habits.ui.emptyDescription")}</p>
               <Button onClick={() => setForm("new")}>{t("habits.add")}</Button>
             </Card>
-          )}
+          )}</div>
         </>
       )}
       <Modal

@@ -14,10 +14,10 @@ import {
 } from "@/pages/patient/PlaceholderPages";
 import { DoctorDashboard, DoctorPatients } from "@/pages/doctor/DoctorPages";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
-import { ProtectedRoute, SessionBar } from "@/auth/RouteAccess";
+import { ProtectedRoute } from "@/auth/RouteAccess";
 export const routes: RouteObject[] = [
   {
-    element: <><SessionBar /><Outlet /></>,
+    element: <Outlet />,
     errorElement: (
       <main className="public-shell">
         <PlaceholderPage
@@ -44,31 +44,19 @@ export const routes: RouteObject[] = [
         ] }],
       },
       {
-        path: "/doctor/dashboard",
+        path: "/doctor",
         element: <ProtectedRoute role="doctor" />,
-        children: [{ index: true, element: (
-          <main className="public-shell">
-            <DoctorDashboard />
-          </main>
-        ) }],
+        children: [{ element: <DashboardLayout role="doctor" />, children: [
+          { path: "dashboard", element: <DoctorDashboard /> },
+          { path: "patients", element: <DoctorPatients /> },
+        ] }],
       },
       {
-        path: "/doctor/patients",
-        element: <ProtectedRoute role="doctor" />,
-        children: [{ index: true, element: (
-          <main className="public-shell">
-            <DoctorPatients />
-          </main>
-        ) }],
-      },
-      {
-        path: "/admin/dashboard",
+        path: "/admin",
         element: <ProtectedRoute role="admin" />,
-        children: [{ index: true, element: (
-          <main className="public-shell">
-            <AdminDashboard />
-          </main>
-        ) }],
+        children: [{ element: <DashboardLayout role="admin" />, children: [
+          { path: "dashboard", element: <AdminDashboard /> },
+        ] }],
       },
       {
         path: "*",

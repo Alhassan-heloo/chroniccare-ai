@@ -1,102 +1,33 @@
-import { Link } from "react-router";
-import {
-  HeartPulse,
-  ShieldCheck,
-  Activity,
-  ArrowLeft,
-  Droplet,
-} from "lucide-react";
-import { Brand } from "@/components/layout/Brand";
-import { Card } from "@/components/ui/Card";
-import { Preferences } from "@/components/layout/Preferences";
-import { useAuth } from "@/auth/context";
+import { useState } from "react";
 import { useNavigate } from "react-router";
+import { PublicLayout } from "@/components/public/PublicLayout";
+import { LivingHome } from "@/components/public/living/LivingHome";
+import { useLivingPresentation } from "@/components/public/living/presentation";
+import { previewReadings, type Kind } from "@/components/public/living/model";
+import { Feedback } from "@/components/ui/Feedback";
+import { useAuth } from "@/auth/context";
+import { roleHome } from "@/auth/api";
+import { useI18n } from "@/i18n/context";
+
 export default function HomePage() {
-  const { enterDemo } = useAuth();
+  const { user, demo, enterDemo } = useAuth();
+  const { language, t } = useI18n(), { c, l } = useLivingPresentation();
   const navigate = useNavigate();
-  return (
-    <div className="home">
-      <header className="public-header">
-        <Brand />
-        <nav aria-label="روابط الحساب">
-          <Preferences />
-          <Link to="/login" className="btn btn-ghost">
-            تسجيل الدخول
-          </Link>
-          <Link to="/register" className="btn btn-primary">
-            إنشاء حساب
-          </Link>
-        </nav>
-      </header>
-      <main className="home-main">
-        <section className="hero">
-          <div className="hero-copy">
-            <span className="eyebrow">رعاية أقرب. حياة أكثر اطمئنانًا.</span>
-            <h1>
-              صحتك..
-              <br />
-              بذكاء واهتمام<span>.</span>
-            </h1>
-            <p>
-              مساحتك اليومية لمتابعة القياسات والأدوية والعادات الصحية، بخطوات
-              بسيطة وواضحة.
-            </p>
-            <Link to="/patient/dashboard" className="btn btn-primary hero-cta" onClick={(event) => {
-              event.preventDefault();
-              void enterDemo().then(() => navigate("/patient/dashboard")).catch(() => navigate("/login"));
-            }}>
-              استكشف لوحة المريض <ArrowLeft size={21} />
-            </Link>
-            <small>نسخة تجريبية · لا تحتاج إلى حساب</small>
-          </div>
-          <div className="hero-visual">
-            <div className="hero-heart">
-              <HeartPulse size={96} strokeWidth={1.4} />
-            </div>
-            <Card className="hero-reading">
-              <span className="icon-tile tone-danger">
-                <HeartPulse />
-              </span>
-              <span>
-                ضغط الدم<strong dir="ltr">120/80</strong>
-              </span>
-              <span className="badge badge-info">بيانات مثال</span>
-            </Card>
-            <Card className="hero-reading second">
-              <span className="icon-tile tone-info">
-                <Droplet />
-              </span>
-              <span>
-                سكر الدم
-                <strong dir="ltr">
-                  98 <small>mg/dL</small>
-                </strong>
-              </span>
-            </Card>
-            <span className="visual-caption">اهتمام يومي، لحياة أفضل</span>
-          </div>
-        </section>
-        <section className="home-features" aria-label="عن المنصة">
-          <Card>
-            <Activity />
-            <h2>متابعة يومية واضحة</h2>
-            <p>أهم قياساتك ومهامك في مكان واحد.</p>
-          </Card>
-          <Card>
-            <HeartPulse />
-            <h2>عادات صغيرة، أثر كبير</h2>
-            <p>تابع روتينك الصحي خطوة بخطوة.</p>
-          </Card>
-          <Card>
-            <ShieldCheck />
-            <h2>تجربة بسيطة للجميع</h2>
-            <p>واجهة عربية تناسب الكمبيوتر والجوال.</p>
-          </Card>
-        </section>
-      </main>
-      <footer className="public-footer">
-        ChronicCare AI · مشروع تخرج · واجهة تجريبية
-      </footer>
-    </div>
-  );
+  const [readings] = useState(previewReadings), [kind, setKind] = useState<Kind>("pressure");
+  const [doses, setDoses] = useState([false, true]), [water, setWater] = useState(6), [steps, setSteps] = useState(4500);
+  const [waterUndo, setWaterUndo] = useState<number | null>(null), [stepsUndo, setStepsUndo] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false), [failed, setFailed] = useState(false);
+  async function explore() {
+    if (busy) return;
+    if (user) { navigate(roleHome(user.role)); return; }
+    setBusy(true); setFailed(false);
+    try { if (!demo) await enterDemo(); navigate("/patient/dashboard"); } catch { setFailed(true); } finally { setBusy(false); }
+  }
+  return <PublicLayout><main id="public-content" className="route-content" tabIndex={-1} aria-busy={busy}>
+    {failed && <Feedback kind="error" className="header-feedback">{t("auth.network")}</Feedback>}
+    <LivingHome c={c} l={l} readings={readings} kind={kind} onKind={setKind} language={language} onDashboard={() => void explore()} onAccount={() => navigate(user ? roleHome(user.role) : "/register")}
+      doses={doses} onDose={index => setDoses(previous => previous.map((value, i) => i === index ? !value : value))}
+      water={water} onWater={() => { if (water < 8) { setWaterUndo(water); setWater(Math.min(8, water + 1)); } }} canUndoWater={waterUndo !== null} onUndoWater={() => { if (waterUndo !== null) { setWater(waterUndo); setWaterUndo(null); } }}
+      steps={steps} onSteps={() => { if (steps < 10000) { setStepsUndo(steps); setSteps(Math.min(10000, steps + 500)); } }} canUndoSteps={stepsUndo !== null} onUndoSteps={() => { if (stepsUndo !== null) { setSteps(stepsUndo); setStepsUndo(null); } }} />
+  </main></PublicLayout>;
 }

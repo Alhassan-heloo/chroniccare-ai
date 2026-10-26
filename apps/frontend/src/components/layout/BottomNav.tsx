@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink } from "react-router";
-import { House, HeartPulse, Plus, Bot, Menu } from "lucide-react";
+import { House, HeartPulse, Plus, Footprints, Menu } from "lucide-react";
 import { useDashboardActions } from "@/context/DashboardContext";
 import { Modal } from "@/components/ui/Modal";
 import { patientNavigation } from "./navigation";
@@ -27,13 +27,14 @@ export function BottomNav() {
         >
           <Plus size={28} />
         </button>
-        <NavLink to="/patient/assistant">
-          <Bot />
-          <span>{t("common.layout.assistant")}</span>
+        <NavLink to="/patient/habits">
+          <Footprints />
+          <span>{t("habits.title")}</span>
         </NavLink>
         <button
           onClick={() => setOpen(true)}
           aria-label={t("common.layout.showMore")}
+          aria-expanded={open}
         >
           <Menu />
           <span>{t("common.layout.more")}</span>
@@ -43,6 +44,7 @@ export function BottomNav() {
         <nav className="more-nav">
           {patientNavigation.slice(2).map((item) => (
             <NavLink key={item.to} to={item.to} onClick={() => setOpen(false)}>
+              <item.icon size={20} aria-hidden="true" />
               <span data-i18n="declarative">{t(item.label)}</span>
             </NavLink>
           ))}

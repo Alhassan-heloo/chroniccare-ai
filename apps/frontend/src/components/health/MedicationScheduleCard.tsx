@@ -5,6 +5,7 @@ import { useSetDoseTaken } from "@/hooks/mutations/useMedicationMutations";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { useI18n } from "@/i18n/context";
 export function MedicationScheduleCard({
   item,
   onEdit,
@@ -14,6 +15,7 @@ export function MedicationScheduleCard({
   onEdit: (item: Medication) => void;
   onDelete: (item: Medication) => void;
 }) {
+  const { t, formatNumber } = useI18n();
   const mutation = useSetDoseTaken();
   const taken = item.doses.filter((dose) => dose.takenOn === todayKey()).length;
   return (
@@ -26,8 +28,8 @@ export function MedicationScheduleCard({
           <h2>{item.name}</h2>
           <p>الجرعة: {item.dosage}</p>
         </div>
-        <Badge tone={taken === item.doses.length ? "success" : "info"}>
-          {taken}/{item.doses.length} مسجلة
+        <Badge tone={taken === item.doses.length ? "success" : "info"} data-i18n="declarative">
+          {t("medications.recorded", { taken: formatNumber(taken), total: formatNumber(item.doses.length) })}
         </Badge>
       </div>
       {item.notes && <p className="medication-notes">{item.notes}</p>}
