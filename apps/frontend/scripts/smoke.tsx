@@ -27,7 +27,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routes as applicationRoutes } from "../src/app/routes";
 import { AuthContext, type AuthValue } from "../src/auth/context";
 import { safeReturnTo } from "../src/auth/api";
-const testAuth: AuthValue = { user: null, demo: true, expired: false, login: async () => { throw new Error("Not used in SSR"); }, register: async () => {}, logout: async () => {}, enterDemo: async () => {} };
+const testAuth: AuthValue = { user: null, demo: true, expired: false, login: async () => { throw new Error("Not used in SSR"); }, register: async () => {}, logout: async () => {}, enterDemo: async () => {}, request: async () => { throw new Error("Demo must not call the backend"); } };
 // Keep existing demo page checks explicit; production routes default to unauthenticated.
 export function DemoFixture() {
   const { pathname } = useLocation();
@@ -377,6 +377,26 @@ const { getPatientReport: getSeedReport } = await import(
   "../src/lib/api/reports"
 );
 const seededReport = await getSeedReport(7);
+const emptyAccountDashboard = await getPatientDashboard([], []);
+assert.equal(emptyAccountDashboard.bloodPressure, null);
+assert.equal(emptyAccountDashboard.glucose, null);
+assert.equal(emptyAccountDashboard.weekly.length, 0, "An empty account must never receive seeded measurements");
+assert.equal(emptyAccountDashboard.medication.total, 0, "An empty account must never receive seeded medications");
+assert.equal((await getSeedReport(7, [], [])).measurements.length, 0);
+const { authenticatedMeasurements } = await import("../src/lib/api/measurements");
+const { AuthError } = await import("../src/auth/api");
+for (const response of [{}, { measurements: null }, { measurements: [{ kind: "glucose", value: 98 }] }]) {
+  const source = authenticatedMeasurements(async <T,>() => response as T);
+  await assert.rejects(source.list(), error => error instanceof AuthError && error.code === "INVALID_RESPONSE");
+}
+await assert.rejects(authenticatedMeasurements(async () => { throw new AuthError("NETWORK"); }).list(), error => error instanceof AuthError && error.code === "NETWORK");
+assert.deepEqual(await authenticatedMeasurements(async <T,>() => ({ measurements: [] }) as T).list(), []);
+const { authenticatedMedications } = await import("../src/lib/api/persistentMedications");
+for (const response of [{}, { medications: null }, { medications: [{ id: "x", name: "Valid", dosage: "x", notes: "", doses: [{ time: "08:00", takenOn: "invalid" }] }] }]) {
+  const source = authenticatedMedications(async <T,>() => response as T);
+  await assert.rejects(source.list(), error => error instanceof AuthError && error.code === "INVALID_RESPONSE");
+}
+assert.deepEqual(await authenticatedMedications(async <T,>() => ({ medications: [] }) as T).list(), []);
 assert.equal(seededReport.points.length, 7);
 assert.equal(seededReport.pressure.count, 7);
 assert.equal(seededReport.glucose.count, 7);

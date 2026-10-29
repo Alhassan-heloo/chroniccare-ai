@@ -115,6 +115,13 @@ async function context(language, theme, width) {
   }, {language,theme});
   let user = null;
   let registered = false;
+  // Authenticated presentation fixtures now model an empty real account,
+  // rather than borrowing the guest's seeded measurements. Real SQL CRUD
+  // is verified separately by measurements-integration-browser.mjs.
+  await context.route('**/api/measurements', route => route.fulfill({ status: user?.role === 'patient' ? 200 : 401,
+    json: user?.role === 'patient' ? { measurements: [] } : { error: { code: 'UNAUTHENTICATED' } } }));
+  await context.route('**/api/medications?*', route => route.fulfill({ status: user?.role === 'patient' ? 200 : 401,
+    json: user?.role === 'patient' ? { medications: [] } : { error: { code: 'UNAUTHENTICATED' } } }));
   await context.route('**/api/auth/**', async route => {
     const path = new URL(route.request().url()).pathname.split('/').at(-1);
     const body = route.request().postDataJSON();

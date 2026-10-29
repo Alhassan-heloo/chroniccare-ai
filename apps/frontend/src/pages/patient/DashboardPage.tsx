@@ -13,11 +13,13 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Feedback } from "@/components/ui/Feedback";
 import { useI18n } from "@/i18n/context";
+import { useAuth } from "@/auth/context";
 
 const WeeklySummary = lazy(() => import("@/components/health/WeeklySummary").then(module => ({ default: module.WeeklySummary })));
 
 export default function DashboardPage() {
   const { t, formatDate, formatNumber, formatUnit } = useI18n();
+  const { demo } = useAuth();
   const { data, isPending, isError, refetch } = usePatientDashboard();
   const { openMeasurement } = useDashboardActions();
   if (isPending) return <div data-i18n="declarative"><Feedback kind="loading">{t("patient.dashboard.loading")}</Feedback></div>;
@@ -68,6 +70,6 @@ export default function DashboardPage() {
         <AssistantCard compact />
       </div>
     </div>
-    <p className="dashboard-disclosure" data-i18n="declarative"><Info size={18} aria-hidden="true" /><span>{t("patient.living.disclosure")}</span></p>
+    <p className="dashboard-disclosure" data-i18n="declarative"><Info size={18} aria-hidden="true" /><span>{t(demo ? "patient.living.disclosure" : "measurements.persistence.dashboardNotice")}</span></p>
   </div>;
 }

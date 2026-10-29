@@ -6,6 +6,8 @@
   "scripts": {
     "test:design-browser": "node scripts/design-browser.mjs",
     "test:auth-browser": "node scripts/auth-browser.mjs",
+    "test:measurements-integration": "node scripts/measurements-integration-browser.mjs",
+    "test:medications-integration": "node scripts/medications-integration-browser.mjs",
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

@@ -64,9 +64,9 @@ test("CORS permits configured origins and rejects others", async (t) => {
   assert.equal(preflight.status, 204);
 });
 
-test("patient endpoints do not exist and unknown routes use a JSON 404", async (t) => {
+test("unconfigured feature routes and unknown routes use a JSON 404", async (t) => {
   const url = await serve(t, createApp({ corsOrigins: [], checkDatabase: async () => {} }));
-  for (const path of ["/api/measurements", "/api/users", "/api/auth/login", "/api/ai/chat", "/missing"]) {
+  for (const path of ["/api/measurements", "/api/medications", "/api/users", "/api/auth/login", "/api/ai/chat", "/missing"]) {
     const response = await fetch(`${url}${path}`);
     assert.equal(response.status, 404);
     assert.deepEqual(await response.json(), { error: { code: "NOT_FOUND", message: "API route not found." } });

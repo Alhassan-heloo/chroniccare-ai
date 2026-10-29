@@ -1,9 +1,10 @@
-# ChronicCare AI — Backend (Tasks 1A and 1B)
+# ChronicCare AI — Backend (through Phase 2A / Task 2A.2)
 
-This is a separate Node.js + Express + TypeScript package. The frontend remains
-unchanged and continues using its existing in-memory demo adapters. Real backend
-authentication is available; no login UI, patient CRUD, AI, FCM, or patient-data
-endpoints are added in Task 1B.
+This is a separate Node.js + Express + TypeScript package. Real PostgreSQL-backed
+authentication plus authenticated-patient measurement and medication CRUD are
+available. Guest measurements and medications remain in frontend demo adapters
+and never enter PostgreSQL. Habits, AI, notifications, and doctor/admin clinical
+workflows are outside Task 2A.2 and remain unchanged.
 
 ## Requirements and Windows setup
 
@@ -92,6 +93,17 @@ stops startup without logging secrets.
 | --- | --- |
 | `GET /api/health` | Liveness: HTTP application is running; returns 200 regardless of DB availability. |
 | `GET /api/health/ready` | Runs a real PostgreSQL `SELECT 1`; 200 when reachable, otherwise 503 with no driver details. |
+| `GET /api/measurements` | Lists only the authenticated patient's measurements. |
+| `GET /api/measurements/:id` | Gets one owned measurement; another patient's ID returns 404. |
+| `POST /api/measurements` | Creates an owned blood-pressure or glucose measurement. |
+| `PUT /api/measurements/:id` | Updates one owned measurement while preserving its recorded timestamp. |
+| `DELETE /api/measurements/:id` | Deletes one owned measurement and returns 204. |
+| `GET /api/medications?date=YYYY-MM-DD` | Lists schedules with dose state for the explicit local calendar date. |
+| `GET /api/medications/:id?date=YYYY-MM-DD` | Gets one owned medication and its schedules. |
+| `POST /api/medications?date=YYYY-MM-DD` | Creates a medication with one to six unique daily times. |
+| `PUT /api/medications/:id?date=YYYY-MM-DD` | Updates text and schedules while preserving unchanged-time dose logs. |
+| `DELETE /api/medications/:id` | Deletes one owned medication, schedules, and dose logs. |
+| `PUT /api/medications/:id/doses/:time` | Records or undoes one `{ date, taken }` daily dose state. |
 
 Readiness checks **connectivity**, not migration completion. Run `db:migrate`
 explicitly before deployment. The HTTP server remains live during a DB outage
@@ -100,10 +112,13 @@ liveness check alone does **not** prove database integration. Startup also makes
 a real connection attempt and logs only a generic success/unavailable message.
 `db:check` and `db:migrate` return a nonzero exit code on failure.
 
-All other routes return JSON 404. Errors use `{ error: { code, message } }`.
+All measurement and medication routes require a live bearer session and the `patient` role.
+Unauthenticated requests return 401, non-patient roles return 403, and missing or
+not-owned records return the same 404 response. All other routes return JSON 404.
+Errors use `{ error: { code, message } }`.
 Helmet headers, no-store responses, a 32 KB JSON limit, bounded pool/query/socket
 timeouts, and an explicit CORS allowlist form the initial security baseline.
-GET/HEAD/POST/OPTIONS and Content-Type/Authorization are advertised by CORS. Requests with a
+GET/HEAD/POST/PUT/DELETE/OPTIONS and Content-Type/Authorization are advertised by CORS. Requests with a
 disallowed Origin receive 403; requests without Origin are allowed. **CORS is
 not authentication**. Authentication and role guards are described below;
 feature-specific authorization policies belong to their future tasks. Do not expose
@@ -118,8 +133,13 @@ cannot override verification settings. Never use `rejectUnauthorized: false`.
 
 ## Migration policy
 
-- `migrations/001_backend_foundation.sql` creates the `chroniccare` schema only.
-  There are intentionally no premature users, roles, or clinical tables.
+- `migrations/001_backend_foundation.sql` creates the `chroniccare` schema.
+- `migrations/002_authentication.sql` creates users and hashed sessions.
+- `migrations/003_patient_measurements.sql` creates the owned measurements table,
+  technical value constraints, timestamps, foreign key, and patient/date index.
+- `migrations/004_patient_medications.sql` creates patient-owned medications,
+  recurring local-time schedules, and date-keyed dose logs with duplicate-proof
+  primary keys and cascading schedule cleanup.
 - The runner creates `public.chroniccare_schema_migrations`, with version,
   filename, SHA-256 checksum, and application timestamp.
 - A PostgreSQL transaction advisory lock serializes concurrent migration runs.
@@ -131,9 +151,8 @@ cannot override verification settings. Never use `rejectUnauthorized: false`.
   applied migration or include `BEGIN`/`COMMIT` in individual files. Use
   transaction-compatible PostgreSQL DDL; e.g. `CREATE INDEX CONCURRENTLY` is not
   supported by this transactional runner.
-- Future tables for users, measurements, medications, habit events, alerts,
-  and doctor-patient relationships go in the `chroniccare` schema. Their actual
-  definitions belong to the tasks that introduce them.
+- Future tables for habit events, alerts, and doctor-patient
+  relationships go in the `chroniccare` schema only in their approved tasks.
 - No automatic migrations on HTTP startup and no destructive down/reset command.
   Back up a populated database and review new migration SQL before applying it.
 - Build output references the root `migrations/` directory: deploy that directory
@@ -150,8 +169,9 @@ git diff --check
 ```
 
 Tests use Node's built-in test runner and actual loopback HTTP requests; no
-Supertest or database emulator is added. DB-up/down application checks inject
-a controlled check function and **do not prove a real PostgreSQL connection**.
+Supertest or database emulator is added. The main integration suite connects to
+real PostgreSQL when `TEST_DATABASE_URL` is configured; smaller readiness tests
+use an injected check and are not a substitute for that suite.
 
 To enable the real integration test, set `TEST_DATABASE_URL` in `.env` to the
 dedicated `chroniccare_test` database, using the same SSL configuration, then run:
@@ -161,10 +181,12 @@ npm.cmd test
 ```
 
 The integration test requires a database name ending in `_test` and refuses
-existing application tables. It really connects, applies the foundation
-migration, checks idempotence and changed checksums, and checks transactional
-rollback. It leaves the foundation schema and migration ledger in the dedicated
-test database; it never drops an existing application database. Without
+existing application tables. It really connects, applies all current migrations,
+checks idempotence, changed checksums, and rollback, then exercises authentication
+plus durable measurement and medication CRUD, schedule/dose-log rules, account
+isolation, role rejection, validation, and database constraints. It leaves the
+schema and migration ledger in the
+dedicated test database; it never drops an existing application database. Without
 `TEST_DATABASE_URL`, this test is explicitly **SKIP**, not PASS. If the variable
 is configured but PostgreSQL cannot be reached, the test **fails**.
 
@@ -175,15 +197,19 @@ apps/backend/
   .env.example
   package.json, package-lock.json
   tsconfig.json, tsconfig.test.json, eslint.config.js
-  migrations/001_backend_foundation.sql, 002_authentication.sql
+  migrations/001_backend_foundation.sql, 002_authentication.sql,
+             003_patient_measurements.sql, 004_patient_medications.sql
   src/
     app.ts, server.ts
     auth/store.ts, security.ts, middleware.ts, provision.ts
+    measurements/store.ts, validation.ts
+    medications/store.ts, validation.ts
     config/env.ts
     db/pool.ts, check.ts, migrations.ts, migrate.ts
     middleware/errors.ts
-    routes/index.ts, health.ts, auth.ts
-  tests/app.test.ts, env.test.ts, database.test.ts, auth.test.ts
+    routes/index.ts, health.ts, auth.ts, measurements.ts, medications.ts
+  tests/app.test.ts, env.test.ts, database.test.ts, auth.test.ts,
+        measurements.test.ts, medications.test.ts
 ```
 
 Runtime: Express (HTTP/routing), pg (PostgreSQL pool), Helmet (security headers),
@@ -191,6 +217,56 @@ cors (explicit browser-origin policy), argon2 (password hashing), and
 express-rate-limit (bounded authentication attempts). Development: TypeScript and type packages,
 tsx (development/test execution), ESLint with TypeScript support. No ORM,
 AI, Firebase, frontend dependency changes, or root-workspace restructuring.
+
+## Phase 2A / Task 2A.1: patient measurements
+
+The measurement API accepts exact JSON objects; unknown or unit fields are
+rejected. Blood pressure uses integer `systolic` and `diastolic` values in mmHg.
+Glucose uses a positive numeric `value` in mg/dL. Create may include `recordedAt`
+as an ISO-8601 timestamp with a timezone offset and millisecond precision; when
+omitted, PostgreSQL records the server time. Updates preserve it. The server owns
+`id`, `patientId`, `createdAt`, `updatedAt`,
+and `isExample` (always false for PostgreSQL rows).
+
+```json
+{ "kind": "bloodPressure", "systolic": 135, "diastolic": 85, "recordedAt": "2026-10-29T09:30:00.000Z" }
+{ "kind": "glucose", "value": 99.25, "recordedAt": "2026-10-29T09:30:00.000Z" }
+```
+
+Every query includes the authenticated user's ID. IDs owned by another patient
+are deliberately indistinguishable from missing IDs. SQL values are always
+parameterized, while database checks duplicate the API's core invariants as a
+last line of defense. Technical acceptance bounds are not medical diagnoses and
+the API does not generate labels such as “normal”.
+
+From `apps/frontend`, `npm.cmd run test:measurements-integration` runs Edge, Vite,
+the compiled Express server, and the dedicated PostgreSQL test database. Set
+`PLAYWRIGHT_MODULE_PATH` when Playwright is supplied outside this repository.
+The script refuses a database whose name does not end in `_test`, also refuses
+the application database URL, uses unique temporary patients, and cleans them up.
+
+## Phase 2A / Task 2A.2: patient medications
+
+Medication JSON contains trimmed `name` (2–100 characters), `dosage` (1–100),
+optional `notes` (up to 400), and one to six unique `HH:MM` daily times. These
+are user-entered records only; the API does not prescribe or recommend anything.
+
+Recurring schedule times are stored as `time without time zone`. Daily dose
+identity is the composite `(medication_id, scheduled_time, taken_on)`, where
+`taken_on` is an explicit `YYYY-MM-DD` date from the patient's device. This
+avoids converting a local calendar day through UTC and prevents duplicate logs.
+Recording an already-recorded dose and undoing an absent log are both idempotent.
+
+Schedule updates run in a transaction. An unchanged time retains all its dose
+logs, a removed time cascades its logs, and a new time starts unrecorded. Every
+lookup and mutation is scoped to the authenticated patient in SQL; ownership is
+never accepted from request JSON.
+
+From `apps/frontend`, `npm.cmd run test:medications-integration` runs responsive
+Edge workflows against the compiled Express server and the dedicated PostgreSQL
+test database. It verifies CRUD, daily dose state, schedule editing, persistence,
+isolation, Dashboard/Reports synchronization, demo separation, API failures,
+RTL/LTR, themes, Motion Off, and reduced-motion behavior.
 
 ## Task 1B: Authentication and authorization
 

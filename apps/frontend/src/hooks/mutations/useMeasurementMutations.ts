@@ -1,10 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  addMeasurement,
-  updateMeasurement,
-  deleteMeasurement,
-} from "@/lib/api/patient";
+import { useMeasurementSource } from "@/hooks/useMeasurementSource";
+import { AuthError } from "@/auth/api";
 import { queryKeys } from "@/lib/query/queryKeys";
 import { useI18n } from "@/i18n/context";
 import type { TranslationKey } from "@/i18n/catalog";
@@ -20,24 +17,29 @@ function useMeasurementFeedback(successMessage: TranslationKey) {
       ]);
       toast.success(t(successMessage));
     },
-    onError: () => toast.error(t("measurements.ui.failed")),
+    onError: (error: Error) => {
+      if (!(error instanceof AuthError && ["SESSION_CHANGED", "UNAUTHENTICATED"].includes(error.code))) toast.error(t("measurements.ui.failed"));
+    },
   };
 }
 export function useAddMeasurement() {
+  const { source, demo } = useMeasurementSource();
   return useMutation({
-    mutationFn: addMeasurement,
-    ...useMeasurementFeedback("measurements.ui.saved"),
+    mutationFn: source.create,
+    ...useMeasurementFeedback(demo ? "measurements.ui.saved" : "measurements.persistence.saved"),
   });
 }
 export function useUpdateMeasurement() {
+  const { source } = useMeasurementSource();
   return useMutation({
-    mutationFn: updateMeasurement,
+    mutationFn: source.update,
     ...useMeasurementFeedback("measurements.ui.updated"),
   });
 }
 export function useDeleteMeasurement() {
+  const { source } = useMeasurementSource();
   return useMutation({
-    mutationFn: deleteMeasurement,
+    mutationFn: source.delete,
     ...useMeasurementFeedback("measurements.ui.deleted"),
   });
 }

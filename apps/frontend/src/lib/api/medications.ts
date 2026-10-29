@@ -2,13 +2,13 @@ import type { Medication, MedicationInput } from "@/lib/types/medication";
 import { createMedicationPlaceholders } from "@/lib/placeholder-data/medications.placeholder";
 import { medicationSchema } from "@/lib/utils/medicationSchema";
 import { summarizeMedications, todayKey } from "@/lib/utils/medications";
-// Session-only adapter; replace with apiClient requests once the backend is ready.
+// Guest-only session adapter. Authenticated medications use the PostgreSQL API.
 const medications = createMedicationPlaceholders();
 export async function getMedications() {
   return structuredClone(medications);
 }
-export function getMedicationSummary() {
-  return summarizeMedications(medications);
+export function getMedicationSummary(items = medications) {
+  return summarizeMedications(items);
 }
 export async function addMedication(input: MedicationInput) {
   const valid = medicationSchema.parse(input);

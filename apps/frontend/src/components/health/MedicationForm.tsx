@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useI18n } from "@/i18n/context";
+import { useAuth } from "@/auth/context";
 export function MedicationForm({
   initial,
   onSaved,
@@ -18,6 +19,7 @@ export function MedicationForm({
   onSaved: () => void;
 }) {
   const { t } = useI18n();
+  const { demo } = useAuth();
   const {
     register,
     control,
@@ -47,8 +49,7 @@ export function MedicationForm({
       })}
     >
       <p className="muted medication-form-note">
-        أدخل الاسم والجرعة والمواعيد كما في وصفتك. التطبيق لا يقترح أدوية أو
-        جرعات.
+        {t(demo ? "أدخل الاسم والجرعة والمواعيد كما في وصفتك. التطبيق لا يقترح أدوية أو جرعات." : "medications.persistence.formNotice")}
       </p>
       <Input
         label="اسم الدواء"
@@ -110,8 +111,7 @@ export function MedicationForm({
       />
       {initial && (
         <p className="medication-form-note muted">
-          المواعيد التي تبقى كما هي تحتفظ بحالة التناول. حذف موعد يلغي سجله،
-          والموعد الجديد يبدأ دون تسجيل.
+          {t("medications.persistence.editHint")}
         </p>
       )}
       <Button type="submit" disabled={pending} data-i18n="declarative">

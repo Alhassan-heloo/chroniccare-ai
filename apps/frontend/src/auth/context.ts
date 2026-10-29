@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import type { User } from "@/lib/types/user";
+import type { AuthorizedRequest } from "./api";
 export interface AuthValue {
   user: User | null;
   demo: boolean;
@@ -8,6 +9,7 @@ export interface AuthValue {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   enterDemo: () => Promise<void>;
+  request: AuthorizedRequest;
 }
 export const AuthContext = createContext<AuthValue | null>(null);
 export function useAuth() {

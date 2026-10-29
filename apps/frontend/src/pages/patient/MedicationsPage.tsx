@@ -11,8 +11,10 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useI18n } from "@/i18n/context";
 import { SignatureArtwork, LivingPulse } from "@/components/public/living/ui";
+import { useAuth } from "@/auth/context";
 export default function MedicationsPage() {
   const { t, formatNumber } = useI18n();
+  const { demo } = useAuth();
   const { data = [], isPending, isError, refetch } = useMedications();
   const [form, setForm] = useState<Medication | "new" | null>(null);
   const [deleting, setDeleting] = useState<Medication | null>(null);
@@ -36,12 +38,12 @@ export default function MedicationsPage() {
       </div>
       {isPending ? (
         <Card className="empty-state" role="status">
-          جارٍ تحميل الأدوية…
+          {t("medications.persistence.loading")}
         </Card>
       ) : isError ? (
         <Card className="empty-state" role="alert">
-          <p>تعذر تحميل الأدوية.</p>
-          <Button onClick={() => void refetch()}>إعادة المحاولة</Button>
+          <p>{t("medications.persistence.loadError")}</p>
+          <Button onClick={() => void refetch()}>{t("common.actions.retry")}</Button>
         </Card>
       ) : (
         <>
@@ -85,7 +87,7 @@ export default function MedicationsPage() {
       )}
       <p className="dashboard-disclosure" data-i18n="declarative">
         <Info size={18} aria-hidden="true" />
-        <span>{t("بيانات تجريبية تُمسح عند تحديث الصفحة. المواعيد تتكرر يوميًا، ولا توجد إشعارات فعلية. تسجيل التناول يوثّق ما تناولته فقط.")}</span>
+        <span>{t(demo ? "بيانات تجريبية تُمسح عند تحديث الصفحة. المواعيد تتكرر يوميًا، ولا توجد إشعارات فعلية. تسجيل التناول يوثّق ما تناولته فقط." : "medications.persistence.notice")}</span>
       </p>
       <Modal
         open={form !== null}
@@ -112,7 +114,7 @@ export default function MedicationsPage() {
         {deleting && (
           <div className="stack">
             <p data-i18n="declarative">
-              {t("medications.deleteQuestion", { name: deleting.name })}
+              {t(demo ? "medications.deleteQuestion" : "medications.persistence.deleteQuestion", { name: deleting.name })}
             </p>
             <div className="confirmation-actions">
               <Button

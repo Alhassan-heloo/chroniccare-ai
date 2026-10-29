@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { ReportSummary } from "@/components/health/ReportSummary";
 import { useI18n } from "@/i18n/context";
 import { SignatureArtwork, LivingPulse } from "@/components/public/living/ui";
+import { useAuth } from "@/auth/context";
 import {
   measurementLabel,
   measurementValue,
@@ -19,6 +20,7 @@ const periods: { value: ReportPeriod; label: string }[] = [
 ];
 export default function ReportsPage() {
   const { locale, t, formatNumber } = useI18n();
+  const { demo } = useAuth();
   const [period, setPeriod] = useState<ReportPeriod>(7);
   const { data, isPending, isError, refetch } = usePatientReport(period);
   return (
@@ -59,7 +61,7 @@ export default function ReportsPage() {
         <>
           <div className="report-workbench"><ReportSummary data={data} /><div className="report-body">
           <p className="report-today-note">
-            <Info size={17} aria-hidden="true" /><span>{t("الأدوية والعادات تعرضان حالة اليوم فقط من البيانات التجريبية الحالية؛ لا يتوفر سجل تاريخي لحساب الالتزام خلال الفترة.")}</span>
+            <Info size={17} aria-hidden="true" /><span>{t(demo ? "الأدوية والعادات تعرضان حالة اليوم فقط من البيانات التجريبية الحالية؛ لا يتوفر سجل تاريخي لحساب الالتزام خلال الفترة." : "medications.persistence.reportTodayNotice")}</span>
           </p>
           <div className="report-charts">
             {(["pressure", "glucose"] as const).map((kind) => (
@@ -112,7 +114,7 @@ export default function ReportsPage() {
           </div></div>
         </>
       )}
-      <p className="dashboard-disclosure"><Info size={18} aria-hidden="true" /><span>{t("أمثلة تجريبية لآخر 7 أيام، وليست قراءات مريض حقيقية. البيانات مؤقتة.")}{" "}{t("reports.window", { days: formatNumber(period) })}{" "}{t("reports.assessmentNotice")}</span></p>
+      <p className="dashboard-disclosure"><Info size={18} aria-hidden="true" /><span>{t(demo ? "أمثلة تجريبية لآخر 7 أيام، وليست قراءات مريض حقيقية. البيانات مؤقتة." : "medications.persistence.reportsNotice")}{" "}{t("reports.window", { days: formatNumber(period) })}{" "}{t("reports.assessmentNotice")}</span></p>
     </div>
   );
 }

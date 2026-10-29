@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { getMedications } from "@/lib/api/medications";
 import { queryKeys } from "@/lib/query/queryKeys";
+import { useMedicationSource } from "@/hooks/useMedicationSource";
 export function useMedications() {
+  const { source, scope, enabled } = useMedicationSource();
   return useQuery({
-    queryKey: queryKeys.medications,
-    queryFn: getMedications,
+    queryKey: [...queryKeys.medications, ...scope],
+    enabled,
+    queryFn: ({ signal }) => source.list(signal),
     refetchInterval: 60_000,
   });
 }

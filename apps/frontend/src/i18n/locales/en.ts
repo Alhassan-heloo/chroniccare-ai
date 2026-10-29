@@ -226,6 +226,14 @@ export const enCatalog = {
     },
   },
   measurements: {
+    persistence: {
+      notice: "Readings are saved to your account and appear in your summary and reports. Readings are not medically assessed.",
+      formNotice: "This reading will be saved to your account. Enter the values as measured.",
+      saved: "Reading saved to your account",
+      deleteHint: "This reading will be deleted from your account. Summaries and reports will update using the remaining readings.",
+      dashboardNotice: "Measurements and medications come from your account. Habits and reminders remain temporary demo data. This summary is not a medical assessment.",
+      reportsNotice: "This report uses your saved account measurements. Medications and habits show today's demo status only.",
+    },
     living: { filters: "Refine your reading history" },
     ui: { eyebrow: "Track your health, step by step", description: "Record and review your readings in one place.", notice: "Demo: the history starts with examples from the last 7 days. Changes are temporary and initial examples return on reload. Readings are not medically assessed.", loading: "Loading measurements…", loadError: "Could not load measurement history.", history: "Reading history", count: "{{shown}} of {{total}} readings", adjustRange: "Adjust the date range to show results.", first: "Start with your first reading", firstDescription: "Add a blood pressure or glucose reading to see it here and on the dashboard.", noMatches: "No matching readings", broaden: "Try another type or broaden the date range.", showAll: "Show all readings", edit: "Edit reading", deleteTitle: "Delete reading?", deleteQuestion: "Delete the {{kind}} reading {{value}}? This cannot be undone.", deleteHint: "The dashboard will show the previous reading of the same type, or the default example if the history becomes empty.", deleting: "Deleting…", confirmDelete: "Confirm deletion", formNotice: "Demo reading, kept until the page reloads.", readingKind: "Reading type", systolic: "Systolic pressure", diastolic: "Diastolic pressure", saving: "Saving…", saveChanges: "Save changes", saveReading: "Save reading", filterKind: "Measurement type", all: "All measurements", from: "From date", to: "To date", invalidRange: "Choose a date on or after the start date", clear: "Clear filters", rangeHint: "The search includes both dates in your device time zone.", example: "Sample data", editLabel: "Edit {{kind}} reading {{time}}", deleteLabel: "Delete {{kind}} reading {{time}}", saved: "Reading saved temporarily", updated: "Reading updated", deleted: "Reading deleted", failed: "The operation failed. Try again.", invalidNumber: "Enter a valid number", positive: "The value must be greater than zero", checkReading: "Check the reading", integer: "Enter a whole number", diastolicOrder: "Diastolic pressure must be lower than systolic pressure" },
     title: "My health & measurements",
@@ -235,6 +243,16 @@ export const enCatalog = {
     empty: "No matching readings",
   },
   medications: {
+    persistence: {
+      notice: "Medications, schedules, and today's dose records are saved to your account. The app does not suggest medicines or doses, and real notifications are not enabled.",
+      formNotice: "The name, dose, and times will be saved to your account exactly as entered. The app does not prescribe medicines or doses.",
+      editHint: "Unchanged times keep their daily records. Removing a time deletes its records, and a new time starts unrecorded.",
+      loading: "Loading medications…", loadError: "Could not load medications.",
+      added: "Medication saved to your account", addedDemo: "Medication added temporarily", updated: "Medication updated", deleted: "Medication and schedule deleted", doseUpdated: "Dose record updated", failed: "Could not update the medication. Try again.",
+      deleteQuestion: "Delete ‘{{name}}’? Its schedule and saved dose records will be removed. This cannot be undone.",
+      reportTodayNotice: "Medications show today's saved account state, while habits remain demo data. The report does not calculate clinical adherence over the period.",
+      reportsNotice: "Measurements and medications come from your saved account. Habits show today's demo data only.",
+    },
     edit: "Edit medication", deleteTitle: "Delete medication?", deleteQuestion: "Delete ‘{{name}}’? Its schedule and demo dose records will be removed. This cannot be undone.",
     summary: "{{taken}} of {{total}} doses recorded · {{medications}} medications",
     recorded: "{{taken}} / {{total}} recorded",

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "./context";
-import { AuthError, authRequest, type LoginResult } from "./api";
+import { AuthError, authRequest, apiRequest, type ApiRequestOptions, type LoginResult } from "./api";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const client = useQueryClient();
@@ -40,6 +40,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const enterDemo = useCallback(async () => {
     await logout(); setDemo(true);
   }, [logout]);
+  // A request belongs to the session that created this callback. Never let an
+  // old query/mutation read a new account's token or commit a late response.
+  const request = useCallback(async <T,>(path: string, options: Omit<ApiRequestOptions, "token"> = {}): Promise<T> => {
+    if (!session || active.current !== session) throw new AuthError("SESSION_CHANGED");
+    try {
+      const result = await apiRequest<T>(path, { ...options, token: session.token });
+      if (active.current !== session) throw new AuthError("SESSION_CHANGED");
+      return result;
+    } catch (error) {
+      if (error instanceof AuthError && error.code === "UNAUTHENTICATED" && active.current === session) {
+        await reset(); setExpired(true);
+      }
+      throw error;
+    }
+  }, [session, reset]);
   useEffect(() => {
     if (!session) return;
     let live = true;
@@ -54,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const interval = setInterval(verify, 60000);
     return () => { live = false; clearTimeout(timer); clearInterval(interval); window.removeEventListener("focus", verify); };
   }, [session, reset]);
-  const value = useMemo(() => ({ user: session?.user ?? null, demo, expired, login, register, logout, enterDemo }),
-    [session, demo, expired, login, register, logout, enterDemo]);
+  const value = useMemo(() => ({ user: session?.user ?? null, demo, expired, login, register, logout, enterDemo, request }),
+    [session, demo, expired, login, register, logout, enterDemo, request]);
   return <AuthContext value={value}>{children}</AuthContext>;
 }
