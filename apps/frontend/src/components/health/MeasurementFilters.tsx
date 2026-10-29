@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { MeasurementFilters as Filters } from "@/lib/types/measurementFilters";
 import { useI18n } from "@/i18n/context";
+import { SlidersHorizontal } from "lucide-react";
 export function MeasurementFilters({
   value,
   onChange,
@@ -13,7 +14,8 @@ export function MeasurementFilters({
   const { t } = useI18n();
   const invalidRange = !!value.from && !!value.to && value.from > value.to;
   return (
-    <Card className="measurements-filters" data-i18n="declarative">
+    <Card className="measurements-filters glass" data-i18n="declarative">
+      <div className="measurement-filter-heading dashboard-panel-heading"><span className="dashboard-feature-icon"><SlidersHorizontal size={20} aria-hidden="true" /></span><h2>{t("measurements.living.filters")}</h2></div>
       <div className="filter-fields">
         <div className="field">
           <label htmlFor="filter-kind">{t("measurements.ui.filterKind")}</label>
@@ -50,6 +52,7 @@ export function MeasurementFilters({
           onChange={(event) => onChange({ ...value, to: event.target.value })}
         />
         <Button
+          className="button"
           variant="secondary"
           onClick={() => onChange({ kind: "all", from: "", to: "" })}
         >

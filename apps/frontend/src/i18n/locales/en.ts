@@ -204,6 +204,11 @@ export const enCatalog = {
     register: "Create account",
   },
   patient: {
+    living: {
+      welcomeBody: "Your week at the center. Your daily routine close by. No medical assessment.",
+      seriesNote: "Cards show the latest reading; the chart shows daily averages of recorded readings.",
+      disclosure: "A demo workspace with sample data, not a database-backed medical record. Changes are temporary; the initial examples return on reload.",
+    },
     clinical: {
       today: "Your space for today", subtitle: "Start with your daily routine, then revisit your readings and trends. No medical assessment is performed here.",
       plan: "Your next step", planBody: "Medication, reminders, and habits, together", record: "Your health record", latest: "Latest recorded readings",
@@ -221,6 +226,7 @@ export const enCatalog = {
     },
   },
   measurements: {
+    living: { filters: "Refine your reading history" },
     ui: { eyebrow: "Track your health, step by step", description: "Record and review your readings in one place.", notice: "Demo: the history starts with examples from the last 7 days. Changes are temporary and initial examples return on reload. Readings are not medically assessed.", loading: "Loading measurements…", loadError: "Could not load measurement history.", history: "Reading history", count: "{{shown}} of {{total}} readings", adjustRange: "Adjust the date range to show results.", first: "Start with your first reading", firstDescription: "Add a blood pressure or glucose reading to see it here and on the dashboard.", noMatches: "No matching readings", broaden: "Try another type or broaden the date range.", showAll: "Show all readings", edit: "Edit reading", deleteTitle: "Delete reading?", deleteQuestion: "Delete the {{kind}} reading {{value}}? This cannot be undone.", deleteHint: "The dashboard will show the previous reading of the same type, or the default example if the history becomes empty.", deleting: "Deleting…", confirmDelete: "Confirm deletion", formNotice: "Demo reading, kept until the page reloads.", readingKind: "Reading type", systolic: "Systolic pressure", diastolic: "Diastolic pressure", saving: "Saving…", saveChanges: "Save changes", saveReading: "Save reading", filterKind: "Measurement type", all: "All measurements", from: "From date", to: "To date", invalidRange: "Choose a date on or after the start date", clear: "Clear filters", rangeHint: "The search includes both dates in your device time zone.", example: "Sample data", editLabel: "Edit {{kind}} reading {{time}}", deleteLabel: "Delete {{kind}} reading {{time}}", saved: "Reading saved temporarily", updated: "Reading updated", deleted: "Reading deleted", failed: "The operation failed. Try again.", invalidNumber: "Enter a valid number", positive: "The value must be greater than zero", checkReading: "Check the reading", integer: "Enter a whole number", diastolicOrder: "Diastolic pressure must be lower than systolic pressure" },
     title: "My health & measurements",
     add: "Add new reading",
@@ -246,6 +252,8 @@ export const enCatalog = {
     completed: "Complete",
   },
   reports: {
+    assessmentNotice: "The report does not include a medical assessment.",
+    chartDescription: "Averages of {{kind}} over {{days}} recorded days, in {{unit}}. Values are available in the daily averages list below the chart.",
     range: "Period: {{from}} to {{to}} · {{count}} readings",
     window: "The last {{days}} days, including today, in your device time zone.",
     count: "{{count}} readings during this period",

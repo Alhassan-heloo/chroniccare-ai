@@ -1,0 +1,77 @@
+/* Medication management adapts the approved Living patient shell and glass,
+   welcome, feature-icon and Pulse primitives. No independent palette,
+   background, shadows or continuous animation are introduced here. */
+.living-medications.living-public .medications-actions { justify-content: flex-end; }
+.living-medications.living-public .medication-summary {
+  --feature: var(--medication);
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center; gap: 24px; padding: 24px; min-width: 0;
+  background: var(--glass);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.living-medications.living-public .medication-summary .dashboard-panel-heading { border: 0; padding: 0; }
+.living-medications.living-public .medication-summary-progress { display: grid; gap: 12px; min-width: 0; }
+.living-medications.living-public .medication-summary p { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.living-medications.living-public .medication-summary progress { height: 5px; }
+.living-medications.living-public .medication-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.living-medications.living-public .medication-schedule {
+  --feature: var(--medication);
+  display: flex; flex-direction: column; min-width: 0; padding: 24px;
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  /* Same quiet feature edge as .dashboard-routine .dashboard-medication. */
+  border-color: color-mix(in srgb, var(--feature) 22%, var(--hairline));
+  background: var(--glass);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.living-medications.living-public .medication-card-heading { align-items: start; gap: 12px; }
+.living-medications.living-public .medication-title { min-width: 0; flex-basis: calc(100% - 48px); }
+.living-medications.living-public .medication-title h2 { font-size: 17px; font-weight: 650; line-height: 1.8; }
+.living-medications.living-public .medication-title p { color: var(--muted); font-size: 14px; line-height: 1.9; margin-top: 4px; }
+.living-medications.living-public .medication-dosage { display: flex; flex-wrap: wrap; gap: 0 5px; }
+.living-medications.living-public .medication-dosage bdi { min-width: 0; overflow-wrap: anywhere; }
+.living-medications.living-public .medication-card-heading .badge {
+  color: var(--feature); border: 1px solid var(--hairline); border-radius: 8px;
+  background: color-mix(in srgb, var(--feature) 7%, transparent);
+  font-size: 12px; font-weight: 650; padding: 3px 9px; margin-inline-start: 48px;
+}
+.living-medications.living-public .medication-notes { color: var(--muted); background: none; padding: 0; font-size: 13px; line-height: 1.9; margin-top: 16px; }
+.living-medications.living-public .dose-list { margin: 20px 0 0; }
+.living-medications.living-public .dose-list li { padding-block: 18px; gap: 14px; border-color: var(--hairline); }
+.living-medications.living-public .dose-list li > div { min-width: 0; }
+.living-medications.living-public .dose-list time { color: var(--text); font-size: 24px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.6; text-align: start; }
+.living-medications.living-public .dose-list li > div > span { display: block; color: var(--muted); font-size: 13px; line-height: 1.9; margin-top: 4px; }
+.living-medications.living-public .dose-list .dose-action {
+  min-height: 44px; padding: 10px 14px; gap: 7px; font-size: 13px;
+  color: var(--feature); border: 1px solid color-mix(in srgb, var(--feature) 45%, var(--hairline));
+  background: transparent; box-shadow: none;
+}
+.living-medications.living-public .dose-action[aria-pressed=false] { background: color-mix(in srgb, var(--feature) 8%, transparent); }
+.living-medications.living-public .dose-list .dose-action:hover:not(:disabled) { background: color-mix(in srgb, var(--feature) 14%, transparent); }
+.living-medications.living-public .medication-card-actions { gap: 10px; padding-top: 16px; border-color: var(--hairline); }
+.living-medications.living-public .medication-card-actions .btn { min-height: 44px; font-size: 13px; }
+.living-medications.living-public .medication-card-actions .delete-action { color: var(--muted); }
+.living-medications.living-public .medications-page > .empty-state { color: var(--muted); }
+.living-medications.living-public .measurement-empty > svg { color: var(--medication); }
+.living-medications.living-public .measurement-empty h2 { color: var(--text); font-size: 22px; }
+.living-medications.living-public .medication-form { gap: 20px; }
+.living-medications.living-public .medication-form-note { color: var(--muted); font-size: 14px; line-height: 1.9; }
+.living-medications.living-public .dose-fieldset { padding: 16px; border-color: var(--hairline); border-radius: var(--radius-small); }
+.living-medications.living-public .dose-fieldset legend { font-size: 14px; font-weight: 650; color: var(--text); }
+.living-medications.living-public .dose-input-row input { direction: ltr; }
+.living-medications.living-public .dose-input-row > .btn { flex-shrink: 0; margin-bottom: 4px; }
+.living-medications.living-public .field-error { color: var(--error); font-size: 13px; }
+.living-medications.living-public dialog .btn.btn-danger { background: var(--error-bg); color: var(--error); border: 1px solid var(--error); }
+@media (max-width: 1050px) {
+  .living-medications.living-public .medication-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .living-medications.living-public .medication-summary { grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 18px; border-radius: 20px; }
+  .living-medications.living-public .medication-schedule { padding: 18px; border-radius: 20px; }
+  .living-medications.living-public .medication-title h2 { font-size: 16px; }
+  .living-medications.living-public .medication-card-actions > .btn { flex: 1; }
+}
+@media (max-width: 360px) {
+  .living-medications.living-public .dose-list li > div { flex-basis: 100%; }
+  .living-medications.living-public .dose-list .dose-action { width: 100%; }
+  .living-medications.living-public .dose-fieldset { padding-inline: 12px; }
+}

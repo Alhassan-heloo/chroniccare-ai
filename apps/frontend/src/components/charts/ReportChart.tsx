@@ -9,8 +9,6 @@ import {
 } from "recharts";
 import type { ReportPoint } from "@/lib/types/report";
 import { useI18n } from "@/i18n/context";
-const formatValue = (value: number | undefined) =>
-  value === undefined ? "—" : String(value);
 export default function ReportChart({
   points,
   kind,
@@ -18,11 +16,12 @@ export default function ReportChart({
   points: ReportPoint[];
   kind: "pressure" | "glucose";
 }) {
-  const { t, locale, language } = useI18n();
+  const { t, locale, language, formatNumber, formatUnit } = useI18n();
+  const formatValue = (value: number | undefined) => value === undefined ? "—" : formatNumber(value);
   const dateFormatter = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric", calendar: "gregory" });
   const axisFormatter = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", calendar: "gregory" });
   const pressure = kind === "pressure";
-  const unit = pressure ? "mmHg" : "mg/dL";
+  const unit = formatUnit(pressure ? "mmHg" : "mg/dL");
   const data = points
     .filter((point) =>
       pressure ? point.systolic !== undefined : point.glucose !== undefined,
@@ -33,19 +32,19 @@ export default function ReportChart({
     }))
     .sort((a, b) => a.timestamp - b.timestamp);
   const first = data[0];
-  if (!first) return <p className="empty-state">لا توجد قراءات خلال الفترة.</p>;
+  if (!first) return <p className="empty-state" data-i18n="declarative">{t("reports.noReadings")}</p>;
   const singleDay =
     data.length === 1 ? (
-      <section className="report-single-day" aria-label="متوسطات يوم واحد">
+      <section className="report-single-day" aria-label={t("متوسطات يوم واحد")}>
         <p className="report-day-date">
           <time dateTime={first.day}>
             {dateFormatter.format(first.timestamp)}
           </time>
-          <span>متوسط اليوم</span>
+          <span>{t("متوسط اليوم")}</span>
         </p>
         <dl className="report-single-values">
           <div>
-            <dt>{pressure ? "الضغط الانقباضي" : "سكر الدم"}</dt>
+            <dt>{t(pressure ? "measurements.ui.systolic" : "measurements.bloodGlucose")}</dt>
             <dd>
               <bdi>
                 {formatValue(pressure ? first.systolic : first.glucose)}
@@ -55,7 +54,7 @@ export default function ReportChart({
           </div>
           {pressure && (
             <div>
-              <dt>الضغط الانبساطي</dt>
+              <dt>{t("measurements.ui.diastolic")}</dt>
               <dd>
                 <bdi>{formatValue(first.diastolic)}</bdi>
                 <small>{unit}</small>
@@ -64,8 +63,7 @@ export default function ReportChart({
           )}
         </dl>
         <p className="report-single-note">
-          تتوفر بيانات يوم واحد فقط؛ تظهر نقاط المتوسط أدناه، ويظهر خط الاتجاه
-          عند تسجيل يوم آخر.
+          {t("تتوفر بيانات يوم واحد فقط؛ تظهر نقاط المتوسط أدناه، ويظهر خط الاتجاه عند تسجيل يوم آخر.")}
         </p>
       </section>
     ) : null;
@@ -87,17 +85,17 @@ export default function ReportChart({
     )
     .map((point) => point.timestamp);
   return (
-    <div className="report-trend">
+    <div className="report-trend" data-i18n="declarative">
       {singleDay}
-      <div className="report-chart-key" aria-label="مفتاح المخطط">
+      <div className="report-chart-key" aria-label={t("مفتاح المخطط")}>
         <span>
           <i aria-hidden="true" />
-          {pressure ? "الانقباضي" : "سكر الدم"}
+          {t(pressure ? "common.chart.systolic" : "measurements.bloodGlucose")}
         </span>
         {pressure && (
           <span>
             <i className="report-key-secondary" aria-hidden="true" />
-            الانبساطي
+            {t("common.chart.diastolic")}
           </span>
         )}
         <bdi className="report-chart-unit">{unit}</bdi>
@@ -106,7 +104,7 @@ export default function ReportChart({
         className="chart"
         dir="ltr"
         role="img"
-        aria-label={`متوسطات ${pressure ? "الضغط" : "السكر"} خلال ${data.length} أيام مسجلة، بوحدة ${unit}. القيم متاحة في قائمة متوسطات الأيام أسفل المخطط.`}
+        aria-label={t("reports.chartDescription", { kind: t(pressure ? "measurements.bloodPressure" : "measurements.bloodGlucose"), days: formatNumber(data.length), unit })}
       >
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <LineChart
@@ -136,6 +134,7 @@ export default function ReportChart({
             />
             <YAxis
               width={44}
+              tickFormatter={(value) => formatNumber(Number(value))}
               domain={[
                 Math.max(0, Math.floor(minimum - padding)),
                 Math.ceil(maximum + padding),
@@ -144,6 +143,7 @@ export default function ReportChart({
               tickLine={false}
             />
             <Tooltip
+              formatter={(value, name) => [typeof value === "number" ? formatNumber(value) : String(value ?? "—"), name ?? ""]}
               labelFormatter={(value) => dateFormatter.format(Number(value))}
               contentStyle={{
                 direction: language === "ar" ? "rtl" : "ltr", background: "var(--surface)", color: "var(--text)",
@@ -178,11 +178,10 @@ export default function ReportChart({
         </ResponsiveContainer>
       </div>
       <p className="report-chart-note">
-        المحور الرأسي يتكيف مع القيم لعرض الفروق. الخط يربط الأيام المسجلة فقط،
-        ولا يمثل قراءات للأيام المفقودة.
+        {t("المحور الرأسي يتكيف مع القيم لعرض الفروق. الخط يربط الأيام المسجلة فقط، ولا يمثل قراءات للأيام المفقودة.")}
       </p>
       <details className="report-day-details">
-        <summary>عرض متوسطات الأيام ({data.length})</summary>
+        <summary>{t("عرض متوسطات الأيام")} ({formatNumber(data.length)})</summary>
         <ul>
           {data.map((point) => (
             <li key={point.day}>
@@ -190,7 +189,7 @@ export default function ReportChart({
                 {dateFormatter.format(point.timestamp)}
               </time>
               <span>
-                {pressure ? "الانقباضي / الانبساطي" : "سكر الدم"}:{" "}
+                {pressure ? `${t("common.chart.systolic")} / ${t("common.chart.diastolic")}` : t("measurements.bloodGlucose")}:{" "}
                 <bdi>
                   {pressure
                     ? `${formatValue(point.systolic)} / ${formatValue(point.diastolic)}`

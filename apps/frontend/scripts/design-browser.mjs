@@ -277,7 +277,9 @@ async function interactions(page, language, width) {
   await page.locator('dialog[open] button[type=submit]').click();await page.locator('dialog[open]').waitFor({state:'hidden'});
   await navigate(page,'/patient/dashboard');
   assert.equal((await page.locator('.metric-number').first().innerText()).trim(),'132/84');
-  await navigate(page,'/patient/reports');assert.match(await page.locator('.report-readings').innerText(),/132\/84/);
+  await navigate(page,'/patient/reports');
+  await page.locator('.report-readings').filter({hasText:'132/84'}).waitFor({timeout:10000});
+  assert.match(await page.locator('.report-readings').innerText(),/132\/84/);
   await page.locator('.report-periods button').last().click();await page.locator('.report-charts').waitFor();
   await navigate(page,'/patient/measurements');
   await page.locator('.measurement-entry-actions button').nth(1).click();
@@ -286,7 +288,7 @@ async function interactions(page, language, width) {
   assert.equal(await page.locator('.measurement-entry').count(),14);
   await page.locator('#filter-kind').selectOption('glucose');assert.equal(await page.locator('.measurement-entry').count(),7);
   await navigate(page,'/patient/habits');
-  await page.locator('.measurements-heading > button').click();
+  await page.locator('.habits-actions > button').click();
   const title=`Wellness روتين ${'A'.repeat(55)}`;
   await page.locator('dialog[open] input[name=title]').fill(title);
   await measure(page,`${tag}-habit-add`);
@@ -303,7 +305,7 @@ async function interactions(page, language, width) {
   await habit.locator('.medication-card-actions button').last().click();await page.locator('dialog[open] .btn-danger').click();await page.locator('dialog[open]').waitFor({state:'hidden'});
   assert.equal(await page.locator('.habit-detail').count(),2);
   await navigate(page,'/patient/medications');
-  await page.locator('.measurements-heading > button').click();
+  await page.locator('.medications-actions > button').click();
   await page.locator('dialog[open] input[name=name]').fill('Browser medication');
   await page.locator('dialog[open] input[name=dosage]').fill('As prescribed');
   await page.locator('dialog[open] input[type=time]').fill('12:30');

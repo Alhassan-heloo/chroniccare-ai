@@ -32,13 +32,13 @@ export function HabitProgressForm({
   return (
     <form
       data-i18n="declarative"
-      className="stack"
+      className="stack habit-progress-form"
       noValidate
       onSubmit={handleSubmit(({ value }) =>
         mutation.mutate({ id: habit.id, value }, { onSuccess: onSaved }),
       )}
     >
-      <p>{habit.title}</p>
+      <p>{habit.id === "steps" && habit.title === "المشي اليومي" ? t("patient.metric.walking") : habit.id === "water" && habit.title === "شرب الماء" ? t("patient.metric.water") : habit.title}</p>
       <Input
         label={t("habits.ui.totalToday", { unit: formatHabitUnit(habit.unit) })}
         type="number"

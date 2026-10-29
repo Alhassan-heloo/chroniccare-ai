@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Pill } from "lucide-react";
+import { Plus, Pill, Info } from "lucide-react";
 import type { Medication } from "@/lib/types/medication";
 import { useMedications } from "@/hooks/queries/useMedications";
 import { useDeleteMedication } from "@/hooks/mutations/useMedicationMutations";
@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useI18n } from "@/i18n/context";
+import { SignatureArtwork, LivingPulse } from "@/components/public/living/ui";
 export default function MedicationsPage() {
   const { t, formatNumber } = useI18n();
   const { data = [], isPending, isError, refetch } = useMedications();
@@ -19,21 +20,20 @@ export default function MedicationsPage() {
   const summary = summarizeMedications(data);
   return (
     <div className="stack medications-page">
-      <div className="section-heading measurements-heading">
-        <div>
-          <span className="eyebrow">روتينك اليومي، في مكان واحد</span>
-          <h1>أدويتي</h1>
-          <p>نظّم مواعيدك وسجّل الجرعات التي تناولتها.</p>
+      <div className="medications-heading dashboard-welcome">
+        <SignatureArtwork />
+        <div data-i18n="declarative">
+          <span className="eyebrow">{t("روتينك اليومي، في مكان واحد")}</span>
+          <h1>{t("medications.title")}</h1>
+          <p>{t("نظّم مواعيدك وسجّل الجرعات التي تناولتها.")}</p>
         </div>
+      </div>
+      <div className="medications-actions dashboard-canvas-actions">
         <Button onClick={() => setForm("new")} data-i18n="declarative">
-          <Plus size={21} />
+          <Plus size={19} aria-hidden="true" />
           {t("medications.add")}
         </Button>
       </div>
-      <p className="measurements-notice">
-        بيانات تجريبية تُمسح عند تحديث الصفحة. المواعيد تتكرر يوميًا، ولا توجد
-        إشعارات فعلية. تسجيل التناول يوثّق ما تناولته فقط.
-      </p>
       {isPending ? (
         <Card className="empty-state" role="status">
           جارٍ تحميل الأدوية…
@@ -45,18 +45,22 @@ export default function MedicationsPage() {
         </Card>
       ) : (
         <>
-          <div className="feature-workbench"><Card className="medication-summary">
-            <div>
+          <Card className="medication-summary glass">
+            <LivingPulse cue={`${summary.taken}:${summary.total}`} />
+            <div className="dashboard-panel-heading">
+              <span className="dashboard-feature-icon" aria-hidden="true"><Pill size={20} /></span>
               <h2>متابعة جرعات اليوم</h2>
+            </div>
+            <div className="medication-summary-progress">
               <p aria-live="polite" data-i18n="declarative">
                 {t("medications.summary", { taken: formatNumber(summary.taken), total: formatNumber(summary.total), medications: formatNumber(data.length) })}
               </p>
+              <progress
+                aria-label="الجرعات المسجلة اليوم"
+                value={summary.taken}
+                max={summary.total || 1}
+              />
             </div>
-            <progress
-              aria-label="الجرعات المسجلة اليوم"
-              value={summary.taken}
-              max={summary.total || 1}
-            />
           </Card>
           {data.length ? (
             <div className="medication-grid">
@@ -70,15 +74,19 @@ export default function MedicationsPage() {
               ))}
             </div>
           ) : (
-            <Card className="empty-state measurement-empty">
-              <Pill size={36} />
+            <Card className="empty-state measurement-empty glass">
+              <Pill size={36} aria-hidden="true" />
               <h2>لا توجد أدوية مسجلة</h2>
               <p>أضف دواءك ومواعيده وفق الوصفة.</p>
               <Button onClick={() => setForm("new")}>إضافة أول دواء</Button>
             </Card>
-          )}</div>
+          )}
         </>
       )}
+      <p className="dashboard-disclosure" data-i18n="declarative">
+        <Info size={18} aria-hidden="true" />
+        <span>{t("بيانات تجريبية تُمسح عند تحديث الصفحة. المواعيد تتكرر يوميًا، ولا توجد إشعارات فعلية. تسجيل التناول يوثّق ما تناولته فقط.")}</span>
+      </p>
       <Modal
         open={form !== null}
         onClose={() => setForm(null)}

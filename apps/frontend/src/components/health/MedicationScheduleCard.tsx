@@ -19,14 +19,14 @@ export function MedicationScheduleCard({
   const mutation = useSetDoseTaken();
   const taken = item.doses.filter((dose) => dose.takenOn === todayKey()).length;
   return (
-    <Card className="medication-schedule">
+    <Card className="medication-schedule glass">
       <div className="medication-card-heading">
-        <span className="icon-tile tone-success">
-          <Pill />
+        <span className="dashboard-feature-icon" aria-hidden="true">
+          <Pill size={20} />
         </span>
         <div className="medication-title">
           <h2>{item.name}</h2>
-          <p>الجرعة: {item.dosage}</p>
+          <p className="medication-dosage"><span data-i18n="declarative">{t("الجرعة")}:</span><bdi>{item.dosage}</bdi></p>
         </div>
         <Badge tone={taken === item.doses.length ? "success" : "info"} data-i18n="declarative">
           {t("medications.recorded", { taken: formatNumber(taken), total: formatNumber(item.doses.length) })}
@@ -43,6 +43,7 @@ export function MedicationScheduleCard({
                 <span>{done ? "✓ تم تسجيل التناول" : "لم يُسجّل التناول"}</span>
               </div>
               <Button
+                className="button dose-action"
                 variant={done ? "secondary" : "primary"}
                 disabled={mutation.isPending}
                 aria-pressed={done}
@@ -57,7 +58,7 @@ export function MedicationScheduleCard({
               >
                 {done ? (
                   <>
-                    <Check size={17} />
+                    <Check size={17} aria-hidden="true" />
                     إلغاء التسجيل
                   </>
                 ) : (
@@ -70,11 +71,12 @@ export function MedicationScheduleCard({
       </ul>
       <div className="medication-card-actions">
         <Button
+          className="button"
           variant="secondary"
           onClick={() => onEdit(item)}
           aria-label={`تعديل ${item.name}`}
         >
-          <Pencil size={17} />
+          <Pencil size={17} aria-hidden="true" />
           تعديل
         </Button>
         <Button
@@ -83,7 +85,7 @@ export function MedicationScheduleCard({
           onClick={() => onDelete(item)}
           aria-label={`حذف ${item.name}`}
         >
-          <Trash2 size={17} />
+          <Trash2 size={17} aria-hidden="true" />
           حذف
         </Button>
       </div>

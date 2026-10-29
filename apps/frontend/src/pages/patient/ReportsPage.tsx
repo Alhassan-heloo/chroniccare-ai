@@ -1,10 +1,12 @@
 import { lazy, Suspense, useState } from "react";
+import { HeartPulse, Droplet, FileChartColumn, Info, CalendarDays } from "lucide-react";
 import { usePatientReport } from "@/hooks/queries/usePatientReport";
 import type { ReportPeriod } from "@/lib/types/report";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ReportSummary } from "@/components/health/ReportSummary";
 import { useI18n } from "@/i18n/context";
+import { SignatureArtwork, LivingPulse } from "@/components/public/living/ui";
 import {
   measurementLabel,
   measurementValue,
@@ -20,14 +22,18 @@ export default function ReportsPage() {
   const [period, setPeriod] = useState<ReportPeriod>(7);
   const { data, isPending, isError, refetch } = usePatientReport(period);
   return (
-    <div className="stack reports-page">
-      <div className="section-heading measurements-heading">
+    <div className="stack reports-page" data-i18n="declarative">
+      <div className="reports-heading dashboard-welcome">
+        <SignatureArtwork />
         <div>
-          <span className="eyebrow">متابعتك، بصورة أوضح</span>
-          <h1>تقاريري</h1>
-          <p>ملخص وصفي للقراءات المسجلة خلال الفترة المختارة.</p>
+          <span className="eyebrow">{t("متابعتك، بصورة أوضح")}</span>
+          <h1>{t("reports.title")}</h1>
+          <p>{t("ملخص وصفي للقراءات المسجلة خلال الفترة المختارة.")}</p>
         </div>
-        <div className="report-periods" role="group" aria-label="فترة التقرير">
+      </div>
+      <div className="reports-toolbar dashboard-canvas-actions">
+        <p className="report-range" role="status"><CalendarDays size={17} aria-hidden="true" /><span>{data && t("reports.range", { from: `\u2068${data.from}\u2069`, to: `\u2068${data.to}\u2069`, count: formatNumber(data.measurements.length) })}</span></p>
+        <div className="report-periods segmented" role="group" aria-label={t("reports.period")}>
           {periods.map((item) => (
             <Button
               key={item.value}
@@ -35,66 +41,56 @@ export default function ReportsPage() {
               aria-pressed={period === item.value}
               onClick={() => setPeriod(item.value)}
             >
-              {item.label}
+              {t(item.label)}
             </Button>
           ))}
         </div>
       </div>
-      <p className="measurements-notice">
-        أمثلة تجريبية لآخر 7 أيام، وليست قراءات مريض حقيقية. البيانات مؤقتة.
-        <span data-i18n="declarative">{t("reports.window", { days: formatNumber(period) })}</span>{" "}لا يتضمن التقرير
-        تقييمًا طبيًا.
-      </p>
       {isPending ? (
-        <Card className="empty-state" role="status">
-          جارٍ تحميل التقرير…
+        <Card className="empty-state glass" role="status">
+          {t("جارٍ تحميل التقرير…")}
         </Card>
       ) : isError || !data ? (
-        <Card className="empty-state" role="alert">
-          <p>تعذر تحميل التقرير.</p>
-          <Button onClick={() => void refetch()}>إعادة المحاولة</Button>
+        <Card className="empty-state glass" role="alert">
+          <p>{t("تعذر تحميل التقرير.")}</p>
+          <Button onClick={() => void refetch()}>{t("common.actions.retry")}</Button>
         </Card>
       ) : (
         <>
-          <p className="muted" role="status" data-i18n="declarative">
-            {t("reports.range", { from: `\u2068${data.from}\u2069`, to: `\u2068${data.to}\u2069`, count: formatNumber(data.measurements.length) })}
-          </p>
           <div className="report-workbench"><ReportSummary data={data} /><div className="report-body">
-          <p className="measurements-notice">
-            الأدوية والعادات تعرضان حالة اليوم فقط من البيانات التجريبية
-            الحالية؛ لا يتوفر سجل تاريخي لحساب الالتزام خلال الفترة.
+          <p className="report-today-note">
+            <Info size={17} aria-hidden="true" /><span>{t("الأدوية والعادات تعرضان حالة اليوم فقط من البيانات التجريبية الحالية؛ لا يتوفر سجل تاريخي لحساب الالتزام خلال الفترة.")}</span>
           </p>
           <div className="report-charts">
             {(["pressure", "glucose"] as const).map((kind) => (
-              <Card key={kind}>
-                <h2>
-                  {kind === "pressure" ? "اتجاه ضغط الدم" : "اتجاه سكر الدم"}
-                </h2>
-                <p className="muted">
-                  متوسط القراءات لكل يوم مسجل، دون ملء الأيام المفقودة.
-                </p>
+              <Card key={kind} className="report-chart-panel health-canvas glass" data-kind={kind}>
+                <LivingPulse cue={`${period}:${kind}`} />
+                <div className="dashboard-panel-heading"><span className="dashboard-feature-icon" aria-hidden="true">{kind === "pressure" ? <HeartPulse size={20} /> : <Droplet size={20} />}</span><div>
+                  <h2>{t(kind === "pressure" ? "اتجاه ضغط الدم" : "اتجاه سكر الدم")}</h2>
+                  <p>{t("متوسط القراءات لكل يوم مسجل، دون ملء الأيام المفقودة.")}</p>
+                </div></div>
                 {(
                   kind === "pressure" ? data.pressure.count : data.glucose.count
                 ) ? (
-                  <Suspense fallback={<p role="status">جارٍ تحميل المخطط…</p>}>
+                  <Suspense fallback={<p role="status">{t("reports.loadingChart")}</p>}>
                     <ReportChart points={data.points} kind={kind} />
                   </Suspense>
                 ) : (
                   <p className="empty-state">
-                    لا توجد قراءات من هذا النوع خلال الفترة.
+                    {t("لا توجد قراءات من هذا النوع خلال الفترة.")}
                   </p>
                 )}
               </Card>
             ))}
           </div>
-          <Card className="report-readings">
-            <h2>أحدث القياسات خلال الفترة</h2>
+          <Card className="report-readings glass">
+            <div className="dashboard-panel-heading"><span className="dashboard-feature-icon" aria-hidden="true"><FileChartColumn size={20} /></span><h2>{t("أحدث القياسات خلال الفترة")}</h2></div>
             {data.measurements.length ? (
               <ul>
                 {data.measurements.slice(0, 5).map((item) => (
                   <li key={item.id}>
-                    <span>{measurementLabel(item)}</span>
-                    {item.isExample && <small>بيانات مثال</small>}
+                    <div className="report-reading-copy"><span>{t(measurementLabel(item))}</span>
+                    {item.isExample && <small>{t("measurements.ui.example")}</small>}</div>
                     <strong>
                       <bdi>{measurementValue(item)}</bdi>{" "}
                       <small>
@@ -109,14 +105,14 @@ export default function ReportsPage() {
               </ul>
             ) : (
               <p className="empty-state">
-                لا توجد قياسات مسجلة خلال الفترة. أضف قراءة من صفحة صحتي لتظهر
-                هنا.
+                {t("لا توجد قياسات مسجلة خلال الفترة. أضف قراءة من صفحة صحتي لتظهر هنا.")}
               </p>
             )}
           </Card>
           </div></div>
         </>
       )}
+      <p className="dashboard-disclosure"><Info size={18} aria-hidden="true" /><span>{t("أمثلة تجريبية لآخر 7 أيام، وليست قراءات مريض حقيقية. البيانات مؤقتة.")}{" "}{t("reports.window", { days: formatNumber(period) })}{" "}{t("reports.assessmentNotice")}</span></p>
     </div>
   );
 }

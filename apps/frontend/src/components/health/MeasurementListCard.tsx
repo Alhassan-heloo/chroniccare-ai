@@ -22,10 +22,10 @@ export function MeasurementListCard({
     timeStyle: "short",
   });
   return (
-    <Card className="measurement-entry" data-i18n="declarative">
+    <Card className="measurement-entry" data-kind={item.kind} data-i18n="declarative">
       <div className="measurement-entry-heading">
-        <span className={`icon-tile ${pressure ? "tone-danger" : "tone-info"}`}>
-          <Icon />
+        <span className="dashboard-feature-icon">
+          <Icon size={20} aria-hidden="true" />
         </span>
         <div>
           <h3>{label}</h3>
@@ -39,20 +39,21 @@ export function MeasurementListCard({
       </div>
       <div className="measurement-entry-actions">
         <Button
+          className="button"
           variant="secondary"
           onClick={() => onEdit(item)}
           aria-label={t("measurements.ui.editLabel", { kind: label, time: timestamp })}
         >
-          <Pencil size={17} />
+          <Pencil size={17} aria-hidden="true" />
           {t("common.actions.edit")}
         </Button>
         <Button
-          className="delete-action"
+          className="button quiet delete-action"
           variant="ghost"
           onClick={() => onDelete(item)}
           aria-label={t("measurements.ui.deleteLabel", { kind: label, time: timestamp })}
         >
-          <Trash2 size={17} />
+          <Trash2 size={17} aria-hidden="true" />
           {t("common.actions.delete")}
         </Button>
       </div>

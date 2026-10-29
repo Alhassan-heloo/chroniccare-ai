@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Activity } from "lucide-react";
+import { Plus, Activity, Info } from "lucide-react";
 import { useMeasurements } from "@/hooks/queries/usePatientDashboard";
 import { useDeleteMeasurement } from "@/hooks/mutations/useMeasurementMutations";
 import { useDashboardActions } from "@/context/DashboardContext";
@@ -15,6 +15,7 @@ import { MeasurementFilters } from "@/components/health/MeasurementFilters";
 import { MeasurementListCard } from "@/components/health/MeasurementListCard";
 import { MeasurementForm } from "@/components/health/MeasurementForm";
 import { useI18n } from "@/i18n/context";
+import { SignatureArtwork, LivingPulse } from "@/components/public/living/ui";
 
 export default function MeasurementsPage() {
   const { t, formatNumber } = useI18n();
@@ -33,23 +34,22 @@ export default function MeasurementsPage() {
   const filtered = invalidRange ? [] : filterMeasurements(data, filters);
   return (
     <div className="stack measurements-page" data-i18n="declarative">
-      <div className="section-heading measurements-heading">
+      <div className="measurements-heading dashboard-welcome">
+        <SignatureArtwork />
         <div>
           <span className="eyebrow">{t("measurements.ui.eyebrow")}</span>
           <h1>{t("measurements.title")}</h1>
           <p>{t("measurements.ui.description")}</p>
         </div>
-        <Button onClick={openMeasurement}>
-          <Plus size={21} />
-          {t("measurements.add")}
-        </Button>
       </div>
-      <p className="measurements-notice">
-        {t("measurements.ui.notice")}
-      </p>
-      <div className="measurements-workbench">
-      <aside className="measurement-filter-panel"><MeasurementFilters value={filters} onChange={setFilters} /></aside>
-      <section className="measurement-results" aria-label={t("measurements.ui.history")}>
+      <div className="measurements-actions dashboard-canvas-actions">
+        <span className="sample-label">{data.some(item => item.isExample) && <><i aria-hidden="true" />{t("patient.overview.includesExamples")}</>}</span>
+        <Button className="add-reading" onClick={openMeasurement}><Plus size={19} aria-hidden="true" />{t("measurements.add")}</Button>
+      </div>
+      <div className="measurements-workbench dashboard-living-grid">
+      <aside className="measurement-filter-panel dashboard-routine" aria-label={t("measurements.living.filters")}><MeasurementFilters value={filters} onChange={setFilters} /></aside>
+      <section className="measurement-results dashboard-primary health-canvas glass" data-kind={filters.kind === "glucose" ? "glucose" : "pressure"} aria-label={t("measurements.ui.history")}>
+      <LivingPulse cue={`${filters.kind}:${filters.from}:${filters.to}`} />
       {isPending ? (
         <Card className="empty-state" role="status">
           {t("measurements.ui.loading")}
@@ -61,11 +61,11 @@ export default function MeasurementsPage() {
         </Card>
       ) : (
         <>
-          <div className="section-heading">
-            <h2>{t("measurements.ui.history")}</h2>
+          <div className="measurement-history-heading dashboard-panel-heading">
+            <div><h2>{t("measurements.ui.history")}</h2>
             <p role="status" aria-live="polite">
               {t("measurements.ui.count", { shown: formatNumber(filtered.length), total: formatNumber(data.length) })}
-            </p>
+            </p></div>
           </div>
           {invalidRange ? (
             <Card className="empty-state">
@@ -105,6 +105,7 @@ export default function MeasurementsPage() {
       )}
       </section>
       </div>
+      <p className="dashboard-disclosure"><Info size={18} aria-hidden="true" /><span>{t("measurements.ui.notice")}</span></p>
       <Modal
         open={!!editing}
         onClose={() => setEditing(null)}

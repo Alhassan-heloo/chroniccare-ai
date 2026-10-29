@@ -179,7 +179,7 @@ async function exerciseInteractions(page, context, meta) {
   await page.locator("dialog[open]").waitFor({ state: "hidden" });
   assert.equal(await page.locator(".measurement-entry").count(), 14);
   await navigate(page, "/patient/habits");
-  await page.locator(".measurements-heading > button").click();
+  await page.locator(".habits-actions > button").click();
   const longName = `روتين Wellness ${"A".repeat(60)}`;
   await page.locator('dialog[open] input[name="title"]').fill(longName);
   await page.locator('dialog[open] button[type="submit"]').click();
@@ -299,11 +299,11 @@ try {
           await dialogCheck(page, meta, page.locator(".add-reading"), "add-reading");
         } else if (route === "/patient/measurements") {
           assert.equal(await page.locator(".measurement-entry").count(), 14);
-          await dialogCheck(page, meta, page.locator(".measurements-heading > button"), "add-reading");
+          await dialogCheck(page, meta, page.locator(".measurements-actions > button"), "add-reading");
           await dialogCheck(page, meta, page.locator(".measurement-entry-actions button").first(), "edit-reading");
           await dialogCheck(page, meta, page.locator(".measurement-entry-actions button").nth(1), "delete-reading");
         } else {
-          await dialogCheck(page, meta, page.locator(".measurements-heading > button"), "add-habit");
+          await dialogCheck(page, meta, page.locator(".habits-actions > button"), "add-habit");
           await dialogCheck(page, meta, page.locator(".habit-detail > button").first(), "habit-progress");
           await dialogCheck(page, meta, page.locator(".medication-card-actions button").first(), "edit-habit");
           await dialogCheck(page, meta, page.locator(".medication-card-actions button").nth(1), "delete-habit");

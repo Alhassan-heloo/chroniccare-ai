@@ -1,0 +1,82 @@
+/* Reporting adapts the existing patient shell, numeric scale, panel heading,
+   feature icons and chart canvas. All colors, depth and motion come from
+   Living 3.3; this file defines layout and report-specific presentation only. */
+.living-reports.living-public .reports-toolbar { align-items: center; }
+.living-reports.living-public .report-range { display: flex; align-items: start; gap: 9px; min-width: 0; color: var(--muted); font-size: 13px; line-height: 1.9; overflow-wrap: anywhere; }
+.living-reports.living-public .report-range svg { margin-top: 4px; }
+.living-reports.living-public .report-periods { display: flex; flex-wrap: nowrap; flex-shrink: 0; gap: 4px; padding: 4px; border: 1px solid var(--hairline); background: var(--bg); border-radius: 14px; }
+.living-reports.living-public .report-periods .btn { min-height: 44px; padding: 8px 14px; background: transparent; color: var(--muted); font-size: 13px; box-shadow: none; }
+.living-reports.living-public .report-periods .btn[aria-pressed=true] { background: var(--tint); color: var(--text); box-shadow: inset 0 0 0 1px var(--hairline); }
+.living-reports.living-public .report-workbench { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.living-reports.living-public .report-summary { --feature: var(--pressure); display: grid; grid-template-columns: 1.2fr 1.2fr 1fr 1fr; gap: 16px; border: 0; background: none; border-radius: 0; }
+.living-reports.living-public .report-summary > .card.report-stat {
+  display: flex; flex-direction: column; min-width: 0; padding: 20px;
+  background: var(--glass); border: 1px solid color-mix(in srgb, var(--feature) 22%, var(--hairline));
+  border-radius: var(--radius); box-shadow: var(--shadow); backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.living-reports.living-public .report-summary [data-kind=glucose] { --feature: var(--glucose); }
+.living-reports.living-public .report-summary [data-kind=medication] { --feature: var(--medication); }
+.living-reports.living-public .report-summary [data-kind=habits] { --feature: var(--habits); }
+.living-reports.living-public .report-stat-heading { display: flex; align-items: start; gap: 10px; }
+.living-reports.living-public .report-summary h2 { color: var(--text); font-size: 14px; font-weight: 650; line-height: 1.8; }
+.living-reports.living-public .report-summary strong { color: var(--text); font-size: clamp(24px, 2.3vw, 34px); font-weight: 650; line-height: 1.6; margin-block: 16px 10px; font-variant-numeric: tabular-nums; }
+.living-reports.living-public .report-summary .report-today-stat strong { font-size: 26px; }
+.living-reports.living-public .report-summary p { margin-top: auto; color: var(--muted); font-size: 12px; line-height: 1.9; }
+.living-reports.living-public .report-body { min-width: 0; gap: 24px; }
+.living-reports.living-public .report-today-note { display: flex; align-items: start; gap: 9px; color: var(--muted); font-size: 12px; line-height: 1.9; }
+.living-reports.living-public .report-today-note svg { color: var(--primary); margin-top: 4px; }
+.living-reports.living-public .report-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.living-reports.living-public .report-chart-panel {
+  --line: var(--pressure); --feature: var(--pressure);
+  display: block; min-width: 0; padding: 24px; background: var(--surface);
+  border: 1px solid var(--hairline); border-radius: var(--radius); box-shadow: none;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.living-reports.living-public .report-chart-panel[data-kind=glucose] { --line: var(--glucose); --feature: var(--glucose); }
+.living-reports.living-public .report-chart-panel .dashboard-panel-heading { align-items: start; }
+.living-reports.living-public .report-chart-panel .dashboard-panel-heading > div { min-width: 0; }
+.living-reports.living-public .report-chart-panel .dashboard-panel-heading p { color: var(--muted); font-size: 12px; line-height: 1.9; margin-top: 5px; }
+.living-reports.living-public .report-trend { --primary: var(--line); --info: var(--pressure-secondary); --border: var(--hairline); }
+.living-reports.living-public .report-trend .chart { height: 260px; margin-block: 16px; padding: 0; border: 0; border-radius: 12px; box-shadow: none; background: transparent; }
+.living-reports.living-public .report-chart-key { font-size: 12px; color: var(--muted); gap: 10px 16px; margin-block: 16px 0; }
+.living-reports.living-public .report-chart-unit { font-size: 11px; }
+.living-reports.living-public .report-chart-note, .living-reports.living-public .report-single-note { font-size: 12px; line-height: 1.9; color: var(--muted); }
+.living-reports.living-public .report-day-details { border-color: var(--hairline); color: var(--muted); }
+.living-reports.living-public .report-day-details summary { min-height: 44px; font-size: 13px; font-weight: 500; color: var(--muted); }
+.living-reports.living-public .report-day-details li { border-color: var(--hairline); font-size: 13px; overflow-wrap: anywhere; }
+.living-reports.living-public .report-single-day { margin-block: 18px; padding: 16px; background: var(--tint); border: 1px solid var(--hairline); border-radius: 14px; }
+.living-reports.living-public .report-day-date { color: var(--muted); font-size: 12px; }
+.living-reports.living-public .report-day-date span { color: var(--text); font-weight: 650; }
+.living-reports.living-public .report-single-values { margin-block: 16px; gap: 14px; }
+.living-reports.living-public .report-single-values dt { font-size: 13px; font-weight: 500; }
+.living-reports.living-public .report-single-values bdi { color: var(--text); font-size: 28px; font-weight: 650; line-height: 1.6; }
+.living-reports.living-public .report-single-values small { font-size: 11px; }
+.living-reports.living-public .report-readings { --feature: var(--reports); padding: 24px; background: var(--glass); box-shadow: var(--shadow); border-radius: var(--radius); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.living-reports.living-public .report-readings ul { margin: 0; }
+.living-reports.living-public .report-readings li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, auto) minmax(150px, auto); align-items: center; gap: 16px; padding-block: 18px; border-color: var(--hairline); }
+.living-reports.living-public .report-readings li:last-child { border: 0; padding-bottom: 0; }
+.living-reports.living-public .report-reading-copy { display: grid; gap: 4px; min-width: 0; }
+.living-reports.living-public .report-reading-copy > span { font-size: 14px; font-weight: 650; }
+.living-reports.living-public .report-reading-copy small { font-size: 11px; color: var(--muted); }
+.living-reports.living-public .report-readings strong { display: flex; align-items: baseline; flex-wrap: wrap; gap: 7px; font-size: clamp(24px, 2.3vw, 34px); font-weight: 650; color: var(--text); font-variant-numeric: tabular-nums; }
+.living-reports.living-public .report-readings strong > small { color: var(--muted); font-size: 11px; font-weight: 500; }
+.living-reports.living-public .report-readings time { color: var(--muted); font-size: 12px; line-height: 1.9; }
+.living-reports.living-public .report-chart-panel .empty-state, .living-reports.living-public .report-readings .empty-state { color: var(--muted); font-size: 14px; line-height: 1.9; padding: 28px 0; }
+@media (max-width: 1050px) {
+  .living-reports.living-public .report-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .living-reports.living-public .report-charts { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .living-reports.living-public .reports-toolbar { flex-direction: column; align-items: stretch; }
+  .living-reports.living-public .report-periods .btn { flex: 1; min-width: 0; }
+  .living-reports.living-public .report-summary { gap: 14px; }
+  .living-reports.living-public .report-summary > .card.report-stat { padding: 18px; border-radius: 20px; }
+  .living-reports.living-public .report-period-stat { grid-column: 1 / -1; }
+  .living-reports.living-public .report-summary strong { font-size: 30px; }
+  .living-reports.living-public .report-today-stat .report-stat-heading { flex-direction: column; }
+  .living-reports.living-public .report-summary .report-today-stat strong { font-size: 26px; }
+  .living-reports.living-public .report-chart-panel, .living-reports.living-public .report-readings { padding: 18px 14px; border-radius: 20px; }
+  .living-reports.living-public .report-readings li { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+  .living-reports.living-public .report-readings strong { font-size: 27px; }
+  .living-reports.living-public .report-readings time { grid-column: 1 / -1; }
+}

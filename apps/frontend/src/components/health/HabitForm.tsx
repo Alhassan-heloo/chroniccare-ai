@@ -32,7 +32,7 @@ export function HabitForm({
   return (
     <form
       data-i18n="declarative"
-      className="stack"
+      className="stack habit-form"
       noValidate
       onSubmit={handleSubmit((input) =>
         initial

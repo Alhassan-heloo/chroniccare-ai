@@ -38,7 +38,7 @@ export function MedicationForm({
   const pending = add.isPending || update.isPending;
   return (
     <form
-      className="stack"
+      className="stack medication-form"
       noValidate
       onSubmit={handleSubmit((input) => {
         if (initial)
@@ -74,12 +74,13 @@ export function MedicationForm({
               error={errors.doses?.[index]?.time?.message}
             />
             <Button
+              className="icon-button"
               variant="ghost"
               aria-label={`إزالة الموعد ${index + 1}`}
               disabled={fields.length === 1 || pending}
               onClick={() => remove(index)}
             >
-              <X size={20} />
+              <X size={20} aria-hidden="true" />
             </Button>
           </div>
         ))}
@@ -89,11 +90,12 @@ export function MedicationForm({
           </p>
         )}
         <Button
+          className="button"
           variant="secondary"
           disabled={fields.length >= 6 || pending}
           onClick={() => append({ time: "" })}
         >
-          <Plus size={18} />
+          <Plus size={18} aria-hidden="true" />
           إضافة موعد
         </Button>
         <p className="medication-form-note muted">

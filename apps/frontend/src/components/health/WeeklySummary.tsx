@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { WeeklyPoint } from "@/lib/types/dashboard";
 import { BloodPressureChart } from "@/components/charts/BloodPressureChart";
 import { GlucoseChart } from "@/components/charts/GlucoseChart";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { useI18n } from "@/i18n/context";
-export function WeeklySummary({ data }: { data: WeeklyPoint[] }) {
+import { LivingPulse } from "@/components/public/living/ui";
+export function WeeklySummary({ data, readouts }: { data: WeeklyPoint[]; readouts?: ReactNode }) {
   const { t, formatNumber, formatDate, formatUnit } = useI18n();
   const [kind, setKind] = useState<"pressure" | "glucose">("pressure");
   const visible = data.filter((point) =>
@@ -15,7 +16,8 @@ export function WeeklySummary({ data }: { data: WeeklyPoint[] }) {
   );
   const includesExamples = visible.some((point) => point.isExample);
   return (
-    <Card className="weekly-section" data-i18n="declarative">
+    <Card className={readouts ? "weekly-section health-canvas glass" : "weekly-section"} data-kind={kind} data-i18n="declarative">
+      {readouts && <LivingPulse cue={kind} />}
       <div className="section-heading">
         <div>
           <h2>{t("patient.overview.weekly")}</h2>
@@ -41,6 +43,7 @@ export function WeeklySummary({ data }: { data: WeeklyPoint[] }) {
           </Button>
         </div>
       </div>
+      {readouts}
       {!visible.length ? (
         <p className="empty-state">{t("patient.overview.weeklyEmpty")}</p>
       ) : kind === "pressure" ? (
