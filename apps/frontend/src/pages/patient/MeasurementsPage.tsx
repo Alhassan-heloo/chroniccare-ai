@@ -16,11 +16,9 @@ import { MeasurementListCard } from "@/components/health/MeasurementListCard";
 import { MeasurementForm } from "@/components/health/MeasurementForm";
 import { useI18n } from "@/i18n/context";
 import { SignatureArtwork, LivingPulse } from "@/components/public/living/ui";
-import { useAuth } from "@/auth/context";
 
 export default function MeasurementsPage() {
   const { t, formatNumber } = useI18n();
-  const { demo } = useAuth();
   const { data = [], isPending, isError, refetch } = useMeasurements();
   const { openMeasurement } = useDashboardActions();
   const [filters, setFilters] = useState<Filters>({
@@ -107,7 +105,7 @@ export default function MeasurementsPage() {
       )}
       </section>
       </div>
-      <p className="dashboard-disclosure"><Info size={18} aria-hidden="true" /><span>{t(demo ? "measurements.ui.notice" : "measurements.persistence.notice")}</span></p>
+      <p className="dashboard-disclosure"><Info size={18} aria-hidden="true" /><span>{t("measurements.persistence.notice")}</span></p>
       <Modal
         open={!!editing}
         onClose={() => setEditing(null)}
@@ -136,7 +134,7 @@ export default function MeasurementsPage() {
               {t("measurements.ui.deleteQuestion", { kind: t(deleting.kind === "bloodPressure" ? "measurements.bloodPressure" : "measurements.bloodGlucose"), value: deleting.kind === "bloodPressure" ? `${formatNumber(deleting.systolic)}/${formatNumber(deleting.diastolic)}` : formatNumber(deleting.value) })}
             </p>
             <p className="muted">
-              {t(demo ? "measurements.ui.deleteHint" : "measurements.persistence.deleteHint")}
+              {t("measurements.persistence.deleteHint")}
             </p>
             <div className="confirmation-actions">
               <Button

@@ -6,12 +6,11 @@ import { AuthError, authRequest, apiRequest, type ApiRequestOptions, type LoginR
 export function AuthProvider({ children }: { children: ReactNode }) {
   const client = useQueryClient();
   const [session, setSession] = useState<LoginResult | null>(null);
-  const [demo, setDemo] = useState(false);
   const [expired, setExpired] = useState(false);
   const active = useRef<LoginResult | null>(null);
   const reset = useCallback(async () => {
     active.current = null;
-    setSession(null); setDemo(false);
+    setSession(null);
     await client.cancelQueries(); client.clear();
   }, [client]);
   const logout = useCallback(async () => {
@@ -37,9 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async (name: string, email: string, password: string) => {
     await authRequest("register", { body: { name, email, password } });
   }, []);
-  const enterDemo = useCallback(async () => {
-    await logout(); setDemo(true);
-  }, [logout]);
   // A request belongs to the session that created this callback. Never let an
   // old query/mutation read a new account's token or commit a late response.
   const request = useCallback(async <T,>(path: string, options: Omit<ApiRequestOptions, "token"> = {}): Promise<T> => {
@@ -69,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const interval = setInterval(verify, 60000);
     return () => { live = false; clearTimeout(timer); clearInterval(interval); window.removeEventListener("focus", verify); };
   }, [session, reset]);
-  const value = useMemo(() => ({ user: session?.user ?? null, demo, expired, login, register, logout, enterDemo, request }),
-    [session, demo, expired, login, register, logout, enterDemo, request]);
+  const value = useMemo(() => ({ user: session?.user ?? null, expired, login, register, logout, request }),
+    [session, expired, login, register, logout, request]);
   return <AuthContext value={value}>{children}</AuthContext>;
 }

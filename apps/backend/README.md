@@ -1,10 +1,10 @@
-# ChronicCare AI — Backend (through Phase 2A / Task 2A.2)
+# ChronicCare AI — Backend (through Phase 2A / Task 2A.3)
 
 This is a separate Node.js + Express + TypeScript package. Real PostgreSQL-backed
-authentication plus authenticated-patient measurement and medication CRUD are
-available. Guest measurements and medications remain in frontend demo adapters
-and never enter PostgreSQL. Habits, AI, notifications, and doctor/admin clinical
-workflows are outside Task 2A.2 and remain unchanged.
+authentication plus authenticated-patient measurement, medication, and habit
+CRUD are available. Patient pages require authentication and never fall back to
+frontend example data. AI, notifications, and doctor/admin clinical workflows
+remain outside Task 2A.3.
 
 ## Requirements and Windows setup
 
@@ -104,6 +104,12 @@ stops startup without logging secrets.
 | `PUT /api/medications/:id?date=YYYY-MM-DD` | Updates text and schedules while preserving unchanged-time dose logs. |
 | `DELETE /api/medications/:id` | Deletes one owned medication, schedules, and dose logs. |
 | `PUT /api/medications/:id/doses/:time` | Records or undoes one `{ date, taken }` daily dose state. |
+| `GET /api/habits?date=YYYY-MM-DD` | Lists the patient's habits and progress for one explicit local calendar date. |
+| `GET /api/habits/:id?date=YYYY-MM-DD` | Gets one owned habit with that day's progress. |
+| `POST /api/habits?date=YYYY-MM-DD` | Creates an owned habit definition. |
+| `PUT /api/habits/:id?date=YYYY-MM-DD` | Updates an owned habit; target changes preserve progress and unit changes invalidate it. |
+| `DELETE /api/habits/:id` | Deletes an owned habit and its daily progress records. |
+| `PUT /api/habits/:id/progress` | Upserts one exact `{ date, value }` daily progress record. |
 
 Readiness checks **connectivity**, not migration completion. Run `db:migrate`
 explicitly before deployment. The HTTP server remains live during a DB outage
@@ -112,7 +118,7 @@ liveness check alone does **not** prove database integration. Startup also makes
 a real connection attempt and logs only a generic success/unavailable message.
 `db:check` and `db:migrate` return a nonzero exit code on failure.
 
-All measurement and medication routes require a live bearer session and the `patient` role.
+All measurement, medication, and habit routes require a live bearer session and the `patient` role.
 Unauthenticated requests return 401, non-patient roles return 403, and missing or
 not-owned records return the same 404 response. All other routes return JSON 404.
 Errors use `{ error: { code, message } }`.
@@ -140,6 +146,8 @@ cannot override verification settings. Never use `rejectUnauthorized: false`.
 - `migrations/004_patient_medications.sql` creates patient-owned medications,
   recurring local-time schedules, and date-keyed dose logs with duplicate-proof
   primary keys and cascading schedule cleanup.
+- `migrations/005_patient_habits.sql` creates patient-owned habit definitions
+  and date-keyed progress rows with a duplicate-proof composite primary key.
 - The runner creates `public.chroniccare_schema_migrations`, with version,
   filename, SHA-256 checksum, and application timestamp.
 - A PostgreSQL transaction advisory lock serializes concurrent migration runs.
@@ -151,8 +159,8 @@ cannot override verification settings. Never use `rejectUnauthorized: false`.
   applied migration or include `BEGIN`/`COMMIT` in individual files. Use
   transaction-compatible PostgreSQL DDL; e.g. `CREATE INDEX CONCURRENTLY` is not
   supported by this transactional runner.
-- Future tables for habit events, alerts, and doctor-patient
-  relationships go in the `chroniccare` schema only in their approved tasks.
+- Future tables for alerts and doctor-patient relationships go in the
+  `chroniccare` schema only in their approved tasks.
 - No automatic migrations on HTTP startup and no destructive down/reset command.
   Back up a populated database and review new migration SQL before applying it.
 - Build output references the root `migrations/` directory: deploy that directory
@@ -183,7 +191,7 @@ npm.cmd test
 The integration test requires a database name ending in `_test` and refuses
 existing application tables. It really connects, applies all current migrations,
 checks idempotence, changed checksums, and rollback, then exercises authentication
-plus durable measurement and medication CRUD, schedule/dose-log rules, account
+plus durable measurement, medication, and habit CRUD, daily progress rules, account
 isolation, role rejection, validation, and database constraints. It leaves the
 schema and migration ledger in the
 dedicated test database; it never drops an existing application database. Without
@@ -198,18 +206,20 @@ apps/backend/
   package.json, package-lock.json
   tsconfig.json, tsconfig.test.json, eslint.config.js
   migrations/001_backend_foundation.sql, 002_authentication.sql,
-             003_patient_measurements.sql, 004_patient_medications.sql
+             003_patient_measurements.sql, 004_patient_medications.sql,
+             005_patient_habits.sql
   src/
     app.ts, server.ts
     auth/store.ts, security.ts, middleware.ts, provision.ts
     measurements/store.ts, validation.ts
     medications/store.ts, validation.ts
+    habits/store.ts, validation.ts
     config/env.ts
     db/pool.ts, check.ts, migrations.ts, migrate.ts
     middleware/errors.ts
-    routes/index.ts, health.ts, auth.ts, measurements.ts, medications.ts
+    routes/index.ts, health.ts, auth.ts, measurements.ts, medications.ts, habits.ts
   tests/app.test.ts, env.test.ts, database.test.ts, auth.test.ts,
-        measurements.test.ts, medications.test.ts
+        measurements.test.ts, medications.test.ts, habits.test.ts
 ```
 
 Runtime: Express (HTTP/routing), pg (PostgreSQL pool), Helmet (security headers),
@@ -265,8 +275,31 @@ never accepted from request JSON.
 From `apps/frontend`, `npm.cmd run test:medications-integration` runs responsive
 Edge workflows against the compiled Express server and the dedicated PostgreSQL
 test database. It verifies CRUD, daily dose state, schedule editing, persistence,
-isolation, Dashboard/Reports synchronization, demo separation, API failures,
+isolation, Dashboard/Reports synchronization, authentication-only routing, API failures,
 RTL/LTR, themes, Motion Off, and reduced-motion behavior.
+
+## Phase 2A / Task 2A.3: patient habits
+
+Habit JSON contains a trimmed `title` (2–80 characters), one of `steps`,
+`minutes`, `cups`, or `times`, and an integer daily `target` from 1 to
+100000. Daily progress is an integer from 0 to 100000 and may exceed the target.
+The API does not interpret goals or provide medical recommendations.
+
+Habit definitions live in `chroniccare.habits`. Daily progress identity is the
+composite `(habit_id, recorded_on)`; an upsert replaces that day's total without
+creating duplicates. The client sends an explicit device-local `YYYY-MM-DD`
+calendar date, so the server does not convert the patient's day through UTC.
+
+Changing only the title or target preserves recorded progress. Changing the unit
+runs in a transaction and invalidates all unit-dependent progress rows. Every
+query is scoped to the authenticated patient, and supplied ownership fields are
+rejected.
+
+From `apps/frontend`, `npm.cmd run test:habits-integration` runs responsive
+Edge workflows against the compiled Express server and the dedicated PostgreSQL
+test database. It verifies CRUD, daily values, edit rules, persistence, account
+isolation, Dashboard/Reports synchronization, failure states, authentication-only
+routing, RTL/LTR, themes, Motion Off, and reduced motion.
 
 ## Task 1B: Authentication and authorization
 

@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useI18n } from "@/i18n/context";
 import { isTranslationKey } from "@/i18n/catalog";
-import { useAuth } from "@/auth/context";
 export function MeasurementForm({
   onSaved,
   initial,
@@ -24,7 +23,6 @@ export function MeasurementForm({
   initial?: Measurement;
 }) {
   const { t, formatUnit } = useI18n();
-  const { demo } = useAuth();
   const errorMessage = (message?: string) => message ? isTranslationKey(message) ? t(message) : t("measurements.ui.checkReading") : undefined;
   const [kind, setKind] = useState<MeasurementKind>(
     initial?.kind ?? "bloodPressure",
@@ -51,7 +49,7 @@ export function MeasurementForm({
       })}
       noValidate
     >
-      <p className="muted">{t(demo ? "measurements.ui.formNotice" : "measurements.persistence.formNotice")}</p>
+      <p className="muted">{t("measurements.persistence.formNotice")}</p>
       <div className="field">
         <label htmlFor="reading-kind">{t("measurements.ui.readingKind")}</label>
         <select

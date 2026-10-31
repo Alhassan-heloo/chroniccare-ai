@@ -9,23 +9,21 @@ import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 export function ProtectedRoute({ role }: { role: User["role"] }) {
-  const { user, demo } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
-  if (demo && role === "patient") return <Outlet />;
   if (!user) return <Navigate replace to={`/login?returnTo=${encodeURIComponent(location.pathname + location.search + location.hash)}`} />;
   if (user.role !== role) return <Navigate replace to={roleHome(user.role)} />;
   return <Outlet />;
 }
 export function SessionBar() {
-  const { user, demo, logout } = useAuth();
+  const { user, logout } = useAuth();
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
-  if (!user && !demo && !failed) return null;
+  if (!user && !failed) return null;
   return <aside className="session-bar" data-i18n="declarative" aria-label={t("auth.session")}>
     {user && user.role !== "patient" && <bdi className="session-identity">{user.name}</bdi>}
-    {demo && <span className="demo-label">{t("common.layout.demo")}</span>}
-    {(user || demo) && <Button variant="ghost" disabled={busy} aria-busy={busy} aria-label={t(busy ? "auth.working" : "auth.logout")} title={t("auth.logout")} onClick={async () => {
+    {user && <Button variant="ghost" disabled={busy} aria-busy={busy} aria-label={t(busy ? "auth.working" : "auth.logout")} title={t("auth.logout")} onClick={async () => {
       setBusy(true); setFailed(false);
       try { await logout(); } catch {
         setFailed(true);

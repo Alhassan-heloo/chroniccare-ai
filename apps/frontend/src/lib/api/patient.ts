@@ -4,10 +4,11 @@ import { getMedicationSummary } from "./medications";
 import { patientDashboardPlaceholder } from "@/lib/placeholder-data/patientDashboard.placeholder";
 import type { Measurement, MeasurementInput } from "@/lib/types/measurement";
 import type { Medication } from "@/lib/types/medication";
+import type { Habit } from "@/lib/types/habit";
 import { summarizeReport } from "@/lib/utils/reports";
 // Guest-only session adapter. Authenticated measurements use the PostgreSQL API.
 const measurements: Measurement[] = createMeasurementPlaceholders();
-export async function getPatientDashboard(readings: Measurement[] = measurements, medications?: Medication[]) {
+export async function getPatientDashboard(readings: Measurement[] = measurements, medications?: Medication[], habits?: Habit[]) {
   const ordered = [...readings].sort((a, b) =>
     b.recordedAt.localeCompare(a.recordedAt),
   );
@@ -29,7 +30,7 @@ export async function getPatientDashboard(readings: Measurement[] = measurements
         : null,
     weekly: summarizeReport(ordered, 7).points,
     medication: getMedicationSummary(medications),
-    habits: getHabitsSnapshot(),
+    habits: habits ?? getHabitsSnapshot(),
   };
 }
 export async function getMeasurements() {

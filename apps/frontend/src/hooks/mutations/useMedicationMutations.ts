@@ -23,10 +23,10 @@ function useMedicationFeedback(message: TranslationKey) {
   };
 }
 export function useAddMedication() {
-  const { source, demo } = useMedicationSource();
+  const { source } = useMedicationSource();
   return useMutation({
     mutationFn: source.create,
-    ...useMedicationFeedback(demo ? "medications.persistence.addedDemo" : "medications.persistence.added"),
+    ...useMedicationFeedback("medications.persistence.added"),
   });
 }
 export function useUpdateMedication() {

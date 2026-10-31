@@ -27,18 +27,50 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routes as applicationRoutes } from "../src/app/routes";
 import { AuthContext, type AuthValue } from "../src/auth/context";
 import { safeReturnTo } from "../src/auth/api";
-const testAuth: AuthValue = { user: null, demo: true, expired: false, login: async () => { throw new Error("Not used in SSR"); }, register: async () => {}, logout: async () => {}, enterDemo: async () => {}, request: async () => { throw new Error("Demo must not call the backend"); } };
-// Keep existing demo page checks explicit; production routes default to unauthenticated.
+import { authenticatedHabits } from "../src/lib/api/persistentHabits";
+import { findTemplateHabit, habitTemplates } from "../src/lib/habitTemplates";
+import type { User } from "../src/lib/types/user";
+const testAuth: AuthValue = { user: null, expired: false, login: async () => { throw new Error("Not used in SSR"); }, register: async () => {}, logout: async () => {}, request: async () => { throw new Error("SSR fixture must not call the backend"); } };
+// Protected-page SSR fixtures are authenticated; production patient routes do not allow guest access.
 export function DemoFixture() {
   const { pathname } = useLocation();
-  const role = pathname.startsWith("/doctor/") ? "doctor" : pathname.startsWith("/admin/") ? "admin" : null;
-  return <AuthContext value={role ? { ...testAuth, demo: false, user: { id: "fixture", name: "Fixture", email: "fixture@example.test", role } } : testAuth}><Outlet /></AuthContext>;
+  const role: User["role"] | null = pathname.startsWith("/patient/") ? "patient" : pathname.startsWith("/doctor/") ? "doctor" : pathname.startsWith("/admin/") ? "admin" : null;
+  const value = role
+    ? { ...testAuth, user: { id: "fixture", name: "Fixture", email: "fixture@example.test", role } }
+    : testAuth;
+  return <AuthContext value={value}><Outlet /></AuthContext>;
 }
 const routes = [{ element: <DemoFixture />, children: applicationRoutes }];
 assert.equal(safeReturnTo("https://example.com", "patient"), "/patient/dashboard");
 assert.equal(safeReturnTo("//example.com", "patient"), "/patient/dashboard");
 assert.equal(safeReturnTo("/admin/dashboard", "patient"), "/patient/dashboard");
 assert.equal(safeReturnTo("/patient/measurements?a=1#history", "patient"), "/patient/measurements?a=1#history");
+const habitCalls: { path: string; method?: string; body?: unknown }[] = [];
+const persistentHabit = {
+  id: "habit-fixture", title: "Morning walk", unit: "minutes" as const, target: 30,
+  progress: 45, recordedOn: new Date().toLocaleDateString("en-CA"),
+};
+const persistentHabitSource = authenticatedHabits((async (path: string, options?: { method?: string; body?: unknown }) => {
+  habitCalls.push({ path, method: options?.method, body: options?.body });
+  if (options?.method === "DELETE" || path.endsWith("/progress")) return undefined;
+  if (options?.method === "POST" || options?.method === "PUT") return { habit: persistentHabit };
+  return { habits: [persistentHabit] };
+}) as AuthValue["request"]);
+assert.deepEqual(await persistentHabitSource.list(), [persistentHabit]);
+await persistentHabitSource.create({ title: "Morning walk", unit: "minutes", target: 30 });
+await persistentHabitSource.update({ id: persistentHabit.id, input: { title: "Longer walk", unit: "minutes", target: 40 } });
+await persistentHabitSource.setProgress({ id: persistentHabit.id, value: 45 });
+await persistentHabitSource.delete(persistentHabit.id);
+assert(habitCalls.every(call => call.path.startsWith("/habits")), "Persistent habits use only the authenticated habits API.");
+assert.deepEqual((habitCalls.find(call => call.path.endsWith("/progress"))?.body as { value: number }).value, 45);
+assert.equal(habitTemplates.length, 7);
+assert.equal(habitTemplates.find((template) => template.id === "water")?.exampleTarget, undefined, "Water requires an explicit target choice");
+const walkingTemplate = habitTemplates.find((template) => template.id === "walking");
+assert(walkingTemplate);
+assert.equal(findTemplateHabit(walkingTemplate, [{ ...persistentHabit, title: translateCatalogMessage("en", walkingTemplate.titleKey) }])?.id, persistentHabit.id);
+assert.equal(findTemplateHabit(walkingTemplate, [{ ...persistentHabit, title: translateCatalogMessage("ar", walkingTemplate.titleKey) }])?.id, persistentHabit.id);
+const malformedHabitSource = authenticatedHabits((async () => ({ habits: [{ ...persistentHabit, progress: "45" }] })) as AuthValue["request"]);
+await assert.rejects(() => malformedHabitSource.list(), /INVALID_RESPONSE/);
 import { queryKeys } from "../src/lib/query/queryKeys";
 import {
   getPatientDashboard,
@@ -84,7 +116,7 @@ for (const language of ["ar", "en"] as const) {
     t: (key: string, variables?: TranslationVariables) => isTranslationKey(key) ? translateCatalogMessage(language, key, variables) : key,
     ...localeSettings(language), ...createFormatters(language),
   };
-  const guest = { ...testAuth, demo: false };
+  const guest = testAuth;
   for (const [path, element] of [["/", <HomePage />], ["/login", <AuthPage mode="login" />], ["/register", <AuthPage mode="register" />]] as const) {
     const html = renderToString(<I18nContext value={context}><AuthContext value={guest}><RouterProvider router={createMemoryRouter([{ path, element }], { initialEntries: [path] })} /></AuthContext></I18nContext>);
     assert.equal((html.match(/class="topbar glass"/g) ?? []).length, 1, "One shared public masthead; nested chart headings are semantic headers");
@@ -242,17 +274,17 @@ const paths = [
 ];
 for (const language of ["ar", "en", "ar", "en"] as const) {
   const client = new QueryClient();
-  client.setQueryData(queryKeys.dashboard, await getPatientDashboard());
+  client.setQueryData([...queryKeys.dashboard, "account", "fixture"], await getPatientDashboard());
   const context: I18nValue = { language, setLanguage: () => undefined, t: (key: string, values?: Readonly<Record<string, string | number>>) => isTranslationKey(key) ? translateCatalogMessage(language, key, values) : key, ...localeSettings(language), ...createFormatters(language) };
   const html = renderToString(<I18nContext value={context}><QueryClientProvider client={client}><RouterProvider router={createMemoryRouter(routes, { initialEntries: ["/patient/dashboard?demo=1#main"] })} /></QueryClientProvider></I18nContext>);
   assert(html.includes(translateCatalogMessage(language, "patient.living.welcomeBody")));
   assert(html.includes(translateCatalogMessage(language, "patient.living.seriesNote")));
-  assert(html.includes(translateCatalogMessage(language, "patient.living.disclosure")));
+  assert(html.includes(translateCatalogMessage(language, "measurements.persistence.dashboardNotice")));
   assert(html.includes(translateCatalogMessage(language, "patient.overview.tasks")));
   assert(!html.includes("patient.overview."));
   assert(html.includes("<bdi>"), "Profile name must use bidi isolation");
   assert(html.includes("\u2068") && html.includes("\u2069"), "Welcome name must be isolated from surrounding direction");
-  client.setQueryData(queryKeys.measurements, await getMeasurements());
+  client.setQueryData([...queryKeys.measurements, "account", "fixture"], await getMeasurements());
   const measurementHtml = renderToString(<I18nContext value={context}><QueryClientProvider client={client}><RouterProvider router={createMemoryRouter(routes, { initialEntries: ["/patient/measurements"] })} /></QueryClientProvider></I18nContext>);
   assert(measurementHtml.includes(translateCatalogMessage(language, "measurements.ui.history")));
   assert(measurementHtml.includes(translateCatalogMessage(language, "measurements.ui.example")));
@@ -264,10 +296,10 @@ for (const language of ["ar", "en", "ar", "en"] as const) {
     assert(translateCatalogMessage(language, "measurements.ui.diastolicOrder").length > 0);
   }
   assert.notEqual(translateCatalogMessage(language, "measurements.ui.saved"), "measurements.ui.saved");
-  client.setQueryData(queryKeys.measurements, []);
+  client.setQueryData([...queryKeys.measurements, "account", "fixture"], []);
   const emptyHtml = renderToString(<I18nContext value={context}><QueryClientProvider client={client}><RouterProvider router={createMemoryRouter(routes, { initialEntries: ["/patient/measurements"] })} /></QueryClientProvider></I18nContext>);
   assert(emptyHtml.includes(translateCatalogMessage(language, "measurements.ui.first")));
-  client.setQueryData(queryKeys.habits, await getHabits());
+  client.setQueryData([...queryKeys.habits, "account", "fixture"], await getHabits());
   const habitsHtml = renderToString(<I18nContext value={context}><QueryClientProvider client={client}><RouterProvider router={createMemoryRouter(routes, { initialEntries: ["/patient/habits"] })} /></QueryClientProvider></I18nContext>);
   const formatter = createFormatters(language);
   const sentence = translateCatalogMessage(language, "habits.ui.progress", { value: formatter.formatNumber(4500), target: formatter.formatNumber(10000), unit: formatter.formatHabitUnit("steps", 10000) });
@@ -291,13 +323,13 @@ for (const path of paths) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  client.setQueryData(queryKeys.dashboard, await getPatientDashboard());
-  client.setQueryData(queryKeys.measurements, await getMeasurements());
-  client.setQueryData(queryKeys.medications, await getMedications());
-  client.setQueryData(queryKeys.habits, await getHabits());
+  client.setQueryData([...queryKeys.dashboard, "account", "fixture"], await getPatientDashboard());
+  client.setQueryData([...queryKeys.measurements, "account", "fixture"], await getMeasurements());
+  client.setQueryData([...queryKeys.medications, "account", "fixture"], await getMedications());
+  client.setQueryData([...queryKeys.habits, "account", "fixture"], await getHabits());
   if (path === "/patient/reports") {
     const { getPatientReport: loadReport } = await import("../src/lib/api/reports");
-    client.setQueryData([...queryKeys.reports, 7], await loadReport(7));
+    client.setQueryData([...queryKeys.reports, 7, "account", "fixture"], await loadReport(7));
   }
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   const html = renderToString(
@@ -358,7 +390,7 @@ for (const path of paths) {
     assert.equal((html.match(/class="card report-stat /g) ?? []).length, 4, "Only the four existing statistics are shown");
     assert.equal((html.match(/class="card report-chart-panel health-canvas glass"/g) ?? []).length, 2, "Both existing charts use the Dashboard canvas surface");
     assert(html.includes('class="card report-readings glass"'), "The latest-five ledger uses a shared surface");
-    assert(html.includes("لا يتوفر سجل تاريخي") && html.includes("لا يتضمن التقرير تقييمًا طبيًا"), "Current-day scope and medical safety disclosures remain explicit");
+    assert(html.includes("حالة اليوم المحفوظة") && html.includes("لا يتضمن التقرير تقييمًا طبيًا"), "Current-day scope and medical safety disclosures remain explicit");
     const readableHtml = html.replace(/<!--[\s\S]*?-->/g, "");
     assert(readableHtml.includes("2/3") && readableHtml.includes("0/2"), "Current-day dose and habit totals are retained");
   }

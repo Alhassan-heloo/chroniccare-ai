@@ -23,10 +23,10 @@ function useMeasurementFeedback(successMessage: TranslationKey) {
   };
 }
 export function useAddMeasurement() {
-  const { source, demo } = useMeasurementSource();
+  const { source } = useMeasurementSource();
   return useMutation({
     mutationFn: source.create,
-    ...useMeasurementFeedback(demo ? "measurements.ui.saved" : "measurements.persistence.saved"),
+    ...useMeasurementFeedback("measurements.persistence.saved"),
   });
 }
 export function useUpdateMeasurement() {

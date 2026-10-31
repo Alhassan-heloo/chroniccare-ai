@@ -1,11 +1,9 @@
 import { useMemo } from "react";
 import { useAuth } from "@/auth/context";
-import { authenticatedMeasurements, type MeasurementSource } from "@/lib/api/measurements";
-import { getMeasurements, addMeasurement, updateMeasurement, deleteMeasurement } from "@/lib/api/patient";
+import { authenticatedMeasurements } from "@/lib/api/measurements";
 
-const demoMeasurements: MeasurementSource = { list: getMeasurements, create: addMeasurement, update: updateMeasurement, delete: deleteMeasurement };
 export function useMeasurementSource() {
-  const { demo, user, request } = useAuth();
-  const source = useMemo(() => demo ? demoMeasurements : authenticatedMeasurements(request), [demo, request]);
-  return { source, scope: demo ? [] : ["account", user?.id ?? "signed-out"], enabled: demo || user?.role === "patient", demo, user };
+  const { user, request } = useAuth();
+  const source = useMemo(() => authenticatedMeasurements(request), [request]);
+  return { source, scope: ["account", user?.id ?? "signed-out"], enabled: user?.role === "patient", user };
 }

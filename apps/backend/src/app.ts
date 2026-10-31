@@ -9,6 +9,8 @@ import type { MeasurementStore } from "./measurements/store.js";
 import { measurementRoutes } from "./routes/measurements.js";
 import type { MedicationStore } from "./medications/store.js";
 import { medicationRoutes } from "./routes/medications.js";
+import type { HabitStore } from "./habits/store.js";
+import { habitRoutes } from "./routes/habits.js";
 
 export interface AppOptions {
   corsOrigins: readonly string[];
@@ -17,6 +19,7 @@ export interface AppOptions {
   authStore?: AuthStore;
   measurementStore?: MeasurementStore;
   medicationStore?: MedicationStore;
+  habitStore?: HabitStore;
 }
 
 // No listening socket, environment reads, or database connections on import.
@@ -45,6 +48,10 @@ export function createApp(options: AppOptions) {
   if (options.medicationStore) {
     if (!options.authStore) throw new Error("Medication routes require authentication.");
     app.use("/api/medications", medicationRoutes(options.authStore, options.medicationStore));
+  }
+  if (options.habitStore) {
+    if (!options.authStore) throw new Error("Habit routes require authentication.");
+    app.use("/api/habits", habitRoutes(options.authStore, options.habitStore));
   }
   app.use("/api", apiRoutes(options.checkDatabase));
   app.use(notFound);

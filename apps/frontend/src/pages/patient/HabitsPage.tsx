@@ -7,17 +7,20 @@ import { progressToday } from "@/lib/utils/habits";
 import { HabitCard } from "@/components/health/HabitCard";
 import { HabitForm } from "@/components/health/HabitForm";
 import { HabitProgressForm } from "@/components/health/HabitProgressForm";
+import { HabitTemplateLibrary } from "@/components/health/HabitTemplateLibrary";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
 import { useI18n } from "@/i18n/context";
 import { SignatureArtwork } from "@/components/public/living/ui";
+import type { HabitTemplate } from "@/lib/habitTemplates";
 export default function HabitsPage() {
   const { t, formatNumber, direction, locale } = useI18n();
   const { data = [], isPending, isError, refetch } = useHabits();
   const [form, setForm] = useState<Habit | "new" | null>(null);
   const [progress, setProgress] = useState<Habit | null>(null);
   const [deleting, setDeleting] = useState<Habit | null>(null);
+  const [template, setTemplate] = useState<HabitTemplate | null>(null);
   const deletion = useDeleteHabit();
   const completed = data.filter(
     (item) => progressToday(item) >= item.target,
@@ -77,6 +80,7 @@ export default function HabitsPage() {
               <Button onClick={() => setForm("new")}>{t("habits.add")}</Button>
             </Card>
           )}
+          <HabitTemplateLibrary habits={data} onCustomize={setTemplate} onEdit={setForm} />
         </>
       )}
       <p className="dashboard-disclosure" data-i18n="declarative"><Info size={18} aria-hidden="true" /><span>{t("habits.ui.notice")}</span></p>
@@ -91,6 +95,24 @@ export default function HabitsPage() {
             key={form === "new" ? "new" : form.id}
             initial={form === "new" ? undefined : form}
             onSaved={() => setForm(null)}
+          />
+        )}
+      </Modal>
+      <Modal
+        open={!!template}
+        onClose={() => setTemplate(null)}
+        title={t("habits.templates.customizeTitle")}
+        declarativeTitle
+      >
+        {template && (
+          <HabitForm
+            key={template.id}
+            draft={{
+              title: t(template.titleKey),
+              unit: template.unit,
+              target: template.exampleTarget,
+            }}
+            onSaved={() => setTemplate(null)}
           />
         )}
       </Modal>

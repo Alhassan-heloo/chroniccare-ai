@@ -98,12 +98,6 @@ export default function AuthPage({ mode }: { mode: "login" | "register" }) {
       </form>
       <p className="auth-switch"><Link to={`${register ? "/login" : "/register"}${suffix}`}>{t(register ? "auth.haveAccount" : "auth.needAccount")}</Link></p>
       <p className="auth-security"><ShieldCheck size={18} aria-hidden="true" />{t("auth.memoryNotice")}</p>
-      <div className="auth-demo-intro"><h2>{t("public.demoHeading")}</h2><p>{t("public.demoBody")}</p></div>
-      <Button variant="secondary" disabled={busy} onClick={async () => {
-        setBusy(true); setError(null);
-        try { await auth.enterDemo(); navigate("/patient/dashboard"); }
-        catch { setError("auth.network"); } finally { setBusy(false); }
-      }}>{t("auth.exploreDemo")}</Button>
       <p className="auth-data-note">{t("auth.dataNotice")}</p>
       <Link className="auth-home-link" to="/"><ArrowRight size={17} aria-hidden="true" />{t("auth.backHome")}</Link>
     </section>

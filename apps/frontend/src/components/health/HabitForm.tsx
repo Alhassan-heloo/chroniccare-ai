@@ -13,19 +13,23 @@ import { habitValidationKey } from "@/i18n/habitValidation";
 import type { HabitUnit } from "@/i18n/formatters";
 export function HabitForm({
   initial,
+  draft,
   onSaved,
 }: {
   initial?: Habit;
+  draft?: Partial<HabitInput>;
   onSaved: () => void;
 }) {
   const { t, formatHabitUnit } = useI18n();
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<HabitInput>({
     resolver: zodResolver(habitSchema),
-    defaultValues: initial ?? { title: "", unit: "minutes", target: 20 },
+    defaultValues: initial ?? (draft
+      ? { title: draft.title ?? "", unit: draft.unit ?? "minutes", target: draft.target }
+      : { title: "", unit: "minutes", target: 20 }),
   });
   const add = useAddHabit();
   const update = useUpdateHabit();
@@ -34,11 +38,15 @@ export function HabitForm({
       data-i18n="declarative"
       className="stack habit-form"
       noValidate
-      onSubmit={handleSubmit((input) =>
-        initial
-          ? update.mutate({ id: initial.id, input }, { onSuccess: onSaved })
-          : add.mutate(input, { onSuccess: onSaved }),
-      )}
+      onSubmit={handleSubmit(async (input) => {
+        try {
+          if (initial) await update.mutateAsync({ id: initial.id, input });
+          else await add.mutateAsync(input);
+          onSaved();
+        } catch {
+          // Mutation hooks provide feedback; keep the form open for correction or retry.
+        }
+      })}
     >
       <Input
         label={t("habits.ui.name")}
@@ -68,7 +76,7 @@ export function HabitForm({
           ? ` ${t("habits.ui.changeHint")}`
           : ""}
       </p>
-      <Button type="submit" disabled={add.isPending || update.isPending}>
+      <Button type="submit" disabled={isSubmitting || add.isPending || update.isPending}>
         {t("habits.ui.save")}
       </Button>
     </form>

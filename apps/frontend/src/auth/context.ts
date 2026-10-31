@@ -3,12 +3,10 @@ import type { User } from "@/lib/types/user";
 import type { AuthorizedRequest } from "./api";
 export interface AuthValue {
   user: User | null;
-  demo: boolean;
   expired: boolean;
   login: (email: string, password: string) => Promise<User>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  enterDemo: () => Promise<void>;
   request: AuthorizedRequest;
 }
 export const AuthContext = createContext<AuthValue | null>(null);

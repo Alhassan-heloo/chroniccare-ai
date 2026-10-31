@@ -4,11 +4,19 @@ import { checkDatabase, createDatabasePool } from "./db/pool.js";
 import { postgresAuthStore } from "./auth/store.js";
 import { postgresMeasurementStore } from "./measurements/store.js";
 import { postgresMedicationStore } from "./medications/store.js";
+import { postgresHabitStore } from "./habits/store.js";
 
 async function start() {
   const config = readEnvironment();
   const pool = createDatabasePool(config);
-  const app = createApp({ corsOrigins: config.corsOrigins, checkDatabase: () => checkDatabase(pool), authStore: postgresAuthStore(pool), measurementStore: postgresMeasurementStore(pool), medicationStore: postgresMedicationStore(pool) });
+  const app = createApp({
+    corsOrigins: config.corsOrigins,
+    checkDatabase: () => checkDatabase(pool),
+    authStore: postgresAuthStore(pool),
+    measurementStore: postgresMeasurementStore(pool),
+    medicationStore: postgresMedicationStore(pool),
+    habitStore: postgresHabitStore(pool),
+  });
   const server = app.listen(config.port, config.host, () => {
     console.log(`ChronicCare API listening on http://${config.host}:${config.port}`);
   });

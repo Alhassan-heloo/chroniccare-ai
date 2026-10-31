@@ -33,7 +33,7 @@ export function Sidebar({ role = "patient" }: { role?: User["role"] }) {
           {t("common.layout.noteLast")}
         </p>
       </div>}
-      <span className="sidebar-footer" data-i18n="declarative">ChronicCare AI · {t("common.layout.demoVersion")}</span>
+      <span className="sidebar-footer" data-i18n="declarative">ChronicCare AI · {t("common.layout.daily")}</span>
     </aside>
   );
 }
