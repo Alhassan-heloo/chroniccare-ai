@@ -1,15 +1,8 @@
 import type { TranslationKey } from "@/i18n/catalog";
 import { translateCatalogMessage } from "@/i18n/catalog";
-import type { Habit, HabitInput } from "@/lib/types/habit";
+import type { Habit, HabitInput, HabitTemplateKey } from "@/lib/types/habit";
 
-export type HabitTemplateId =
-  | "walking"
-  | "water"
-  | "produce"
-  | "relaxation"
-  | "bedtime"
-  | "movement-breaks"
-  | "foot-check";
+export type HabitTemplateId = HabitTemplateKey;
 
 export interface HabitTemplate {
   id: HabitTemplateId;
@@ -35,9 +28,13 @@ function normalized(value: string) {
 }
 
 export function findTemplateHabit(template: HabitTemplate, habits: Habit[]) {
+  const identified = habits.find((habit) => habit.templateKey === template.id);
+  if (identified) return identified;
   const titles = new Set([
     normalized(translateCatalogMessage("ar", template.titleKey)),
     normalized(translateCatalogMessage("en", template.titleKey)),
   ]);
-  return habits.find((habit) => titles.has(normalized(habit.title)));
+  // Compatibility for records created before migration 006. New and migrated
+  // template records use templateKey and remain linked after the title changes.
+  return habits.find((habit) => habit.templateKey === null && titles.has(normalized(habit.title)));
 }

@@ -26,9 +26,24 @@ function useFeedback(message: TranslationKey) {
 }
 export function useAddHabit() {
   const { source } = useHabitSource();
+  const client = useQueryClient();
+  const { t } = useI18n();
+  const feedback = useFeedback("habits.ui.added");
   return useMutation({
     mutationFn: source.create,
-    ...useFeedback("habits.ui.added"),
+    onSuccess: feedback.onSuccess,
+    onError: async (error) => {
+      if (error instanceof AuthError && error.code === "HABIT_TEMPLATE_EXISTS") {
+        await Promise.all([
+          client.invalidateQueries({ queryKey: queryKeys.habits }),
+          client.invalidateQueries({ queryKey: queryKeys.dashboard }),
+          client.invalidateQueries({ queryKey: queryKeys.reports }),
+        ]);
+        toast.info(t("habits.templates.alreadyAdded"));
+        return;
+      }
+      feedback.onError(error);
+    },
   });
 }
 export function useUpdateHabit() {

@@ -256,7 +256,7 @@ export const arCatalog = {
     title: "أدويتي",
     add: "إضافة دواء",
     empty: "لا توجد أدوية مسجلة",
-    dosesTaken: "جرعات تم تناولها",
+    dosesTaken: "جرعات تم تناولها اليوم",
   },
   habits: {
     completedSingle: "{{completed}} من {{total}} عادة مكتملة",
@@ -276,6 +276,7 @@ export const arCatalog = {
       customize: "تخصيص",
       chooseGoal: "اختيار الهدف",
       added: "مضافة",
+      alreadyAdded: "هذه العادة المقترحة مفعّلة بالفعل.",
       editActive: "تعديل العادة النشطة",
       customizeTitle: "تخصيص العادة المقترحة",
       items: {

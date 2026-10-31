@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, X } from "lucide-react";
@@ -22,7 +23,7 @@ export function MedicationForm({
     register,
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<MedicationInput>({
     resolver: zodResolver(medicationSchema),
     defaultValues: initial ?? {
@@ -35,15 +36,24 @@ export function MedicationForm({
   const { fields, append, remove } = useFieldArray({ control, name: "doses" });
   const add = useAddMedication();
   const update = useUpdateMedication();
-  const pending = add.isPending || update.isPending;
+  const submitLock = useRef(false);
+  const pending = isSubmitting || add.isPending || update.isPending;
   return (
     <form
       className="stack medication-form"
       noValidate
-      onSubmit={handleSubmit((input) => {
-        if (initial)
-          update.mutate({ id: initial.id, input }, { onSuccess: onSaved });
-        else add.mutate(input, { onSuccess: onSaved });
+      onSubmit={handleSubmit(async (input) => {
+        if (submitLock.current) return;
+        submitLock.current = true;
+        try {
+          if (initial) await update.mutateAsync({ id: initial.id, input });
+          else await add.mutateAsync(input);
+          onSaved();
+        } catch {
+          // Mutation hooks own error feedback; keep the form open for retry.
+        } finally {
+          submitLock.current = false;
+        }
       })}
     >
       <p className="muted medication-form-note">

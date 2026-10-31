@@ -259,7 +259,7 @@ export const enCatalog = {
     title: "My medications",
     add: "Add medication",
     empty: "No medications recorded",
-    dosesTaken: "Doses taken",
+    dosesTaken: "Doses taken today",
   },
   habits: {
     completedSingle: "{{completed}} of {{total}} completed habit",
@@ -279,6 +279,7 @@ export const enCatalog = {
       customize: "Customize",
       chooseGoal: "Choose goal",
       added: "Added",
+      alreadyAdded: "This suggested habit is already active.",
       editActive: "Edit active habit",
       customizeTitle: "Customize suggested habit",
       items: {

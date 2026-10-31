@@ -148,6 +148,10 @@ cannot override verification settings. Never use `rejectUnauthorized: false`.
   primary keys and cascading schedule cleanup.
 - `migrations/005_patient_habits.sql` creates patient-owned habit definitions
   and date-keyed progress rows with a duplicate-proof composite primary key.
+- `migrations/006_habit_template_identity.sql` adds a nullable, validated
+  `template_key`, safely links known legacy Arabic/English template titles,
+  and prevents one patient from activating the same template twice. Custom
+  habits remain null and no habit or progress row is deleted.
 - The runner creates `public.chroniccare_schema_migrations`, with version,
   filename, SHA-256 checksum, and application timestamp.
 - A PostgreSQL transaction advisory lock serializes concurrent migration runs.
@@ -207,7 +211,7 @@ apps/backend/
   tsconfig.json, tsconfig.test.json, eslint.config.js
   migrations/001_backend_foundation.sql, 002_authentication.sql,
              003_patient_measurements.sql, 004_patient_medications.sql,
-             005_patient_habits.sql
+             005_patient_habits.sql, 006_habit_template_identity.sql
   src/
     app.ts, server.ts
     auth/store.ts, security.ts, middleware.ts, provision.ts
@@ -285,6 +289,12 @@ Habit JSON contains a trimmed `title` (2–80 characters), one of `steps`,
 100000. Daily progress is an integer from 0 to 100000 and may exceed the target.
 The API does not interpret goals or provide medical recommendations.
 
+Curated habits additionally carry an immutable `templateKey`. It is accepted
+only while creating a habit, is returned on reads, and is preserved when the
+patient renames or edits the habit. A partial unique index prevents duplicate
+activation for the same patient while allowing identical templates for different
+patients. Ordinary custom habits use `templateKey: null`.
+
 Habit definitions live in `chroniccare.habits`. Daily progress identity is the
 composite `(habit_id, recorded_on)`; an upsert replaces that day's total without
 creating duplicates. The client sends an explicit device-local `YYYY-MM-DD`
@@ -300,6 +310,24 @@ Edge workflows against the compiled Express server and the dedicated PostgreSQL
 test database. It verifies CRUD, daily values, edit rules, persistence, account
 isolation, Dashboard/Reports synchronization, failure states, authentication-only
 routing, RTL/LTR, themes, Motion Off, and reduced motion.
+
+## Phase 2A.4 application-database migration
+
+The test suite applies migration `006` only to the dedicated test database. To
+upgrade an existing local application database, first back it up and confirm
+that `DATABASE_URL` in `apps/backend/.env` points to that application database,
+not production and not the test database. Then run:
+
+```powershell
+Set-Location C:\Users\msi\Desktop\chroniccare-ai\apps\backend
+npm.cmd run db:check
+npm.cmd run db:migrate
+npm.cmd run dev
+```
+
+`db:migrate` applies only pending versions, records the checksum, and does not
+reset or remove existing habits. It is deliberately not run during HTTP server
+startup.
 
 ## Task 1B: Authentication and authorization
 

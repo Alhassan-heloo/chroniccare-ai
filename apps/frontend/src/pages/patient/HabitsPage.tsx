@@ -112,6 +112,7 @@ export default function HabitsPage() {
               unit: template.unit,
               target: template.exampleTarget,
             }}
+            templateKey={template.id}
             onSaved={() => setTemplate(null)}
           />
         )}

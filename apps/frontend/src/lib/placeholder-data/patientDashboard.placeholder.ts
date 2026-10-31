@@ -10,13 +10,7 @@ export const patientDashboardPlaceholder: Omit<
     role: "patient",
     conditions: ["السكري", "ارتفاع ضغط الدم"],
   },
-  reminder: {
-    id: "glucose-reminder",
-    title: "قياس السكر",
-    description: "اليوم، الساعة 10 مساءً",
-    level: "info",
-    read: false,
-  },
+  reminder: null,
 };
 
 export const demoWeeklyMeasurements = [

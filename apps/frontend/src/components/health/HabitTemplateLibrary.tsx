@@ -49,6 +49,7 @@ export function HabitTemplateLibrary({
         title: t(template.titleKey),
         unit: template.unit,
         target: template.exampleTarget,
+        templateKey: template.id,
       });
     } catch {
       // The mutation hook owns translated error feedback. Keep the template available.

@@ -4,6 +4,7 @@ export function createHabitPlaceholders(): Habit[] {
   return [
     {
       id: "steps",
+      templateKey: null,
       title: "المشي اليومي",
       unit: "steps",
       target: 10000,
@@ -12,6 +13,7 @@ export function createHabitPlaceholders(): Habit[] {
     },
     {
       id: "water",
+      templateKey: null,
       title: "شرب الماء",
       unit: "cups",
       target: 8,

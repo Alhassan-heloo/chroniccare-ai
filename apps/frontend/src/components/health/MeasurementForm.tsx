@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type {
@@ -34,18 +34,24 @@ export function MeasurementForm({
     });
   const add = useAddMeasurement();
   const update = useUpdateMeasurement();
-  const isPending = add.isPending || update.isPending;
+  const submitLock = useRef(false);
+  const isPending = formState.isSubmitting || add.isPending || update.isPending;
   return (
     <form
       data-i18n="declarative"
       className="stack"
-      onSubmit={handleSubmit((values) => {
-        if (initial)
-          update.mutate(
-            { id: initial.id, input: values },
-            { onSuccess: onSaved },
-          );
-        else add.mutate(values, { onSuccess: onSaved });
+      onSubmit={handleSubmit(async (values) => {
+        if (submitLock.current) return;
+        submitLock.current = true;
+        try {
+          if (initial) await update.mutateAsync({ id: initial.id, input: values });
+          else await add.mutateAsync(values);
+          onSaved();
+        } catch {
+          // Mutation hooks own error feedback; keep the form open for retry.
+        } finally {
+          submitLock.current = false;
+        }
       })}
       noValidate
     >

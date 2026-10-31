@@ -1,10 +1,10 @@
 import { AuthError, type AuthorizedRequest } from "@/auth/api";
-import type { Habit, HabitInput } from "@/lib/types/habit";
+import { habitTemplateKeys, type Habit, type HabitCreateInput, type HabitInput, type HabitTemplateKey } from "@/lib/types/habit";
 import { habitDay, habitProgressSchema, habitSchema } from "@/lib/utils/habits";
 
 export interface HabitSource {
   list(signal?: AbortSignal): Promise<Habit[]>;
-  create(input: HabitInput): Promise<Habit>;
+  create(input: HabitCreateInput): Promise<Habit>;
   update(update: { id: string; input: HabitInput }): Promise<Habit>;
   delete(id: string): Promise<void>;
   setProgress(action: { id: string; value: number }): Promise<void>;
@@ -17,10 +17,12 @@ function record(value: unknown): Habit {
   const fields = value as Record<string, unknown>;
   const input = habitSchema.safeParse({ title: fields.title, unit: fields.unit, target: fields.target });
   const progress = habitProgressSchema.safeParse(fields.progress);
-  if (typeof fields.id !== "string" || !date(fields.recordedOn) || !input.success || !progress.success) {
+  const templateKey = fields.templateKey;
+  if (typeof fields.id !== "string" || !date(fields.recordedOn) || !input.success || !progress.success
+    || (templateKey !== null && (typeof templateKey !== "string" || !habitTemplateKeys.includes(templateKey as HabitTemplateKey)))) {
     throw new AuthError("INVALID_RESPONSE");
   }
-  return { ...input.data, id: fields.id, progress: progress.data, recordedOn: fields.recordedOn };
+  return { ...input.data, id: fields.id, templateKey: templateKey as HabitTemplateKey | null, progress: progress.data, recordedOn: fields.recordedOn };
 }
 function single(response: unknown): Habit {
   if (!response || typeof response !== "object" || !("habit" in response)) throw new AuthError("INVALID_RESPONSE");

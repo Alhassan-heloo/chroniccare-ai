@@ -31,7 +31,8 @@
 مسارات المريض تتطلب المصادقة، ولا يوجد دخول عام كضيف.
 شغّل `npm.cmd run db:migrate` من `apps/backend` قبل تشغيل التطبيق لتطبيق مهاجرات
 القياسات `003_patient_measurements.sql` والأدوية `004_patient_medications.sql`
-والعادات `005_patient_habits.sql`
+والعادات `005_patient_habits.sql` وهوية قوالب العادات
+`006_habit_template_identity.sql`
 بأمان ومن دون حذف بيانات سابقة.
 راجع [دليل مصادقة الواجهة](apps/frontend/AUTHENTICATION.md) للتفاصيل.
 الأقسام التالية تتضمن توثيقًا تاريخيًا لمراحل الواجهة السابقة.

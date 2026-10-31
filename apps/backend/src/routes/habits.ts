@@ -6,6 +6,10 @@ import { habitDate, habitId, validateHabit, validateProgress } from "../habits/v
 import { HttpError } from "../middleware/errors.js";
 
 const missing = () => new HttpError(404, "HABIT_NOT_FOUND", "Habit not found.");
+function duplicateTemplate(error: unknown) {
+  return !!error && typeof error === "object" && "code" in error && error.code === "23505"
+    && "constraint" in error && error.constraint === "habits_patient_template_key_unique";
+}
 function day(value: unknown) {
   if (Array.isArray(value)) throw new HttpError(400, "INVALID_HABIT_DATE", "Habit date is invalid.");
   return habitDate(value);
@@ -22,8 +26,13 @@ export function habitRoutes(auth: AuthStore, store: HabitStore) {
     response.json({ habit: result });
   });
   router.post("/", async (request, response) => {
-    const result = await store.create((response.locals as AuthLocals).user.id, validateHabit(request.body), day(request.query.date));
-    response.status(201).location("/api/habits/" + result.id).json({ habit: result });
+    try {
+      const result = await store.create((response.locals as AuthLocals).user.id, validateHabit(request.body, true), day(request.query.date));
+      response.status(201).location("/api/habits/" + result.id).json({ habit: result });
+    } catch (error) {
+      if (duplicateTemplate(error)) throw new HttpError(409, "HABIT_TEMPLATE_EXISTS", "This habit template is already active.");
+      throw error;
+    }
   });
   router.put("/:id", async (request, response) => {
     const result = await store.update((response.locals as AuthLocals).user.id, habitId(request.params.id), validateHabit(request.body), day(request.query.date));

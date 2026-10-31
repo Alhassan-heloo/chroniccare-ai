@@ -4,7 +4,6 @@ import { Link, NavLink, useLocation } from "react-router";
 import { Brand } from "./Brand";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { usePatientDashboard } from "@/hooks/queries/usePatientDashboard";
 import { Preferences } from "./Preferences";
 import { useI18n } from "@/i18n/context";
 import { useAuth } from "@/auth/context";
@@ -14,17 +13,15 @@ import type { User } from "@/lib/types/user";
 
 function PatientTools() {
   const { user } = useAuth();
-  const { data } = usePatientDashboard();
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   return <>
     <Button variant="ghost" aria-label={t("common.layout.showNotifications")} onClick={() => setOpen(true)} data-i18n="declarative"><Bell size={21} aria-hidden="true" /></Button>
     <Link to="/patient/profile" className="profile-link" aria-label={t("common.navigation.profile")} data-i18n="declarative">
-      <span className="avatar" aria-hidden="true">{(user?.name ?? data?.patient.name ?? "C").slice(0,1)}</span>
-      <span className="profile-name"><bdi>{user?.name ?? data?.patient.name}</bdi><small>{t("auth.patient")}</small></span>
+      <span className="avatar" aria-hidden="true">{(user?.name ?? "C").slice(0,1)}</span>
+      <span className="profile-name"><bdi>{user?.name}</bdi><small>{t("auth.patient")}</small></span>
     </Link>
     <Modal open={open} onClose={() => setOpen(false)} title={t("common.layout.notifications")} declarativeTitle>
-      <p data-i18n={data?.reminder.id === "glucose-reminder" ? "declarative" : undefined}>{data?.reminder.id === "glucose-reminder" ? <>{t("common.reminder.glucose")} — {t("common.reminder.evening")}</> : <>{data?.reminder.title} — {data?.reminder.description}</>}</p>
       <p className="muted" data-i18n="declarative">{t("common.layout.notificationDemo")}</p>
     </Modal>
   </>;

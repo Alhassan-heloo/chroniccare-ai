@@ -14,6 +14,10 @@ import { habitDate, habitId, validateHabit, validateProgress, type Habit } from 
 test("habit validation enforces existing units, bounds, exact fields and calendar dates", () => {
   assert.deepEqual(validateHabit({ title: "  Morning walk  ", unit: "minutes", target: 30 }),
     { title: "Morning walk", unit: "minutes", target: 30 });
+  assert.deepEqual(validateHabit({ title: "  Morning walk  ", unit: "minutes", target: 30, templateKey: "walking" }, true),
+    { title: "Morning walk", unit: "minutes", target: 30, templateKey: "walking" });
+  assert.throws(() => validateHabit({ title: "Morning walk", unit: "minutes", target: 30, templateKey: "walking" }));
+  assert.throws(() => validateHabit({ title: "Morning walk", unit: "minutes", target: 30, templateKey: "diagnosis" }, true));
   assert.deepEqual(validateProgress({ date: "2024-02-29", value: 0 }), { date: "2024-02-29", value: 0 });
   assert.deepEqual(validateProgress({ date: "2026-10-31", value: 100000 }), { date: "2026-10-31", value: 100000 });
   for (const input of [null, [], {}, { title: "A", unit: "minutes", target: 1 },
@@ -96,11 +100,30 @@ test("real PostgreSQL habits: daily progress, unit rules, durable CRUD, authoriz
       { title: "  Morning walk  ", unit: "minutes", target: 30 }, tokenA);
     assert.equal(create.status, 201);
     const created = (await create.json() as { habit: Habit }).habit;
-    assert.deepEqual(created, { id: created.id, title: "Morning walk", unit: "minutes", target: 30, progress: 0, recordedOn: day });
+    assert.deepEqual(created, { id: created.id, title: "Morning walk", unit: "minutes", target: 30, templateKey: null, progress: 0, recordedOn: day });
     assert.equal(create.headers.get("location"), "/api/habits/" + created.id);
     const account = await auth.findAccount(emails[0]!); assert(account);
     assert.equal((await pool.query("SELECT patient_id FROM chroniccare.habits WHERE id=$1", [created.id])).rows[0]?.patient_id, account.id);
     assert.deepEqual(await get(created.id, tokenA), created);
+
+    const templateCreate = await request("/api/habits?date=" + day, "POST",
+      { title: "Daily walking", unit: "minutes", target: 20, templateKey: "walking" }, tokenA);
+    assert.equal(templateCreate.status, 201);
+    const templated = (await templateCreate.json() as { habit: Habit }).habit;
+    assert.equal(templated.templateKey, "walking");
+    assert.equal(templated.progress, 0);
+    const renamedTemplate = await request("/api/habits/" + templated.id + "?date=" + day, "PUT",
+      { title: "My own walking name", unit: "minutes", target: 25 }, tokenA);
+    assert.equal(renamedTemplate.status, 200);
+    assert.equal((await renamedTemplate.json() as { habit: Habit }).habit.templateKey, "walking",
+      "Patient-editable titles must not change stable template identity.");
+    assert.equal((await request("/api/habits?date=" + day, "POST",
+      { title: "Another name", unit: "minutes", target: 10, templateKey: "walking" }, tokenA)).status, 409);
+    assert.equal((await request("/api/habits/" + templated.id + "?date=" + day, "PUT",
+      { title: "Blocked identity change", unit: "minutes", target: 10, templateKey: "water" }, tokenA)).status, 400);
+    const otherPatientTemplate = await request("/api/habits?date=" + day, "POST",
+      { title: "Daily walking", unit: "minutes", target: 15, templateKey: "walking" }, tokenB);
+    assert.equal(otherPatientTemplate.status, 201, "Template identity is unique per patient, not globally.");
 
     assert.equal((await request("/api/habits/" + created.id + "/progress", "PUT", { date: day, value: 45 }, tokenA)).status, 204,
       "Progress above the target remains valid.");
@@ -133,12 +156,15 @@ test("real PostgreSQL habits: daily progress, unit rules, durable CRUD, authoriz
     }
 
     for (const method of ["GET", "PUT", "DELETE"] as const) {
-      const path = "/api/habits/" + created.id + (method === "DELETE" ? "" : "?date=" + day);
+      const path: string = "/api/habits/" + created.id + (method === "DELETE" ? "" : "?date=" + day);
       assert.equal((await request(path, method,
         method === "PUT" ? { title: "Stolen", unit: "times", target: 1 } : undefined, tokenB)).status, 404);
     }
     assert.equal((await request("/api/habits/" + created.id + "/progress", "PUT", { date: day, value: 2 }, tokenB)).status, 404);
-    assert.deepEqual((await (await request("/api/habits?date=" + day, "GET", undefined, tokenB)).json() as { habits: Habit[] }).habits, []);
+    const patientBHabits = (await (await request("/api/habits?date=" + day, "GET", undefined, tokenB)).json() as { habits: Habit[] }).habits;
+    assert.equal(patientBHabits.length, 1);
+    assert.equal(patientBHabits[0]?.templateKey, "walking");
+    assert(!patientBHabits.some(habit => habit.id === created.id));
 
     await stop();
     await start();
@@ -148,13 +174,15 @@ test("real PostgreSQL habits: daily progress, unit rules, durable CRUD, authoriz
       await auth.createUser(role, emails[index]!, await hashPassword(password), role);
       const token = await login(emails[index]!);
       for (const method of ["GET", "POST", "PUT", "DELETE"]) {
-        const path = method === "PUT" || method === "DELETE" ? "/api/habits/" + created.id + (method === "PUT" ? "?date=" + day : "") : "/api/habits?date=" + day;
+        const path: string = method === "PUT" || method === "DELETE" ? "/api/habits/" + created.id + (method === "PUT" ? "?date=" + day : "") : "/api/habits?date=" + day;
         assert.equal((await request(path, method,
           ["POST", "PUT"].includes(method) ? { title: "Valid", unit: "steps", target: 1 } : undefined, token)).status, 403);
       }
     }
     await assert.rejects(() => pool.query(
       "INSERT INTO chroniccare.habits(id,patient_id,title,unit,target) VALUES($1,$2,'A','steps',1)", [randomUUID(), account.id]));
+    await assert.rejects(() => pool.query(
+      "INSERT INTO chroniccare.habits(id,patient_id,title,unit,target,template_key) VALUES($1,$2,'Valid','steps',1,'unsupported')", [randomUUID(), account.id]));
     assert.equal((await request("/api/habits/" + created.id, "DELETE", undefined, tokenA)).status, 204);
     assert.equal((await request("/api/habits/" + created.id + "?date=" + day, "GET", undefined, tokenA)).status, 404);
     assert.equal((await pool.query("SELECT 1 FROM chroniccare.habit_progress WHERE habit_id=$1", [created.id])).rowCount, 0);

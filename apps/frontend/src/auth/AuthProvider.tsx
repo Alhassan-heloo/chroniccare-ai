@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "./context";
 import { AuthError, authRequest, apiRequest, type ApiRequestOptions, type LoginResult } from "./api";
@@ -8,11 +8,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<LoginResult | null>(null);
   const [expired, setExpired] = useState(false);
   const active = useRef<LoginResult | null>(null);
-  const reset = useCallback(async () => {
+  const reset = useCallback(() => {
     active.current = null;
     setSession(null);
-    await client.cancelQueries(); client.clear();
+    // clear() destroys (and therefore cancels) queries synchronously, so no
+    // protected cache can remain visible while the login route is rendered.
+    client.clear();
   }, [client]);
+  // A mounted protected screen can briefly subscribe again between reset() and
+  // React committing the login route. Clear once more after that commit.
+  useLayoutEffect(() => { if (!session) client.clear(); }, [client, session]);
   const logout = useCallback(async () => {
     const token = active.current?.token;
     try { if (token) await authRequest("logout", { token, method: "POST" }); }

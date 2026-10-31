@@ -21,6 +21,7 @@ export async function addHabit(input: HabitInput) {
   const item: Habit = {
     ...habitSchema.parse(input),
     id: crypto.randomUUID(),
+    templateKey: null,
     progress: 0,
     recordedOn: habitDay(),
   };
@@ -41,6 +42,7 @@ export async function updateHabit({
   const item: Habit = {
     ...valid,
     id,
+    templateKey: old.templateKey,
     progress: old.unit === valid.unit ? progressToday(old) : 0,
     recordedOn: habitDay(),
   };

@@ -61,7 +61,7 @@ export default function DashboardPage() {
           {!data.habits.length && <p className="dashboard-empty" data-i18n="declarative">{t("habits.empty")}</p>}
           <div className="dashboard-routine-progress" data-i18n="declarative"><span>{t("patient.overview.activity")}</span><strong>{formatNumber(steps)}</strong><small>{t("patient.overview.steps", { goal: formatNumber(stepGoal) })}</small><progress value={stepsPercent} max={100} aria-label={t("patient.metric.progress", { label: t("patient.overview.activity") })} /></div>
         </section>
-        <section className="dashboard-reminder glass" aria-label={t("common.layout.notifications")}><AlertCard notification={data.reminder} onAction={openMeasurement} /></section>
+        {data.reminder && <section className="dashboard-reminder glass" aria-label={t("common.layout.notifications")}><AlertCard notification={data.reminder} onAction={openMeasurement} /></section>}
       </aside>
       <div className="dashboard-support">
         <Link className="dashboard-report glass" to="/patient/reports" data-i18n="declarative"><span className="dashboard-feature-icon"><FileChartColumn size={22} aria-hidden="true" /></span><span><strong>{t("reports.title")}</strong><span>{t("patient.clinical.reportBody")}</span></span><ArrowUpRight size={20} aria-hidden="true" /></Link>

@@ -207,10 +207,16 @@ try {
     const u = await db.query("SELECT id FROM chroniccare.users WHERE email=$1", [email]);
     stage = `${language}: session-expiration`;
     await db.query("DELETE FROM chroniccare.sessions WHERE user_id=$1", [u.rows[0].id]);
-    await page.evaluate(() => window.dispatchEvent(new Event('focus'))); await page.waitForURL("**/login?returnTo=*");
-    await page.locator('.auth-card > .btn-secondary').click(); await page.waitForURL("**/patient/dashboard");
+    const expiredCheck = page.waitForResponse(r => r.url().endsWith("/auth/me") && r.status() === 401);
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    assert.equal((await (await expiredCheck).json()).error?.code, "UNAUTHENTICATED");
+    await page.waitForFunction(() => location.pathname === "/login" && new URLSearchParams(location.search).has("returnTo"));
+    const expiredKeys = await page.evaluate(async () => { const {queryClient} = await import('/src/lib/query/queryClient.ts'); return queryClient.getQueryCache().getAll().map(query => query.queryKey); });
+    assert.equal(expiredKeys.some(key => key[0] === 'patient' || key[0] === 'auth-cache-probe'), false, 'Expired sessions must remove protected cache keys');
+    await page.locator('input[type="email"]').fill(email); await page.locator('input[autocomplete="current-password"]').fill(password);
+    await page.locator('button[type="submit"]').click(); await page.waitForURL("**/patient/measurements?range=7#history");
     await page.reload(); await page.waitForURL("**/login?returnTo=*");
-    report.checks.push(`${language}: ${process.argv.includes("--flow-only") ? "flow-only (layout matrix skipped)" : "responsive login/register at 8 widths × light/dark/system-light/system-dark"}; language switching preserves inputs; validation, register, duplicate, invalid login, login/me, token memory, logout/revocation, cache clearing, return URL, expired session, demo, reload`);
+    report.checks.push(`${language}: ${process.argv.includes("--flow-only") ? "flow-only (layout matrix skipped)" : "responsive login/register at 8 widths × light/dark/system-light/system-dark"}; language switching preserves inputs; validation, register, duplicate, invalid login, login/me, token memory, logout/revocation, cache clearing, return URL, expired session, re-login and reload`);
     await context.close();
   }
   for (const role of ["doctor", "admin"]) {

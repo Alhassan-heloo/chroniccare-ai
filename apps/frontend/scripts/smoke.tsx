@@ -48,6 +48,7 @@ assert.equal(safeReturnTo("/patient/measurements?a=1#history", "patient"), "/pat
 const habitCalls: { path: string; method?: string; body?: unknown }[] = [];
 const persistentHabit = {
   id: "habit-fixture", title: "Morning walk", unit: "minutes" as const, target: 30,
+  templateKey: null,
   progress: 45, recordedOn: new Date().toLocaleDateString("en-CA"),
 };
 const persistentHabitSource = authenticatedHabits((async (path: string, options?: { method?: string; body?: unknown }) => {
@@ -69,6 +70,7 @@ const walkingTemplate = habitTemplates.find((template) => template.id === "walki
 assert(walkingTemplate);
 assert.equal(findTemplateHabit(walkingTemplate, [{ ...persistentHabit, title: translateCatalogMessage("en", walkingTemplate.titleKey) }])?.id, persistentHabit.id);
 assert.equal(findTemplateHabit(walkingTemplate, [{ ...persistentHabit, title: translateCatalogMessage("ar", walkingTemplate.titleKey) }])?.id, persistentHabit.id);
+assert.equal(findTemplateHabit(walkingTemplate, [{ ...persistentHabit, title: "My renamed habit", templateKey: "walking" }])?.id, persistentHabit.id);
 const malformedHabitSource = authenticatedHabits((async () => ({ habits: [{ ...persistentHabit, progress: "45" }] })) as AuthValue["request"]);
 await assert.rejects(() => malformedHabitSource.list(), /INVALID_RESPONSE/);
 import { queryKeys } from "../src/lib/query/queryKeys";
@@ -409,12 +411,16 @@ const { getPatientReport: getSeedReport } = await import(
   "../src/lib/api/reports"
 );
 const seededReport = await getSeedReport(7);
-const emptyAccountDashboard = await getPatientDashboard([], []);
+const emptyAccountDashboard = await getPatientDashboard([], [], []);
 assert.equal(emptyAccountDashboard.bloodPressure, null);
 assert.equal(emptyAccountDashboard.glucose, null);
 assert.equal(emptyAccountDashboard.weekly.length, 0, "An empty account must never receive seeded measurements");
 assert.equal(emptyAccountDashboard.medication.total, 0, "An empty account must never receive seeded medications");
-assert.equal((await getSeedReport(7, [], [])).measurements.length, 0);
+assert.equal(emptyAccountDashboard.habits.length, 0, "An empty account must never receive seeded habits");
+assert.equal(emptyAccountDashboard.reminder, null, "An empty account must never receive a fabricated reminder");
+const emptyAccountReport = await getSeedReport(7, [], [], []);
+assert.equal(emptyAccountReport.measurements.length, 0);
+assert.equal(emptyAccountReport.habitsToday.total, 0);
 const { authenticatedMeasurements } = await import("../src/lib/api/measurements");
 const { AuthError } = await import("../src/auth/api");
 for (const response of [{}, { measurements: null }, { measurements: [{ kind: "glucose", value: 98 }] }]) {

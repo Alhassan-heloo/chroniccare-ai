@@ -1,21 +1,21 @@
 import { randomUUID } from "node:crypto";
 import type { PoolClient, Pool } from "pg";
-import type { Habit, HabitInput, ProgressInput } from "./validation.js";
+import type { Habit, HabitCreateInput, HabitInput, ProgressInput } from "./validation.js";
 
-interface Row { id: string; title: string; unit: Habit["unit"]; target: number; progress: number; recorded_on: string }
+interface Row { id: string; title: string; unit: Habit["unit"]; target: number; template_key: Habit["templateKey"]; progress: number; recorded_on: string }
 export interface HabitStore {
   list(patientId: string, date: string): Promise<Habit[]>;
   get(patientId: string, id: string, date: string): Promise<Habit | undefined>;
-  create(patientId: string, input: HabitInput, date: string): Promise<Habit>;
+  create(patientId: string, input: HabitCreateInput, date: string): Promise<Habit>;
   update(patientId: string, id: string, input: HabitInput, date: string): Promise<Habit | undefined>;
   delete(patientId: string, id: string): Promise<boolean>;
   setProgress(patientId: string, id: string, input: ProgressInput): Promise<boolean>;
 }
 function habit(row: Row): Habit {
-  return { id: row.id, title: row.title, unit: row.unit, target: row.target, progress: row.progress, recordedOn: row.recorded_on };
+  return { id: row.id, title: row.title, unit: row.unit, target: row.target, templateKey: row.template_key, progress: row.progress, recordedOn: row.recorded_on };
 }
 async function read(client: Pool | PoolClient, patientId: string, date: string, id?: string): Promise<Habit[]> {
-  const sql = "SELECT h.id,h.title,h.unit,h.target,COALESCE(p.value,0) AS progress,"
+  const sql = "SELECT h.id,h.title,h.unit,h.target,h.template_key,COALESCE(p.value,0) AS progress,"
     + "to_char($2::date,'YYYY-MM-DD') AS recorded_on FROM chroniccare.habits h "
     + "LEFT JOIN chroniccare.habit_progress p ON p.habit_id=h.id AND p.recorded_on=$2::date "
     + "WHERE h.patient_id=$1 " + (id ? "AND h.id=$3 " : "") + "ORDER BY h.created_at,h.id";
@@ -28,8 +28,8 @@ export function postgresHabitStore(pool: Pool): HabitStore {
     async get(patientId, id, date) { return (await read(pool, patientId, date, id))[0]; },
     async create(patientId, input, date) {
       const id = randomUUID();
-      await pool.query("INSERT INTO chroniccare.habits(id,patient_id,title,unit,target) VALUES($1,$2,$3,$4,$5)",
-        [id, patientId, input.title, input.unit, input.target]);
+      await pool.query("INSERT INTO chroniccare.habits(id,patient_id,title,unit,target,template_key) VALUES($1,$2,$3,$4,$5,$6)",
+        [id, patientId, input.title, input.unit, input.target, input.templateKey ?? null]);
       const result = (await read(pool, patientId, date, id))[0];
       if (!result) throw new Error("Habit insert returned no row.");
       return result;

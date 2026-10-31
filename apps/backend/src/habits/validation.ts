@@ -1,8 +1,11 @@
 import { HttpError } from "../middleware/errors.js";
 
 export type HabitUnit = "steps" | "minutes" | "cups" | "times";
+export const habitTemplateKeys = ["walking", "water", "produce", "relaxation", "bedtime", "movement-breaks", "foot-check"] as const;
+export type HabitTemplateKey = typeof habitTemplateKeys[number];
 export interface HabitInput { title: string; unit: HabitUnit; target: number }
-export interface Habit extends HabitInput { id: string; progress: number; recordedOn: string }
+export interface HabitCreateInput extends HabitInput { templateKey?: HabitTemplateKey }
+export interface Habit extends HabitInput { id: string; templateKey: HabitTemplateKey | null; progress: number; recordedOn: string }
 export interface ProgressInput { date: string; value: number }
 
 function invalid(code = "INVALID_HABIT"): never { throw new HttpError(400, code, "Check the habit fields."); }
@@ -17,14 +20,23 @@ export function habitDate(value: unknown): string {
     || parsed.getUTCFullYear() !== year || parsed.getUTCMonth() + 1 !== month || parsed.getUTCDate() !== day) invalid("INVALID_HABIT_DATE");
   return value;
 }
-export function validateHabit(body: unknown): HabitInput {
+export function validateHabit(body: unknown, allowTemplateKey: true): HabitCreateInput;
+export function validateHabit(body: unknown, allowTemplateKey?: false): HabitInput;
+export function validateHabit(body: unknown, allowTemplateKey = false): HabitCreateInput {
   if (!object(body)) invalid();
-  exact(body, ["title", "unit", "target"]);
+  exact(body, allowTemplateKey ? ["title", "unit", "target", "templateKey"] : ["title", "unit", "target"]);
   if (typeof body.title !== "string" || typeof body.unit !== "string" || typeof body.target !== "number") invalid();
   const title = body.title.trim();
   if (title.length < 2 || title.length > 80 || !["steps", "minutes", "cups", "times"].includes(body.unit)
     || !Number.isInteger(body.target) || body.target < 1 || body.target > 100000) invalid();
-  return { title, unit: body.unit as HabitUnit, target: body.target };
+  if (body.templateKey !== undefined && (typeof body.templateKey !== "string"
+    || !habitTemplateKeys.includes(body.templateKey as HabitTemplateKey))) invalid();
+  return {
+    title,
+    unit: body.unit as HabitUnit,
+    target: body.target,
+    ...(body.templateKey === undefined ? {} : { templateKey: body.templateKey as HabitTemplateKey }),
+  };
 }
 export function validateProgress(body: unknown): ProgressInput {
   if (!object(body)) invalid("INVALID_HABIT_PROGRESS");

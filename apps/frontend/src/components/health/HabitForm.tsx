@@ -1,6 +1,7 @@
+import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Habit, HabitInput } from "@/lib/types/habit";
+import type { Habit, HabitInput, HabitTemplateKey } from "@/lib/types/habit";
 import { habitSchema, habitUnits } from "@/lib/utils/habits";
 import {
   useAddHabit,
@@ -14,10 +15,12 @@ import type { HabitUnit } from "@/i18n/formatters";
 export function HabitForm({
   initial,
   draft,
+  templateKey,
   onSaved,
 }: {
   initial?: Habit;
   draft?: Partial<HabitInput>;
+  templateKey?: HabitTemplateKey;
   onSaved: () => void;
 }) {
   const { t, formatHabitUnit } = useI18n();
@@ -33,18 +36,23 @@ export function HabitForm({
   });
   const add = useAddHabit();
   const update = useUpdateHabit();
+  const submitLock = useRef(false);
   return (
     <form
       data-i18n="declarative"
       className="stack habit-form"
       noValidate
       onSubmit={handleSubmit(async (input) => {
+        if (submitLock.current) return;
+        submitLock.current = true;
         try {
           if (initial) await update.mutateAsync({ id: initial.id, input });
-          else await add.mutateAsync(input);
+          else await add.mutateAsync({ ...input, ...(templateKey ? { templateKey } : {}) });
           onSaved();
         } catch {
           // Mutation hooks provide feedback; keep the form open for correction or retry.
+        } finally {
+          submitLock.current = false;
         }
       })}
     >

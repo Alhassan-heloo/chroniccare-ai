@@ -19,6 +19,6 @@ export interface PatientDashboard {
   glucose: { value: number; isExample: boolean } | null;
   medication: MedicationSummary;
   habits: Habit[];
-  reminder: Notification;
+  reminder: Notification | null;
   weekly: WeeklyPoint[];
 }

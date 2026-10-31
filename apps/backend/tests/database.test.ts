@@ -13,6 +13,11 @@ test("versioned migration files load deterministically", async () => {
   assert.equal(new Set(migrations.map((migration) => migration.version)).size, migrations.length);
   for (const migration of migrations) assert.match(migration.checksum, /^[a-f0-9]{64}$/);
   assert.match(migrations[0]?.sql ?? "", /CREATE SCHEMA chroniccare/);
+  const templateIdentity = migrations.find((migration) => migration.name === "006_habit_template_identity.sql");
+  assert(templateIdentity);
+  assert.match(templateIdentity.sql, /template_key/);
+  assert.match(templateIdentity.sql, /habits_patient_template_key_unique/);
+  assert.match(templateIdentity.sql, /ranked\.position = 1/);
 });
 
 test("real PostgreSQL: connectivity, migrations, idempotence, checksums, rollback", {
@@ -37,6 +42,13 @@ test("real PostgreSQL: connectivity, migrations, idempotence, checksums, rollbac
     assert.deepEqual(await applyMigrations(pool, migrations), []);
     const schema = await pool.query("SELECT 1 FROM information_schema.schemata WHERE schema_name = 'chroniccare'");
     assert.equal(schema.rowCount, 1);
+    const templateColumn = await pool.query<{ is_nullable: string }>(`SELECT is_nullable FROM information_schema.columns
+      WHERE table_schema='chroniccare' AND table_name='habits' AND column_name='template_key'`);
+    assert.equal(templateColumn.rows[0]?.is_nullable, "YES", "Existing custom habits remain compatible through a nullable identity.");
+    const templateIndex = await pool.query(`SELECT 1 FROM pg_indexes
+      WHERE schemaname='chroniccare' AND indexname='habits_patient_template_key_unique'
+      AND indexdef ILIKE '%UNIQUE%' AND indexdef ILIKE '%WHERE (template_key IS NOT NULL)%'`);
+    assert.equal(templateIndex.rowCount, 1);
     const changed = migrations.map((migration) => ({ ...migration, checksum: "changed" }));
     await assert.rejects(() => applyMigrations(pool, changed), /missing or changed/);
     await assert.rejects(() => applyMigrations(pool, [...migrations, {
