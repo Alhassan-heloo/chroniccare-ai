@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query/queryKeys";
 import { Bell } from "lucide-react";
 import { useAuth } from "@/auth/context";
 import { useI18n } from "@/i18n/context";
@@ -16,6 +18,13 @@ function AccountNotifications() {
   const [open, setOpen] = useState(false);
   const { t, formatNumber, formatDateTime } = useI18n();
   const { count, list, read } = useNotifications(open);
+  const client=useQueryClient();
+  useEffect(()=>{
+    if (!("serviceWorker" in navigator)) return;
+    const refresh=(event:MessageEvent)=>{ if (event.data?.type==="cc-push-refresh") void client.invalidateQueries({queryKey:queryKeys.notifications}); };
+    navigator.serviceWorker.addEventListener("message",refresh);
+    return ()=>navigator.serviceWorker.removeEventListener("message",refresh);
+  },[client]);
   return <>
     <Button className="notification-bell" variant="ghost" aria-label={`${t("common.layout.showNotifications")}${!count.isError && count.data !== undefined ? ": " + t("notificationsUi.unreadCount", { count: formatNumber(count.data) }) : ""}`} aria-haspopup="dialog" aria-expanded={open}
       onClick={() => setOpen(true)}><Bell size={21} aria-hidden="true" />

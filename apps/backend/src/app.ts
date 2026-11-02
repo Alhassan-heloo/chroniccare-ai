@@ -26,6 +26,8 @@ import { assistantRoutes } from "./routes/assistant.js";
 import { notificationRoutes } from "./routes/notifications.js";
 import type { NotificationStore } from "./notifications/store.js";
 import { registrationRoutes, type RegistrationStore } from "./notifications/registrations.js";
+import type pg from "pg";
+import { pushReceiptRoutes } from "./notifications/push.js";
 
 export interface AppOptions {
   corsOrigins: readonly string[];
@@ -44,6 +46,7 @@ export interface AppOptions {
   assistantProvider?: AssistantProvider;
   notificationStore?: NotificationStore;
   registrationStore?: RegistrationStore;
+  pushPool?: pg.Pool;
 }
 
 // No listening socket, environment reads, or database connections on import.
@@ -78,6 +81,7 @@ export function createApp(options: AppOptions) {
     if (!options.authStore) throw new Error("Notifications require authentication.");
     app.use("/api/notifications", notificationRoutes(options.authStore, options.notificationStore));
   }
+  if (options.pushPool) app.use("/api/notifications/push-receipt",pushReceiptRoutes(options.pushPool));
   if (options.registrationStore) {
     if (!options.authStore) throw new Error("Browser registrations require authentication.");
     app.use("/api/notifications/browser-registration", registrationRoutes(options.authStore, options.registrationStore));

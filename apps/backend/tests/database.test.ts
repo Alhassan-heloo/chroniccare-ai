@@ -38,7 +38,7 @@ test("real PostgreSQL: connectivity, migrations, idempotence, checksums, rollbac
     await checkDatabase(pool);
     const tables = await pool.query<{ tablename: string }>(`SELECT tablename FROM pg_tables
       WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-      AND NOT (schemaname = 'chroniccare' AND tablename IN ('users', 'sessions', 'measurements', 'medications', 'medication_schedules', 'medication_dose_logs', 'habits', 'habit_progress', 'doctor_patient_relationships', 'doctor_connection_codes', 'account_tokens', 'notifications', 'browser_registrations'))
+      AND NOT (schemaname = 'chroniccare' AND tablename IN ('users', 'sessions', 'measurements', 'medications', 'medication_schedules', 'medication_dose_logs', 'habits', 'habit_progress', 'doctor_patient_relationships', 'doctor_connection_codes', 'account_tokens', 'notifications', 'browser_registrations', 'push_control', 'push_jobs'))
       AND NOT (schemaname = 'public' AND tablename = 'chroniccare_schema_migrations')`);
     assert.equal(tables.rows.length, 0, "Use a dedicated test database with only known migration-owned tables.");
     const migrations = await loadMigrations();

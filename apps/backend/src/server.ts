@@ -15,6 +15,8 @@ import { isIP } from "node:net";
 import { configuredAssistant } from "./assistant/provider.js";
 import { postgresNotificationStore } from "./notifications/store.js";
 import { postgresRegistrationStore } from "./notifications/registrations.js";
+import { configuredPush } from "./notifications/firebase.js";
+import { configurePush, startPushWorker } from "./notifications/push.js";
 
 async function start() {
   const config = readEnvironment();
@@ -24,6 +26,9 @@ async function start() {
   if (trustedProxy && !isIP(trustedProxy)) throw new Error("TRUST_PROXY_IP must identify one trusted reverse proxy.");
   const email = configuredEmail();
   const assistantProvider = configuredAssistant();
+  let pushProvider;
+  try { pushProvider=await configuredPush(); }
+  catch { console.error("Push disabled: check server configuration. In-app notifications remain available."); }
   const pool = createDatabasePool(config);
   let bootstrap;
   try { bootstrap = config.nodeEnv === "production" && process.env.FIRST_ADMIN_EMAIL && !process.env.BOOTSTRAP_SECRET
@@ -35,6 +40,7 @@ async function start() {
     authStore: postgresAuthStore(pool),
     notificationStore: postgresNotificationStore(pool),
     registrationStore: postgresRegistrationStore(pool),
+    pushPool: pool,
     assistantProvider,
     measurementStore: postgresMeasurementStore(pool),
     medicationStore: postgresMedicationStore(pool),
@@ -59,6 +65,7 @@ async function start() {
     void pool.end().finally(() => { process.exitCode = 1; });
   });
   let stopping = false;
+  let stopPush: (() => Promise<void>) | undefined;
   const shutdown = () => {
     if (stopping) return;
     stopping = true;
@@ -68,7 +75,7 @@ async function start() {
     }, 10000);
     deadline.unref();
     server.close(() => {
-      void pool.end().then(() => { clearTimeout(deadline); }, () => {
+      void (async () => { await stopPush?.(); await pool.end(); })().then(() => { clearTimeout(deadline); }, () => {
         console.error("Database shutdown failed.");
         process.exitCode = 1;
       });
@@ -77,7 +84,12 @@ async function start() {
   process.once("SIGINT", shutdown);
   process.once("SIGTERM", shutdown);
   // Liveness stays available during database outages; readiness must return 503.
-  try { await checkDatabase(pool); console.log("PostgreSQL connection verified."); }
+  try {
+    await checkDatabase(pool);
+    await configurePush(pool,!!pushProvider);
+    if (pushProvider) stopPush=startPushWorker(pool,pushProvider);
+    console.log("PostgreSQL connection verified.");
+  }
   catch { console.warn("PostgreSQL unavailable. API is live but not ready; check /api/health/ready."); }
 }
 

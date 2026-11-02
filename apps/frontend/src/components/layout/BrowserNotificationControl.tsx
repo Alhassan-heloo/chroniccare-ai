@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/auth/context";
 import { useI18n } from "@/i18n/context";
 import { Button } from "@/components/ui/Button";
 import { Feedback } from "@/components/ui/Feedback";
-import { browserAvailability, registerBrowser, unregisterBrowser } from "@/lib/notifications/browser";
+import { browserAvailability, registerBrowser, unregisterBrowser, upgradePushWorker } from "@/lib/notifications/browser";
 export function BrowserNotificationControl() {
-  const { request, user } = useAuth(), { t } = useI18n(), client = useQueryClient();
+  const { request, user } = useAuth(), { t, language } = useI18n(), client = useQueryClient();
   const [issue, setIssue] = useState<ReturnType<typeof browserAvailability> | "failed">(null);
   const key = ["browser-registration", user?.id], path = "/notifications/browser-registration";
   const status = useQuery({ queryKey: key, queryFn: ({ signal }) => request<{ registered: boolean; context: string }>(path, { signal }), staleTime: 0 });
+  useEffect(()=>{ if(status.data?.registered) void upgradePushWorker().catch(()=>setIssue("failed")); },[status.data?.registered,language]);
   const mutation = useMutation({ retry: 0, mutationFn: async (disable: boolean) => {
     setIssue(null);
     const context = status.data?.context;

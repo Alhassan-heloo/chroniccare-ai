@@ -15,6 +15,21 @@ async function messaging() {
   return { sdk, instance: sdk.getMessaging(app) };
 }
 let busy = false;
+function workerConfiguration() {
+  const base = new URL(import.meta.env.BASE_URL, location.origin);
+  const scope = new URL("cc-fcm/", base).href, scriptURL = new URL("cc-fcm/sw.js", base);
+  scriptURL.searchParams.set("api", (env.VITE_API_URL || "http://localhost:3001/api").replace(/\/$/, ""));
+  scriptURL.searchParams.set("lang", document.documentElement.lang.startsWith("en") ? "en" : "ar");
+  return {scope,scriptURL};
+}
+// Upgrade only our already-installed worker, after the server confirms opt-in.
+// No Firebase initialization or permission request is involved.
+export async function upgradePushWorker() {
+  if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
+  const {scope,scriptURL}=workerConfiguration(), existing=await navigator.serviceWorker.getRegistration(scope);
+  if (existing?.scope===scope && existing.active && new URL(existing.active.scriptURL).pathname===scriptURL.pathname)
+    await navigator.serviceWorker.register(scriptURL.href,{scope});
+}
 export async function registerBrowser(): Promise<string> {
   const unavailable = browserAvailability();
   if (unavailable) throw new Error(unavailable);
@@ -24,10 +39,10 @@ export async function registerBrowser(): Promise<string> {
     // This call runs in the click handler, before loading SDK modules or awaiting anything.
     if (await Notification.requestPermission() !== "granted") throw new Error("denied");
     const { sdk, instance } = await messaging();
-    const base = new URL(import.meta.env.BASE_URL, location.origin);
-    const scope = new URL("cc-fcm/", base).href, script = new URL("cc-fcm/sw.js", base).href;
+    const {scope,scriptURL}=workerConfiguration();
+    const script=scriptURL.href;
     const existing = await navigator.serviceWorker.getRegistration(scope);
-    if (existing && existing.scope === scope && existing.active?.scriptURL !== script) throw new Error("workerConflict");
+    if (existing && existing.scope === scope && existing.active && new URL(existing.active.scriptURL).pathname !== scriptURL.pathname) throw new Error("workerConflict");
     const worker = await navigator.serviceWorker.register(script, { scope });
     if (!worker.active) await new Promise<void>((resolve, reject) => {
       const installing = worker.installing ?? worker.waiting;

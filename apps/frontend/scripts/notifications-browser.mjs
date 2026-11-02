@@ -23,6 +23,7 @@ const output = resolve(root, "artifacts/notifications"); await mkdir(output, { r
 const report = { checks: [], errors: [], screenshots: [] };
 const options = { corsOrigins: [base], checkDatabase: async () => { await pool.query("SELECT 1"); } };
 options.registrationStore = (await loadModule("notifications/registrations.js")).postgresRegistrationStore(pool);
+options.pushPool = pool;
 for (const [key, file, factory] of [["authStore","auth/store.js","postgresAuthStore"], ["notificationStore","notifications/store.js","postgresNotificationStore"], ["connectionStore","connections/store.js","postgresConnectionStore"], ["doctorStore","doctor/store.js","postgresDoctorStore"], ["measurementStore","measurements/store.js","postgresMeasurementStore"], ["medicationStore","medications/store.js","postgresMedicationStore"], ["habitStore","habits/store.js","postgresHabitStore"], ["adminStore","admin/store.js","postgresAdminStore"]]) options[key] = (await loadModule(file))[factory](pool);
 let server, vite, viteDone, browser, stage = "startup";
 async function start() { server = createApp(options).listen(3313, "127.0.0.1"); await once(server, "listening"); }
@@ -51,7 +52,7 @@ try {
   assert.equal(await patient.evaluate(() => Notification.permission), "default");
   // Mock only the external browser/Firebase adapter; persistence is the real API.
   await patient.route("**/src/lib/notifications/browser.ts*", route => route.fulfill({ contentType: "application/javascript", body:
-    'export const browserAvailability=()=>null; export async function registerBrowser(){window.pushOptIns=(window.pushOptIns||0)+1; await new Promise(r=>setTimeout(r,100)); return "cBBBBBBBBBBBBBBBBBBBBB";} export async function unregisterBrowser(){}' }));
+    'export const browserAvailability=()=>null; export async function upgradePushWorker(){} export async function registerBrowser(){window.pushOptIns=(window.pushOptIns||0)+1; await new Promise(r=>setTimeout(r,100)); return "cBBBBBBBBBBBBBBBBBBBBB";} export async function unregisterBrowser(){}' }));
   await patient.reload(); await patient.locator(".notification-bell").click();
   assert.equal(await patient.evaluate(() => window.pushOptIns || 0), 0);
   await patient.getByRole("button", { name: "Enable for this session", exact: true }).click();
@@ -95,10 +96,40 @@ try {
   await patient.keyboard.press("Escape"); await patient.waitForFunction(() => !document.querySelector("dialog[open]"));
   report.checks = ["real authenticated PostgreSQL list/count", "empty account without fixtures", "approval creates private notifications", "connection mutation updates badge", "failed write has no false read", "read confirmation updates count", "revocation event", "refresh/backend restart persistence", "two Patient isolation", "Doctor own events", "Admin has no automatic notifications", "Arabic RTL/light mobile and English/dark desktop", "Escape closes dialog"];
   report.checks.push("missing Firebase configuration disables opt-in without permission prompt", "browser deregistration control persists through real API");
+  stage="push-worker";
+  const { configurePush, dispatchOne }=await loadModule("notifications/push.js");
+  const { tokenHash }=await loadModule("auth/security.js");
+  const session=(await patient.context().cookies(api)).find(c=>c.name==="cc_session").value;
+  await options.registrationStore.put(users[0].id,tokenHash(session),"c"+"W".repeat(21));
+  await configurePush(pool,true);
+  const newDelivery=async()=>{
+    const n=await pool.query("INSERT INTO chroniccare.notifications(user_id,type) VALUES($1,'connection_revoked') RETURNING id",[users[0].id]);
+    const j=await pool.query("SELECT id FROM chroniccare.push_jobs WHERE notification_id=$1",[n.rows[0].id]);
+    await dispatchOne(pool,{send:async()=>"sent"}); return j.rows[0].id;
+  };
+  await patient.evaluate(async api=>{
+    const r=await navigator.serviceWorker.register('/cc-fcm/sw.js?api='+encodeURIComponent(api)+'&lang=en',{scope:'/cc-fcm/'});
+    if(!r.active) await new Promise(resolve=>{const w=r.installing||r.waiting;w.addEventListener('statechange',()=>{if(w.state==='activated')resolve();});});
+  },api);
+  const worker=patient.context().serviceWorkers().find(w=>w.url().includes('/cc-fcm/sw.js'));
+  assert(worker);
+  await worker.evaluate(()=>{ self.shown=[]; self.refreshes=0; self.registration.showNotification=async(title,options)=>{self.shown.push({title,options});}; self.clients.matchAll=async()=>[{url:self.location.origin+'/patient/dashboard',visibilityState:'visible',postMessage:()=>{self.refreshes++;}}]; });
+  const foreground=await newDelivery(); await worker.evaluate(id=>receive({data:{deliveryId:id}}),foreground);
+  assert.deepEqual(await worker.evaluate(()=>[self.shown.length,self.refreshes]),[0,1]);
+  await worker.evaluate(()=>{self.clients.matchAll=async()=>[];});
+  const background=await newDelivery(); await worker.evaluate(id=>receive({data:{deliveryId:id}}),background);
+  await worker.evaluate(id=>receive({data:{deliveryId:id}}),background);
+  assert.equal(await worker.evaluate(()=>self.shown.length),1);
+  assert.equal(await worker.evaluate(()=>self.shown[0].options.body),'You have a new account notification. Sign in to view it.');
+  const revoked=await newDelivery(); await options.registrationStore.remove(users[0].id,tokenHash(session));
+  await worker.evaluate(id=>receive({data:{deliveryId:id}}),revoked);
+  assert.equal(await worker.evaluate(()=>self.shown.length),1);
+  await configurePush(pool,false);
+  report.checks.push("real service worker foreground refresh without OS duplicate", "background generic preview and persistent duplicate suppression", "delayed push after deregistration fails closed against real API");
   assert.deepEqual(report.errors, []); console.log(JSON.stringify({ status: "PASS", checks: report.checks.length, output }));
 } catch (error) { report.errors.push({ stage, message: String(error.message).replaceAll(password, "[password]") }); console.error(stage + ": " + error.name); process.exitCode = 1; }
 finally {
   if (browser) await browser.close(); if (vite && vite.exitCode === null) { vite.kill(); await viteDone; } await stop();
-  try { await pool.query("DELETE FROM chroniccare.users WHERE email=ANY($1::text[])", [emails]); } finally { await pool.end(); }
+  try { await pool.query("UPDATE chroniccare.push_control SET enabled=false"); await pool.query("DELETE FROM chroniccare.users WHERE email=ANY($1::text[])", [emails]); } finally { await pool.end(); }
   await writeFile(resolve(output, "report.json"), JSON.stringify(report, null, 2));
 }

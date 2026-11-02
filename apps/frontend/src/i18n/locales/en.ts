@@ -3,7 +3,7 @@ import type { arCatalog } from "./ar";
 
 export const enCatalog = {
   browserPush: {
-    title: "Browser notifications", intro: "Optional registration for this signed-in session. Push delivery is not enabled in this phase. In-app notifications remain available.",
+    title: "Browser notifications", intro: "Optional notifications for this signed-in session, when enabled by the clinic. Previews contain no medical details. In-app notifications remain available.",
     enable: "Enable for this session", disable: "Disable for this session", working: "Saving…", enabled: "Registration confirmed for this session.", disabled: "Not registered for this session.",
     missing: "Browser notifications are not configured. In-app notifications still work.", insecure: "Use HTTPS or localhost to register this browser.",
     unsupported: "This browser does not support push registration.", denied: "Permission was not granted. You can change it in browser site settings.",
