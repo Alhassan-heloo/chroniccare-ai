@@ -3,7 +3,7 @@ import HabitsPage from "@/pages/patient/HabitsPage";
 import MedicationsPage from "@/pages/patient/MedicationsPage";
 import { Outlet, type RouteObject } from "react-router";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { PlaceholderPage } from "@/components/ui/PlaceholderPage";
+import UnavailablePage from "@/pages/public/UnavailablePage";
 import HomePage from "@/pages/public/HomePage";
 import AuthPage from "@/pages/auth/AuthPage";
 import AccountEmailPage from "@/pages/auth/AccountEmailPage";
@@ -20,14 +20,7 @@ import { ConnectPatientPage, MyDoctorsPage } from "@/pages/connections/Connectio
 export const routes: RouteObject[] = [
   {
     element: <Outlet />,
-    errorElement: (
-      <main className="public-shell">
-        <PlaceholderPage
-          title="تعذر عرض الصفحة"
-          description="حاول العودة إلى لوحة المريض."
-        />
-      </main>
-    ),
+    errorElement: <UnavailablePage error />,
     children: [
       { path: "/", element: <HomePage /> },
       { path: "/login", element: <AuthPage key="login" mode="login" /> },
@@ -69,14 +62,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: "*",
-        element: (
-          <main className="public-shell">
-            <PlaceholderPage
-              title="الصفحة غير موجودة"
-              description="تحقق من الرابط أو عد إلى لوحة المريض."
-            />
-          </main>
-        ),
+        element: <UnavailablePage />,
       },
     ],
   },

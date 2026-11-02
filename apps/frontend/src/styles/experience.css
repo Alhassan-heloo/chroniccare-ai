@@ -1,0 +1,134 @@
+/* Living 3.3 continuity. The original palette, health colors and page adapters
+   remain authoritative; these rules connect the remaining role/account surfaces. */
+.experience-shell {
+  --canvas: var(--bg);
+  --clinical-secondary: var(--tint);
+  --input-border: var(--border);
+  --danger: var(--error);
+  --danger-soft: var(--error-bg);
+  --info-soft: color-mix(in srgb, var(--glucose) 9%, var(--surface));
+  --success-soft: color-mix(in srgb, var(--habits) 9%, var(--surface));
+}
+.living-public .btn { font-weight: 700; font-size: 14px; transition: border-color .18s, box-shadow .18s, background-color .18s; }
+.living-public .btn-primary { background-color: var(--primary); color: var(--on-primary); }
+.living-public .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.living-public .btn-secondary:hover:not(:disabled) { background: var(--tint); border-color: var(--primary); }
+.living-public .assistant-scene .scene-copy > .btn { margin-top: 24px; }
+.living-public .btn:disabled { cursor: default; }
+.living-public .ui-feedback { background: var(--surface); color: var(--muted); border-color: var(--hairline); box-shadow: none; }
+.living-public .ui-feedback-info { background: color-mix(in srgb, var(--aqua) 6%, var(--surface)); }
+.living-public .ui-feedback-info > svg { color: var(--aqua); }
+.living-public .ui-feedback-error { background: var(--error-bg); color: var(--error); border-color: color-mix(in srgb, var(--error) 45%, var(--hairline)); }
+.living-public .ui-feedback-success { background: color-mix(in srgb, var(--habits) 8%, var(--surface)); color: var(--habits); }
+.living-public .ui-feedback-empty { padding: 28px; border-style: dashed; line-height: 1.9; }
+.living-public .ui-feedback-action .btn { min-height: 44px; }
+.living-public .field input:focus-visible { outline-offset: 3px; }
+/* The skip/route target is a document landmark, not an interactive control. */
+.living-dashboard.living-public main:focus { outline: none; }
+.living-public .field input[readonly] { background: var(--bg); }
+.experience-shell .ui-feedback-loading { min-height: 72px; align-items: center; }
+.experience-shell .ui-feedback-loading > svg { margin: 0; }
+.experience-heading { position: relative; isolation: isolate; display: flex; align-items: start; justify-content: space-between; gap: 24px; padding-block: 8px 26px; border-bottom: 1px solid var(--hairline); }
+.experience-heading > div { min-width: 0; }
+.experience-heading h1 { font-size: clamp(28px, 3vw, 40px); font-weight: 650; line-height: 1.65; overflow-wrap: anywhere; margin-block: 4px 8px; }
+.experience-heading p { color: var(--muted); font-size: 15px; line-height: 1.9; max-width: 64ch; }
+.experience-heading .eyebrow { font-size: 12px; color: var(--primary); }
+.experience-heading .signature-artwork { position: absolute; z-index: -1; inset-inline-start: auto; inset-inline-end: 0; top: -16px; width: 60%; height: 140px; opacity: .25; transform: none; pointer-events: none; }
+.experience-heading-action { flex-shrink: 0; padding-top: 12px; max-width: 100%; }
+.experience-shell .doctor-page, .experience-shell .account-page { max-width: none; gap: 24px; }
+.living-dashboard.living-public.experience-doctor .clinical-app-body { grid-template-columns: 210px minmax(0, 1fr); }
+.living-dashboard.living-public.experience-doctor .clinical-app .sidebar { width: 210px; padding: 12px; }
+.living-dashboard.living-public.experience-doctor .sidebar .nav-caption { display: block; padding: 10px 12px 18px; margin: 0; font-size: 12px; color: var(--muted); }
+.living-dashboard.living-public.experience-doctor .clinical-app .sidebar .nav-link { flex-direction: row; justify-content: start; text-align: start; min-height: 52px; gap: 12px; padding: 12px; margin-block: 4px; font-size: 14px; border-radius: 12px; border-inline-start: 3px solid transparent; }
+.living-dashboard.living-public.experience-doctor .clinical-app .sidebar .nav-link.active { border-inline-start-color: var(--aqua); }
+.experience-shell .doctor-page > .btn { justify-self: start; }
+.experience-shell .doctor-summary-card { padding: 28px; border-color: var(--hairline); border-radius: var(--radius); background: linear-gradient(110deg, color-mix(in srgb, var(--aqua) 7%, var(--surface)), var(--surface)); }
+.experience-shell .doctor-summary-card strong { font-size: 44px; line-height: 1.4; font-variant-numeric: tabular-nums; }
+.experience-shell .doctor-summary-card .icon-tile { width: 54px; height: 54px; border-radius: 18px; color: var(--aqua); background: var(--tint); }
+.experience-shell .doctor-patient-card { padding: 22px; border-color: var(--hairline); border-radius: 18px; box-shadow: none; }
+.experience-shell .doctor-patient-card > div { min-width: 0; overflow-wrap: anywhere; }
+.experience-shell .doctor-patient-card h2 { font-size: 18px; font-weight: 650; }
+.experience-shell .doctor-patient-card p { line-height: 1.9; }
+.experience-shell .doctor-record-section { border-color: var(--hairline); box-shadow: none; border-radius: 20px; min-width: 0; }
+.experience-shell .doctor-section-heading { padding-bottom: 16px; border-bottom: 1px solid var(--hairline); }
+.experience-shell .doctor-record-section:has(#doctor-measurements) .doctor-section-heading svg { color: var(--pressure); }
+.experience-shell .doctor-record-section:has(#doctor-medications) .doctor-section-heading svg { color: var(--medication); }
+.experience-shell .doctor-record-section:has(#doctor-habits) .doctor-section-heading svg { color: var(--habits); }
+.experience-shell .doctor-data-list li { border-color: var(--hairline); overflow-wrap: anywhere; }
+.experience-shell .doctor-data-list li > span[dir=ltr] { font-size: 19px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--pressure); }
+.experience-shell .doctor-back { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; width: fit-content; }
+.experience-shell .doctor-record-meta { font-size: 13px; line-height: 1.9; }
+:root[dir=rtl] .experience-doctor .doctor-summary-card .btn svg { transform: rotate(180deg); }
+.connection-workspace { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 28px; align-items: start; }
+.connection-workspace > *, .connection-current > * { min-width: 0; }
+.experience-shell .connection-page .card { padding: 24px; border-color: var(--hairline); border-radius: 20px; box-shadow: none; }
+.connection-review-card > h2 { display: flex; gap: 10px; align-items: center; font-size: 18px; }
+.connection-review-card > h2 svg, .connection-symbol { color: var(--aqua); }
+.connection-review-card > section { border-top: 1px solid var(--hairline); padding-top: 20px; }
+.connection-review-card > section .btn { width: 100%; }
+.connection-current .card h3 { font-size: 18px; }
+.connection-current .card .btn { align-self: start; justify-self: start; }
+.connection-code-card { width: min(100%, 640px); }
+.connection-code-card input[readonly] { font-variant-numeric: tabular-nums; letter-spacing: .08em; font-size: 20px; font-weight: 650; text-align: center; }
+.account-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 24px; align-items: start; }
+.account-grid > .card { min-width: 0; padding: 28px; border-color: var(--hairline); border-radius: 24px; box-shadow: none; }
+.account-identity { position: relative; }
+.living-public .account-symbol { display: grid; place-items: center; width: 52px; height: 52px; padding: 12px; border: 1px solid var(--hairline); border-radius: 16px; color: var(--aqua); background: var(--tint); }
+.account-role { color: var(--primary); font-size: 13px; }
+.account-identity h2 { font-size: 24px; overflow-wrap: anywhere; }
+.account-identity dl { display: grid; gap: 0; margin: 0; }
+.account-identity dl > div { display: grid; grid-template-columns: minmax(80px, .4fr) minmax(0, 1fr); gap: 16px; padding-block: 18px; border-top: 1px solid var(--hairline); }
+.account-identity dt { color: var(--muted); font-size: 14px; }
+.account-identity dd { margin: 0; overflow-wrap: anywhere; }
+.account-guidance > svg { color: var(--aqua); }
+.account-guidance p { color: var(--muted); line-height: 1.9; font-size: 14px; }
+.account-guidance .btn { align-self: start; justify-self: start; }
+.living-public .account-recovery { display: block; width: min(520px, calc(100% - 32px)); margin: 56px auto 64px; }
+.living-public .account-recovery .auth-card { padding: 32px; }
+.living-public .account-recovery .auth-card > h1 { margin-block: 20px 10px; font-size: 30px; }
+.living-public .account-recovery .auth-card > p { color: var(--muted); font-size: 14px; line-height: 1.9; }
+.living-public .account-recovery .auth-card > a { display: flex; justify-content: center; align-items: center; min-height: 44px; margin-top: 24px; font-size: 14px; }
+.living-public .account-recovery .auth-card > .btn-primary { color: var(--on-primary); background: var(--primary); }
+.living-public .account-recovery .auth-card .ui-feedback { margin-block: 20px 0; }
+.living-public .notification-badge { background: var(--primary); color: var(--on-primary); font-weight: 700; }
+.living-public .notification-center li { border-color: var(--hairline); padding: 20px 14px; gap: 20px; }
+.living-public .notification-center li > div { min-width: 0; overflow-wrap: anywhere; }
+.living-public .notification-center li.is-unread { border-inline-start-color: var(--aqua); background: color-mix(in srgb, var(--aqua) 5%, var(--surface)); border-radius: 0 12px 12px 0; }
+.living-public .notification-center li.is-read { border-inline-start-color: transparent; }
+.living-public .browser-notification-control { padding: 18px; border: 1px solid var(--hairline); border-radius: 16px; background: var(--bg); }
+.living-public .browser-notification-control .btn { margin-block: 6px 12px; }
+.living-public .browser-notification-control .ui-feedback { margin-block: 12px; }
+.living-public dialog .dialog-heading { position: sticky; top: -24px; z-index: 2; padding-block: 8px 16px; margin-bottom: 18px; background: var(--surface); border-bottom: 1px solid var(--hairline); }
+.living-public dialog .dialog-heading h2 { font-size: 20px; }
+.living-public dialog .dialog-heading button { min-width: 44px; min-height: 44px; padding: 8px; }
+@media (max-width: 1050px) {
+  .living-dashboard.living-public.experience-doctor .clinical-app-body { display: block; }
+  .living-dashboard.living-public.experience-shell .role-mobile-nav { display: flex; flex-wrap: wrap; gap: 8px; width: calc(100% - 48px); margin: 16px auto 0; padding: 8px; border: 1px solid var(--hairline); border-radius: 18px; background: var(--surface); }
+  .living-dashboard.living-public.experience-shell .role-mobile-nav a { display: inline-flex; gap: 8px; align-items: center; flex: 1 1 auto; justify-content: center; font-size: 13px; min-height: 44px; padding: 8px 12px; border-radius: 12px; }
+  .living-dashboard.living-public.experience-shell .role-mobile-nav a.active { background: var(--tint); color: var(--primary); }
+  .living-dashboard.living-public.experience-doctor .clinical-app .page-footer { padding-bottom: 32px; }
+}
+@media (max-width: 800px) {
+  .connection-workspace, .account-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .experience-heading { flex-direction: column; gap: 16px; padding-bottom: 22px; }
+  .experience-heading h1 { font-size: 28px; }
+  .experience-heading-action { padding-top: 0; }
+  .experience-heading p { font-size: 14px; }
+  .experience-shell .doctor-summary-card, .account-grid > .card { padding: 20px; }
+  .experience-shell .connection-page .card { padding: 20px; }
+  .living-dashboard.living-public.experience-shell .role-mobile-nav { width: calc(100% - 24px); }
+  .experience-shell .session-identity { max-width: 120px; overflow-wrap: anywhere; font-size: 12px; }
+  .living-public .account-recovery { margin-block: 28px 40px; }
+  .living-public .account-recovery .auth-card { padding: 24px 20px; }
+  .living-public .account-recovery .auth-card > h1 { font-size: 26px; }
+  .living-public dialog .dialog-heading { top: -24px; }
+}
+@media (max-width: 360px) {
+  .account-identity dl > div { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .living-public .btn { transition: none; }
+}
+.living-public[data-motion=paused] .btn { transition: none; }

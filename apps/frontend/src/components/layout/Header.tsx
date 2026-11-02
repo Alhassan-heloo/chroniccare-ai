@@ -15,7 +15,7 @@ function PatientTools() {
   return <>
     <Link to="/patient/profile" className="profile-link" aria-label={t("common.navigation.profile")} data-i18n="declarative">
       <span className="avatar" aria-hidden="true">{(user?.name ?? "C").slice(0,1)}</span>
-      <span className="profile-name"><bdi>{user?.name}</bdi><small>{t("auth.patient")}</small></span>
+      <span className="profile-name"><bdi>{user?.name}</bdi><small>{t("experience.roles.patient")}</small></span>
     </Link>
   </>;
 }
@@ -23,14 +23,14 @@ export function Header({ role = "patient", motion }: { role?: User["role"]; moti
   const { t } = useI18n();
   const { pathname } = useLocation();
   const navigation = roleNavigation(role);
-  const current = navigation.find(item => pathname === item.to);
+  const current = navigation.find(item => pathname === item.to || pathname.startsWith(`${item.to}/`));
   const motionLabel = t(motion?.reduced ? "public.living.motionReduced" : motion?.paused ? "public.living.motionResume" : "public.living.motionPause");
   return <>
     <header className="header app-header">
       <Brand living={Boolean(motion)} />
-      <div className="header-breadcrumb" data-i18n="declarative"><span>{t(`auth.${role}`)}</span><strong>{t(current?.label ?? `auth.${role}`)}</strong></div>
+      <div className="header-breadcrumb" data-i18n="declarative"><span>{t(`experience.roles.${role}`)}</span><strong>{t(current?.label ?? `auth.${role}`)}</strong></div>
       <div className="header-actions"><Preferences />{motion && <span className="dashboard-motion" data-i18n="declarative"><button type="button" className="icon-button motion-toggle" disabled={motion.reduced} aria-label={motionLabel} title={motionLabel} aria-pressed={motion.paused || motion.reduced} onClick={motion.toggle}>{motion.paused || motion.reduced ? <Play size={17} aria-hidden="true" /> : <Pause size={17} aria-hidden="true" />}</button></span>}<NotificationCenter />{role === "patient" && <PatientTools />}<SessionBar /></div>
     </header>
-    {role !== "patient" && <nav className="role-mobile-nav" aria-label={t("common.layout.mainNav")} data-i18n="declarative">{navigation.map(item => <NavLink key={item.to} to={item.to}>{t(item.label)}</NavLink>)}</nav>}
+    {role !== "patient" && <nav className="role-mobile-nav" aria-label={t("common.layout.mainNav")} data-i18n="declarative">{navigation.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to}><Icon size={18} aria-hidden="true" />{t(label)}</NavLink>)}</nav>}
   </>;
 }

@@ -8,6 +8,7 @@ import {
   UserRound,
   Users,
   LayoutDashboard,
+  Link2,
 } from "lucide-react";
 import type { TranslationKey } from "@/i18n/catalog";
 import type { User } from "@/lib/types/user";
@@ -27,7 +28,7 @@ export function roleNavigation(role: User["role"]): readonly NavigationItem[] {
   if (role === "doctor") return [
     { to: "/doctor/dashboard", label: "doctor.dashboard", icon: LayoutDashboard },
     { to: "/doctor/patients", label: "doctor.patients", icon: Users },
-    { to: "/doctor/connect", label: "connections.connect", icon: Users },
+    { to: "/doctor/connect", label: "connections.connect", icon: Link2 },
   ];
   if (role === "admin") return [{ to: "/admin/dashboard", label: "admin.dashboard", icon: LayoutDashboard }];
   return patientNavigation;

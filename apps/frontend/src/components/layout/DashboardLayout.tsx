@@ -21,8 +21,13 @@ import "@/styles/living-assistant.css";
 export function DashboardLayout({ role = "patient" }: { role?: User["role"] }) {
   const [open, setOpen] = useState(false);
   const { t } = useI18n();
-  const { pathname } = useLocation();
-  // Only approved Phase 1E pages opt into the shared Living shell.
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (hash) return;
+    window.scrollTo({ top: 0, behavior: "instant" });
+    document.getElementById("main")?.focus({ preventScroll: true });
+  }, [pathname, hash]);
+  // All roles share Living foundations; page adapters retain their own composition.
   const patientPath = pathname.replace(/\/$/, "");
   const measurements = role === "patient" && patientPath === "/patient/measurements";
   const medications = role === "patient" && patientPath === "/patient/medications";
@@ -30,16 +35,15 @@ export function DashboardLayout({ role = "patient" }: { role?: User["role"] }) {
   const reports = role === "patient" && patientPath === "/patient/reports";
   const admin = role === "admin" && patientPath === "/admin/dashboard";
   const assistant = role === "patient" && patientPath === "/patient/assistant";
-  const living = admin || assistant || (role === "patient" && (patientPath === "/patient/dashboard" || measurements || medications || habits || reports));
   const reduced = useReducedMotion();
   const [paused, setPaused] = useState(() => { try { return localStorage.getItem("cc-public-motion") === "paused"; } catch { return false; } });
-  useEffect(() => { if (living) { try { localStorage.setItem("cc-public-motion", paused ? "paused" : "running"); } catch { /* Optional visual preference. */ } } }, [living, paused]);
+  useEffect(() => { try { localStorage.setItem("cc-public-motion", paused ? "paused" : "running"); } catch { /* Optional visual preference. */ } }, [paused]);
   return (
     <DashboardContext value={{ openMeasurement: () => setOpen(true) }}>
-      <div className={living ? `living-public living-dashboard${assistant ? " living-assistant" : ""}${admin ? " living-admin" : ""}${measurements ? " living-measurements" : ""}${medications ? " living-medications" : ""}${habits ? " living-habits" : ""}${reports ? " living-reports" : ""}` : undefined} data-motion={living ? paused || reduced ? "paused" : "running" : undefined}>
+      <div className={`living-public living-dashboard experience-shell experience-${role}${assistant ? " living-assistant" : ""}${admin ? " living-admin" : ""}${measurements ? " living-measurements" : ""}${medications ? " living-medications" : ""}${habits ? " living-habits" : ""}${reports ? " living-reports" : ""}`} data-motion={paused || reduced ? "paused" : "running"}>
       <a className="skip-link" href="#main" data-i18n="declarative">{t("common.layout.skip")}</a>
       <div className={`app-frame role-${role} clinical-app`}>
-        <Header role={role} motion={living ? { paused, reduced, toggle: () => setPaused(value => !value) } : undefined} />
+        <Header role={role} motion={{ paused, reduced, toggle: () => setPaused(value => !value) }} />
         <div className="clinical-app-body">
           <Sidebar role={role} />
           <div className="app-stage">

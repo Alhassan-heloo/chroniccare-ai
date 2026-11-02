@@ -389,6 +389,8 @@ for (const path of paths) {
     </QueryClientProvider>,
   );
   assert(html.includes("<main"), `Missing main for ${path}`);
+  const livingShell = /class="living-public living-dashboard\b[^"\n]*"/.test(html);
+  assert.equal(livingShell, /^\/(patient|doctor|admin)\//.test(path), `All protected roles share Living foundations: ${path}`);
   assert(!html.includes("تعذر عرض الصفحة"), `Error boundary at ${path}`);
   if (path === "/patient/dashboard")
     for (const value of ["120/80", "98", "2/3", "4,500", "مرحبًا", "ماذا علي"])
@@ -397,7 +399,7 @@ for (const path of paths) {
     assert(html.includes('class="dashboard-living-grid"'), "Living canvas and routine form the primary workspace");
     assert(html.includes('class="dashboard-primary"') && html.includes('class="dashboard-routine"'), "Chart and daily routine retain distinct regions");
     assert(html.indexOf('class="dashboard-primary"') < html.indexOf('class="dashboard-routine"'), "The health canvas leads the reading order");
-    assert(html.includes('class="living-public living-dashboard"'), "Dashboard opts into the approved Living tokens");
+    assert(livingShell, "Dashboard opts into the approved Living tokens");
     assert(html.includes('class="dashboard-assistant glass"'), "Assistant preview remains accessible through native disclosure");
     assert(!html.includes('class="dashboard-board"') && !html.includes('class="routine-strip metrics-grid"'), "Previous dashboard composition is not mounted");
     assert(html.includes('class="clinical-app-body"') && html.includes('class="app-stage"'), "One shared shell with a quiet navigation rail");
@@ -407,17 +409,15 @@ for (const path of paths) {
   }
   if (path === "/patient/measurements")
     assert(html.includes("بيانات مثال"));
-  if (path !== "/patient/dashboard" && path !== "/patient/measurements" && path !== "/patient/medications" && path !== "/patient/habits" && path !== "/patient/reports")
-    assert(!html.includes('class="living-public living-dashboard"'), `Dashboard styles must not opt in on ${path}`);
   if (path === "/patient/measurements") {
-    assert(html.includes('class="living-public living-dashboard living-measurements"'), "Measurements reuse the approved Living shell");
+    assert(/class="[^"]*\bliving-measurements\b/.test(html), "Measurements reuse the approved Living shell");
     assert(html.includes('data-kind="bloodPressure"') && html.includes('data-kind="glucose"'), "Reading types retain distinct visual cues");
     assert(html.includes('class="measurement-filter-heading dashboard-panel-heading"'), "Filters reuse the approved patient panel heading");
     assert(html.includes('class="measurement-results dashboard-primary health-canvas glass"'), "History reuses the approved patient canvas surface");
     assert(html.includes('class="measurements-heading dashboard-welcome"'), "Measurements reuse the approved open patient heading");
   }
   if (path === "/patient/medications") {
-    assert(html.includes('class="living-public living-dashboard living-medications"'), "Medications reuse the approved patient shell");
+    assert(/class="[^"]*\bliving-medications\b/.test(html), "Medications reuse the approved patient shell");
     assert(html.includes('class="medications-heading dashboard-welcome"'), "Medication management reuses the open patient heading");
     assert(html.includes('class="card medication-summary glass"'), "Daily dose summary uses the approved Living surface");
     assert(html.includes('class="card medication-schedule glass"'), "Schedules use the approved Living surface");
@@ -427,7 +427,7 @@ for (const path of paths) {
     assert(!html.includes('class="feature-workbench"'), "Medication management has its own summary-and-schedules composition");
   }
   if (path === "/patient/habits") {
-    assert(html.includes('class="living-public living-dashboard living-habits"'), "Habits reuse the approved patient shell");
+    assert(/class="[^"]*\bliving-habits\b/.test(html), "Habits reuse the approved patient shell");
     assert(html.includes('class="habits-heading dashboard-welcome"'), "Daily tracking uses the approved open heading");
     assert(html.includes('class="card habit-summary glass"'), "Today's overview uses the shared surface");
     assert(html.includes('class="card habit-detail glass"'), "Habit cards use the shared surface");
@@ -436,7 +436,7 @@ for (const path of paths) {
     assert(html.includes('class="habits-grid"') && !html.includes('class="feature-workbench"'), "Daily completion lives alongside the introduction, ahead of the habit cards");
   }
   if (path === "/patient/reports") {
-    assert(html.includes('class="living-public living-dashboard living-reports"'), "Reports reuse the approved patient shell");
+    assert(/class="[^"]*\bliving-reports\b/.test(html), "Reports reuse the approved patient shell");
     assert(html.includes('class="reports-heading dashboard-welcome"'), "Reports use the shared open heading and artwork");
     assert.equal((html.match(/class="card report-stat /g) ?? []).length, 4, "Only the four existing statistics are shown");
     assert.equal((html.match(/class="card report-chart-panel health-canvas glass"/g) ?? []).length, 2, "Both existing charts use the Dashboard canvas surface");

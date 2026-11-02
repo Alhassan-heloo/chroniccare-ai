@@ -6,22 +6,18 @@ import type { Measurement } from "@/lib/types/measurement";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Feedback } from "@/components/ui/Feedback";
+import { PageHeading as WorkspaceHeading } from "@/components/ui/PageHeading";
 
-function PageHeading({ title, description }: { title: string; description: string }) {
+function PageHeading({ title, description, connect = false }: { title: string; description: string; connect?: boolean }) {
   const { t } = useI18n();
-  return <header className="doctor-heading">
-    <span className="eyebrow">{t("doctor.eyebrow")}</span>
-    <h1>{title}</h1>
-    <p>{description}</p>
-  </header>;
+  return <WorkspaceHeading title={title} description={description} eyebrow={t("doctor.eyebrow")} action={connect ? <Link className="btn btn-secondary" to="/doctor/connect">{t("connections.connect")}</Link> : undefined} />;
 }
 
 export function DoctorDashboard() {
   const { data, isPending, isError, refetch } = useDoctorPatients();
   const { t, formatNumber } = useI18n();
   return <div className="doctor-page stack" data-i18n="declarative">
-    <PageHeading title={t("doctor.dashboard")} description={t("doctor.dashboardDescription")} />
-    <Link className="btn btn-secondary" to="/doctor/connect">{t("connections.connect")}</Link>
+    <PageHeading title={t("doctor.dashboard")} description={t("doctor.dashboardDescription")} connect />
     {isPending ? <Feedback kind="loading">{t("doctor.loading")}</Feedback>
       : isError || !data ? <Feedback kind="error" action={<Button variant="secondary" onClick={() => void refetch()}><RefreshCw size={17} aria-hidden="true" />{t("common.actions.retry")}</Button>}>{t("doctor.error")}</Feedback>
         : <>
@@ -39,8 +35,7 @@ export function DoctorPatients() {
   const { data, isPending, isError, refetch } = useDoctorPatients();
   const { t } = useI18n();
   return <div className="doctor-page stack" data-i18n="declarative">
-    <PageHeading title={t("doctor.patients")} description={t("doctor.patientsDescription")} />
-    <Link className="btn btn-secondary" to="/doctor/connect">{t("connections.connect")}</Link>
+    <PageHeading title={t("doctor.patients")} description={t("doctor.patientsDescription")} connect />
     {isPending ? <Feedback kind="loading">{t("doctor.loading")}</Feedback>
       : isError || !data ? <Feedback kind="error" action={<Button variant="secondary" onClick={() => void refetch()}>{t("common.actions.retry")}</Button>}>{t("doctor.error")}</Feedback>
         : data.length ? <ul className="doctor-patient-list">
@@ -65,7 +60,7 @@ export function DoctorPatientDetails() {
   const { patientId } = useParams();
   const { data, isPending, isError, refetch } = useDoctorPatient(patientId);
   const { t, formatNumber, formatDateTime, formatHabitUnit } = useI18n();
-  if (isPending) return <Feedback kind="loading">{t("doctor.loadingRecord")}</Feedback>;
+  if (isPending) return <div className="doctor-page stack" data-i18n="declarative"><Link className="doctor-back" to="/doctor/patients">{t("doctor.backToPatients")}</Link><Feedback kind="loading">{t("doctor.loadingRecord")}</Feedback></div>;
   if (isError || !data) return <div className="doctor-page stack" data-i18n="declarative">
     <Link className="doctor-back" to="/doctor/patients">{t("doctor.backToPatients")}</Link>
     <Feedback kind="error" action={<Button variant="secondary" onClick={() => void refetch()}>{t("common.actions.retry")}</Button>}>{t("doctor.recordUnavailable")}</Feedback>

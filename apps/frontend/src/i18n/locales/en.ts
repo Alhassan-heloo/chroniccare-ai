@@ -2,6 +2,16 @@ import type { LocaleShape } from "../catalogTypes";
 import type { arCatalog } from "./ar";
 
 export const enCatalog = {
+  experience: {
+    roles: { patient: "Patient", doctor: "Doctor", admin: "Administrator" },
+    openAssistant: "Open health assistant",
+    accountIntro: "Your signed-in account details. Use the header controls to choose your language, appearance and motion preferences.",
+    accountAccess: "Review which doctors can view your records and manage their access from My doctors.",
+    revokeConfirm: "Remove {{name}}’s access to your health records? Your records will be kept. You can connect again using a new code.",
+    notFound: "Page not found", notFoundBody: "Check the address or return to your workspace.",
+    pageError: "This page could not be displayed", pageErrorBody: "Return to your workspace and try opening the page again.",
+    home: "Return to homepage",
+  },
   browserPush: {
     title: "Browser notifications", intro: "Optional notifications for this signed-in session, when enabled by the clinic. Previews contain no medical details. In-app notifications remain available.",
     enable: "Enable for this session", disable: "Disable for this session", working: "Saving…", enabled: "Registration confirmed for this session.", disabled: "Not registered for this session.",
@@ -99,10 +109,10 @@ export const enCatalog = {
           "reportsLabel": "03 / A record to return to",
           "reportsTitle": "The details, when you need them.",
           "reportsBody": "Change the period to explore readings and arithmetic averages. The same data, through a different descriptive lens.",
-          "assistantLabel": "04 / Room for understanding, later",
-          "assistantTitle": "Data first. Conversation comes next.",
-          "assistantBody": "A preview of a future assistant interface. No AI model is connected and no answers are generated.",
-          "noResponse": "No AI response. An interface prototype only, without diagnosis or treatment advice.",
+          "assistantLabel": "04 / Room for understanding",
+          "assistantTitle": "A place for your health questions.",
+          "assistantBody": "Ask general health questions in your signed-in space. Each question is independent, and your health records are not attached automatically.",
+          "noResponse": "This preview does not send questions or generate answers. The signed-in assistant provides education, not diagnosis or treatment advice.",
           "closingTitle": "Every detail belongs. Every day has room.",
           "closingBody": "Explore follow-up with illustrative data, without an account or personal information.",
           "canvas": "The reading canvas",
@@ -146,14 +156,14 @@ export const enCatalog = {
           "hideLedger": "Hide the reading history",
           "viewLedger": "Explore the reading history",
           "reportRecordLabel": "Period record",
-          "assistantStatus": "Not connected",
+          "assistantStatus": "Interactive preview",
           "expandAssistant": "Explore the assistant preview",
           "question": "Illustrative question",
-          "questionOne": "How have my readings changed this week?",
-          "questionTwo": "Which doses have I recorded today?",
+          "questionOne": "What does systolic blood pressure mean?",
+          "questionTwo": "How can I build a consistent daily routine?",
           "close": "Close",
           "accessTitle": "Create a patient account",
-          "footerPrivacy": "Real authentication; displayed health data is illustrative."
+          "footerPrivacy": "Public previews use sample data. Your account records are separate."
     },
     clinical: {
       title: "A clearer record.", accent: "A simpler day.",

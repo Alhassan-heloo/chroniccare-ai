@@ -8,12 +8,14 @@ export function Modal({
   title,
   children,
   declarativeTitle = false,
+  dismissible = true,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
   declarativeTitle?: boolean;
+  dismissible?: boolean;
 }) {
   const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
@@ -25,10 +27,10 @@ export function Modal({
     if (!open && dialog.open) dialog.close();
   }, [open]);
   return (
-    <dialog ref={ref} aria-labelledby={id} onCancel={onClose} onClose={onClose}>
+    <dialog ref={ref} aria-labelledby={id} onCancel={event => { if (!dismissible) event.preventDefault(); else onClose(); }} onClose={onClose}>
       <div className="dialog-heading">
         <h2 id={id} data-i18n={declarativeTitle ? "declarative" : undefined}>{title}</h2>
-        <Button variant="ghost" onClick={onClose} aria-label={t("common.actions.close")} data-i18n="declarative">
+        <Button variant="ghost" disabled={!dismissible} onClick={onClose} aria-label={t("common.actions.close")} data-i18n="declarative">
           <X size={22} />
         </Button>
       </div>

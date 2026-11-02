@@ -5,10 +5,13 @@ import { AssistantPanel, HabitsPanel, MedicationPanel, ReportPanel, SceneArrow, 
 import { Arrow, Button, ReadingSignature, SectionMarker, SignatureArtwork, StoryBridge, ValueArrival } from './ui';
 import { type Language } from './model';
 import { scrollToSection, useActiveSection } from './useActiveSection';
+import { Link } from 'react-router';
+import { useI18n } from '@/i18n/context';
 
 const sections=['weekly-scene','medication-scene','habits-scene','report-scene','assistant-scene'] as const;
 
 export function LivingHome({c,l,readings,kind,onKind,language,onDashboard,onAccount,...routine}:CanvasProps&RoutineProps&{language:Language;onDashboard:()=>void;onAccount:()=>void}) {
+  const { t } = useI18n();
   const active=useActiveSection(sections);
   const values=readings.map(row=>kind==='pressure'?row.systolic:row.glucose);
   // A zero baseline represents small differences honestly; this is display scale only.
@@ -53,7 +56,7 @@ export function LivingHome({c,l,readings,kind,onKind,language,onDashboard,onAcco
       </section>
       <section id="assistant-scene" className="scene assistant-scene reveal tone-assistant" aria-labelledby="assistant-title">
         <StoryBridge/>
-        <div className="scene-copy"><SectionMarker label={c.assistantLabel} icon={Bot}/><h2 id="assistant-title">{c.assistantTitle}</h2><p>{c.assistantBody}</p></div><div className="assistant-composition"><AssistantPanel c={c}/><span className="assistant-annotation"><ArrowDown size={16} aria-hidden="true"/>{c.noResponse}</span></div>
+        <div className="scene-copy"><SectionMarker label={c.assistantLabel} icon={Bot}/><h2 id="assistant-title">{c.assistantTitle}</h2><p>{c.assistantBody}</p><Link className="btn btn-secondary" to="/patient/assistant">{t("experience.openAssistant")}<Arrow rtl={language==='ar'}/></Link></div><div className="assistant-composition"><AssistantPanel c={c}/><span className="assistant-annotation"><ArrowDown size={16} aria-hidden="true"/>{c.noResponse}</span></div>
       </section>
     </div>
     <section className="closing-line reveal"><ReadingSignature/><div><span className="eyebrow"><bdi>ChronicCare AI</bdi> / {c.interfaceLabel}</span><h2>{c.closingTitle}</h2><p>{c.closingBody}</p></div><div className="closing-actions"><Button onClick={onDashboard}>{c.openSpace}<Arrow rtl={language==='ar'}/></Button><Button variant="quiet" onClick={onAccount}>{c.accessTitle}</Button></div></section>

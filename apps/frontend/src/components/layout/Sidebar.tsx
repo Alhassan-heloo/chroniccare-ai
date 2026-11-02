@@ -9,7 +9,7 @@ export function Sidebar({ role = "patient" }: { role?: User["role"] }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand"><Brand /></div>
-      <p className="nav-caption" data-i18n="declarative">{t(`auth.${role}`)}</p>
+      <p className="nav-caption" data-i18n="declarative">{t(`experience.roles.${role}`)}</p>
       <nav aria-label={t("common.layout.mainNav")} data-i18n="declarative">
         {roleNavigation(role).map(({ to, label, icon: Icon }) => (
           <NavLink
@@ -19,7 +19,7 @@ export function Sidebar({ role = "patient" }: { role?: User["role"] }) {
               isActive ? "nav-link active" : "nav-link"
             }
           >
-            <Icon size={21} />
+            <Icon size={21} aria-hidden="true" />
             <span data-i18n="declarative">{t(label)}</span>
           </NavLink>
         ))}
