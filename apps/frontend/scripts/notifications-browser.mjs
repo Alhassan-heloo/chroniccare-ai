@@ -22,6 +22,7 @@ const emails = Array.from({ length: 4 }, () => randomUUID() + "@notifications-br
 const output = resolve(root, "artifacts/notifications"); await mkdir(output, { recursive: true });
 const report = { checks: [], errors: [], screenshots: [] };
 const options = { corsOrigins: [base], checkDatabase: async () => { await pool.query("SELECT 1"); } };
+options.registrationStore = (await loadModule("notifications/registrations.js")).postgresRegistrationStore(pool);
 for (const [key, file, factory] of [["authStore","auth/store.js","postgresAuthStore"], ["notificationStore","notifications/store.js","postgresNotificationStore"], ["connectionStore","connections/store.js","postgresConnectionStore"], ["doctorStore","doctor/store.js","postgresDoctorStore"], ["measurementStore","measurements/store.js","postgresMeasurementStore"], ["medicationStore","medications/store.js","postgresMedicationStore"], ["habitStore","habits/store.js","postgresHabitStore"], ["adminStore","admin/store.js","postgresAdminStore"]]) options[key] = (await loadModule(file))[factory](pool);
 let server, vite, viteDone, browser, stage = "startup";
 async function start() { server = createApp(options).listen(3313, "127.0.0.1"); await once(server, "listening"); }
@@ -45,6 +46,21 @@ try {
   const patient = await loginPage(emails[0], "patient", "/patient/doctors");
   stage = "empty-and-event";
   await patient.locator(".notification-bell").click(); await patient.getByText("No notifications yet.", { exact: true }).waitFor();
+  await patient.getByText("Browser notifications are not configured. In-app notifications still work.", { exact: true }).waitFor();
+  assert.equal(await patient.getByRole("button", { name: "Enable for this session", exact: true }).isDisabled(), true);
+  assert.equal(await patient.evaluate(() => Notification.permission), "default");
+  // Mock only the external browser/Firebase adapter; persistence is the real API.
+  await patient.route("**/src/lib/notifications/browser.ts*", route => route.fulfill({ contentType: "application/javascript", body:
+    'export const browserAvailability=()=>null; export async function registerBrowser(){window.pushOptIns=(window.pushOptIns||0)+1; await new Promise(r=>setTimeout(r,100)); return "cBBBBBBBBBBBBBBBBBBBBB";} export async function unregisterBrowser(){}' }));
+  await patient.reload(); await patient.locator(".notification-bell").click();
+  assert.equal(await patient.evaluate(() => window.pushOptIns || 0), 0);
+  await patient.getByRole("button", { name: "Enable for this session", exact: true }).click();
+  await patient.getByText("Registration confirmed for this session.", { exact: true }).waitFor();
+  assert.equal(await patient.evaluate(() => window.pushOptIns), 1);
+  assert.equal((await pool.query("SELECT 1 FROM chroniccare.browser_registrations WHERE user_id=$1", [users[0].id])).rowCount, 1);
+  await patient.getByRole("button", { name: "Disable for this session", exact: true }).click();
+  await patient.getByText("Not registered for this session.", { exact: true }).waitFor();
+  assert.equal((await pool.query("SELECT 1 FROM chroniccare.browser_registrations WHERE user_id=$1", [users[0].id])).rowCount, 0);
   await patient.getByRole("button", { name: "Close", exact: true }).click();
   const code = await options.connectionStore.generate(users[2].id);
   await patient.locator('input[autocomplete="off"]').fill(code.code); await patient.getByRole("button", { name: "Review Doctor", exact: true }).click();
@@ -78,6 +94,7 @@ try {
   const screenshot = resolve(output, "notifications-390-ar-light.png"); await patient.screenshot({ path: screenshot, fullPage: true, animations: "disabled" }); report.screenshots.push(screenshot);
   await patient.keyboard.press("Escape"); await patient.waitForFunction(() => !document.querySelector("dialog[open]"));
   report.checks = ["real authenticated PostgreSQL list/count", "empty account without fixtures", "approval creates private notifications", "connection mutation updates badge", "failed write has no false read", "read confirmation updates count", "revocation event", "refresh/backend restart persistence", "two Patient isolation", "Doctor own events", "Admin has no automatic notifications", "Arabic RTL/light mobile and English/dark desktop", "Escape closes dialog"];
+  report.checks.push("missing Firebase configuration disables opt-in without permission prompt", "browser deregistration control persists through real API");
   assert.deepEqual(report.errors, []); console.log(JSON.stringify({ status: "PASS", checks: report.checks.length, output }));
 } catch (error) { report.errors.push({ stage, message: String(error.message).replaceAll(password, "[password]") }); console.error(stage + ": " + error.name); process.exitCode = 1; }
 finally {

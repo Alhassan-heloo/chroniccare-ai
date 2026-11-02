@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Feedback } from "@/components/ui/Feedback";
 import "@/styles/notifications.css";
+import { BrowserNotificationControl } from "./BrowserNotificationControl";
 export function NotificationCenter() {
   const { user } = useAuth();
   return user ? <AccountNotifications key={user.id} /> : null;
@@ -23,6 +24,7 @@ function AccountNotifications() {
     </Button>
     <Modal open={open} onClose={() => setOpen(false)} title={t("common.layout.notifications")} declarativeTitle>
       {open && <div className="notification-center" data-i18n="declarative">
+        <BrowserNotificationControl />
         <p className="muted">{t("notificationsUi.latest")}</p>
         {list.isPending ? <Feedback kind="loading">{t("notificationsUi.loading")}</Feedback>
           : list.isError ? <Feedback kind="error" action={<Button onClick={() => void list.refetch()}>{t("common.actions.retry")}</Button>}>{t("notificationsUi.failed")}</Feedback>

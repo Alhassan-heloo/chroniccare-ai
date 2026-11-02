@@ -25,6 +25,7 @@ import type { AssistantProvider } from "./assistant/provider.js";
 import { assistantRoutes } from "./routes/assistant.js";
 import { notificationRoutes } from "./routes/notifications.js";
 import type { NotificationStore } from "./notifications/store.js";
+import { registrationRoutes, type RegistrationStore } from "./notifications/registrations.js";
 
 export interface AppOptions {
   corsOrigins: readonly string[];
@@ -42,6 +43,7 @@ export interface AppOptions {
   accountService?: AccountService;
   assistantProvider?: AssistantProvider;
   notificationStore?: NotificationStore;
+  registrationStore?: RegistrationStore;
 }
 
 // No listening socket, environment reads, or database connections on import.
@@ -75,6 +77,10 @@ export function createApp(options: AppOptions) {
   if (options.notificationStore) {
     if (!options.authStore) throw new Error("Notifications require authentication.");
     app.use("/api/notifications", notificationRoutes(options.authStore, options.notificationStore));
+  }
+  if (options.registrationStore) {
+    if (!options.authStore) throw new Error("Browser registrations require authentication.");
+    app.use("/api/notifications/browser-registration", registrationRoutes(options.authStore, options.registrationStore));
   }
   if (options.measurementStore) {
     if (!options.authStore) throw new Error("Measurement routes require authentication.");
