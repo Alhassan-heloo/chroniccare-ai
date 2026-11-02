@@ -33,6 +33,21 @@ import { findTemplateHabit, habitTemplates } from "../src/lib/habitTemplates";
 import type { User } from "../src/lib/types/user";
 import { Input } from "../src/components/ui/Input";
 import { Card } from "../src/components/ui/Card";
+import { sendAssistantMessage } from "../src/lib/api/assistant";
+import AssistantPage from "../src/pages/patient/AssistantPage";
+const assistantReply = { reply: "<script>Not HTML</script>", language: "en", disclaimer: "Education only.", emergencyGuidance: "Seek emergency help for urgent danger." };
+let assistantCalls = 0;
+const assistantRequest = (async (path, options) => {
+  assistantCalls++; assert.equal(path, "/assistant/messages"); assert.deepEqual(options?.body, { message: "A general question", language: "en" });
+  return { data: assistantReply };
+}) as AuthValue["request"];
+assert.deepEqual(await sendAssistantMessage(assistantRequest, " A general question ", "en"), assistantReply);
+await assert.rejects(() => sendAssistantMessage(assistantRequest, " ", "en"));
+await assert.rejects(() => sendAssistantMessage(assistantRequest, "x".repeat(2001), "en"));
+assert.equal(assistantCalls, 1);
+for (const data of [{ ...assistantReply, reply: "" }, { ...assistantReply, language: "ar" }, { ...assistantReply, disclaimer: null }, { ...assistantReply, emergencyGuidance: "" }, { ...assistantReply, unexpected: "private" }]) {
+  await assert.rejects(() => sendAssistantMessage((async () => ({ data })) as AuthValue["request"], "Question", "en"));
+}
 const describedInput = renderToString(<Input id="foundation-field" label="Label" hint="Help" error="Invalid" aria-describedby="external foundation-field-error" />);
 assert(describedInput.includes('aria-describedby="external foundation-field-error foundation-field-hint"'));
 assert(describedInput.includes('id="foundation-field-error"'));
@@ -41,6 +56,9 @@ assert(!renderToString(<Input label="Label" />).includes("aria-describedby"));
 assert(renderToString(<Card padding="comfortable" />).includes('data-padding="comfortable"'));
 assert(!renderToString(<Card />).includes("data-padding"));
 const testAuth: AuthValue = { user: null, loading: false, expired: false, login: async () => { throw new Error("Not used in SSR"); }, register: async () => {}, logout: async () => {}, request: async () => { throw new Error("SSR fixture must not call the backend"); } };
+const assistantHtml = renderToString(<AuthContext value={{ ...testAuth, user: { id: "assistant-fixture", name: "Fixture", email: "fixture@example.test", role: "patient" } }}><AssistantPage /></AuthContext>);
+assert(/maxlength="2000"/i.test(assistantHtml)); assert(assistantHtml.includes('role="log"'));
+assert.equal(renderToString(<AuthContext value={testAuth}><AssistantPage /></AuthContext>), "");
 const adminDoctor = { id: "doctor-fixture", name: "Doctor Fixture", email: "doctor@example.test", role: "doctor" as const };
 const adminCalls: { path: string; method?: string; body?: unknown }[] = [];
 const adminRequest = (async (path: string, options?: { method?: string; body?: unknown }) => {

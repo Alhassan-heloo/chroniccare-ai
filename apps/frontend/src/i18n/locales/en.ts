@@ -2,6 +2,21 @@ import type { LocaleShape } from "../catalogTypes";
 import type { arCatalog } from "./ar";
 
 export const enCatalog = {
+  assistantChat: {
+    title: "Your health questions, explained", intro: "A space for general health education. Ask in your own words, without sharing your identity.",
+    new: "New conversation", safety: "Education, emergencies and privacy", education: "Educational information only. This assistant does not replace a qualified healthcare professional.",
+    emergency: "For severe or sudden symptoms, or if you believe your life is in danger, contact local emergency services immediately. Do not wait for the assistant.",
+    privacy: "Messages are sent to an external AI provider. Avoid names, contact details and unnecessary sensitive medical information. Your account and health records are not attached automatically.",
+    conversation: "Health education conversation", empty: "What would you like to understand?", emptyBody: "Ask a general question about healthy routines or health terminology. No messages are sent until you choose Send.",
+    you: "You", name: "Health assistant", message: "Your question", placeholder: "Write a general health question…", send: "Send", loading: "Waiting for the assistant’s response…",
+    keyboard: "Enter to send · Shift + Enter for a new line", memory: "Messages stay in this page’s memory only and disappear when you leave or refresh. Each question is sent independently; earlier messages are not sent.",
+    latest: "Go to latest message", notAnswered: "No answer confirmed", retry: "Retry this question", retryHint: "Retry sends this question again and may use your request allowance. Nothing is retried automatically.",
+    network: "Connection failed or the request timed out. An answer could not be confirmed. Check your connection before retrying.", timeout: "The assistant took too long. No answer was returned. You can retry when ready.",
+    rate: "Your request limit has been reached. Wait before trying again.", busyError: "Another assistant request is still running. Wait before retrying.",
+    unavailable: "The assistant is not configured yet. Contact the clinic administrator.", providerError: "The AI service could not return an answer. You can retry later.",
+    invalidResponse: "The service returned an incomplete or invalid answer. It has not been displayed.", invalidInput: "Write a question between 1 and 2000 characters.",
+    refused: "The assistant could not answer this question safely. Ask a qualified healthcare professional for individual advice.",
+  },
   accountEmail: {
     forgot: "Forgot password?", activate: "Activate Admin account", reset: "Reset password", request: "Request reset link",
     forgotIntro: "Enter your account email to request a password-reset link.", activationIntro: "Your clinic authorized this invitation. Choose your name and a unique password.",

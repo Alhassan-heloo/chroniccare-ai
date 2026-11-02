@@ -1,0 +1,41 @@
+/* Scoped to the Patient assistant. Existing Living tokens and motion govern the page. */
+.living-assistant .assistant-page{max-width:1100px;margin-inline:auto}
+.living-assistant .assistant-heading{position:relative;isolation:isolate;display:flex;align-items:center;justify-content:space-between;gap:20px;padding-block:8px 18px}
+.living-assistant .assistant-heading .signature-artwork{position:absolute;inset-inline-start:auto;inset-inline-end:0;top:-20px;width:65%;height:160px;overflow:hidden;z-index:-1;opacity:.25;pointer-events:none}
+.living-assistant .assistant-heading h1{font-size:clamp(26px,3vw,36px);font-weight:650}
+.living-assistant .assistant-heading p{color:var(--muted);max-width:65ch;font-size:14px;margin-top:8px}
+.living-assistant .assistant-safety{padding:18px 22px;border-inline-start:3px solid var(--primary);background:var(--glass);border-radius:0 16px 16px 0;display:grid;gap:10px}
+[dir=rtl] .living-assistant .assistant-safety{border-radius:16px 0 0 16px}
+.living-assistant .assistant-safety p{font-size:13px;line-height:1.9;max-width:95ch}
+.living-assistant .assistant-safety p:first-child{display:flex;align-items:flex-start;gap:8px;font-weight:650}
+.living-assistant .assistant-safety svg{margin-top:4px;flex-shrink:0;color:var(--primary)}
+.living-assistant .assistant-emergency{color:var(--pressure)}
+.living-assistant .assistant-privacy{color:var(--muted)}
+.living-assistant .assistant-workspace{position:relative;min-width:0;border:1px solid var(--hairline);border-radius:24px;background:var(--surface);overflow:visible}
+.living-assistant .assistant-log{height:clamp(300px,48dvh,560px);overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:26px;display:flex;flex-direction:column;gap:20px;border-radius:24px 24px 0 0;scroll-behavior:auto}
+.living-assistant .assistant-empty{margin:auto;max-width:52ch;text-align:center;padding:28px 8px;display:grid;justify-items:center;gap:16px}
+.living-assistant .assistant-empty>svg{color:var(--primary)}
+.living-assistant .assistant-empty h2{font-size:22px;font-weight:650}
+.living-assistant .assistant-empty p{font-size:14px;color:var(--muted);line-height:2}
+.living-assistant .assistant-turn{display:grid;gap:18px;flex-shrink:0}
+.living-assistant .assistant-message{min-width:0;max-width:82%;padding:16px 20px;border-radius:18px;line-height:1.9}
+.living-assistant .assistant-message h2{font-size:12px;font-weight:650;color:var(--primary);margin-bottom:8px}
+.living-assistant .assistant-message p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;max-width:72ch}
+.living-assistant .patient-message{justify-self:end;background:var(--tint);border-end-end-radius:5px}
+.living-assistant .patient-message small{display:block;margin-top:8px;color:var(--muted)}
+.living-assistant .model-message{justify-self:start;border:1px solid var(--hairline);border-end-start-radius:5px;background:var(--bg)}
+.living-assistant .assistant-message .assistant-disclaimer{font-size:12px;color:var(--muted);border-top:1px solid var(--hairline);margin-top:14px;padding-top:12px}
+.living-assistant .assistant-error{padding:0 22px 18px;display:grid;gap:10px}
+.living-assistant .assistant-error>p{color:var(--muted);font-size:12px}
+.living-assistant .assistant-error>.btn{justify-self:start}
+.living-assistant .assistant-latest{display:flex;margin:0 auto 12px;font-size:12px}
+.living-assistant .assistant-composer{padding:20px 24px;border-top:1px solid var(--hairline);display:grid;gap:10px}
+.living-assistant .assistant-composer label{font-size:14px;font-weight:650}
+.living-assistant .assistant-composer textarea{width:100%;resize:vertical;min-height:96px;max-height:220px;border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:var(--bg);color:var(--text);font:inherit;line-height:1.8}
+.living-assistant .assistant-composer textarea:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.living-assistant .assistant-composer textarea[readonly]{opacity:.7}
+.living-assistant .assistant-composer-footer{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.living-assistant .assistant-composer-footer small{color:var(--muted);margin-inline-end:auto}
+.living-assistant .assistant-composer-footer>span{font-size:12px;color:var(--muted)}
+.living-assistant .assistant-memory{font-size:12px;color:var(--muted);line-height:1.9}
+@media(max-width:600px){.living-assistant .assistant-heading{align-items:flex-start;flex-direction:column;gap:14px}.living-assistant .assistant-safety{padding:14px}.living-assistant .assistant-log{padding:18px 12px;height:390px}.living-assistant .assistant-message{max-width:94%;padding:14px}.living-assistant .assistant-composer{padding:18px 14px}.living-assistant .assistant-composer-footer small{flex-basis:100%}.living-assistant .assistant-composer-footer>.btn{margin-inline-start:auto}.living-assistant .assistant-heading .signature-artwork{width:100%}}
