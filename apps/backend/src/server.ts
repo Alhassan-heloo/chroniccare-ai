@@ -13,6 +13,7 @@ import { accountService } from "./auth/accounts.js";
 import { configuredEmail } from "./auth/email.js";
 import { isIP } from "node:net";
 import { configuredAssistant } from "./assistant/provider.js";
+import { postgresNotificationStore } from "./notifications/store.js";
 
 async function start() {
   const config = readEnvironment();
@@ -31,6 +32,7 @@ async function start() {
     corsOrigins: config.corsOrigins,
     checkDatabase: () => checkDatabase(pool),
     authStore: postgresAuthStore(pool),
+    notificationStore: postgresNotificationStore(pool),
     assistantProvider,
     measurementStore: postgresMeasurementStore(pool),
     medicationStore: postgresMedicationStore(pool),

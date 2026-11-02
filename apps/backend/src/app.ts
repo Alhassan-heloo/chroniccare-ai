@@ -23,6 +23,8 @@ import { accountRoutes } from "./routes/accounts.js";
 import type { AccountService } from "./auth/accounts.js";
 import type { AssistantProvider } from "./assistant/provider.js";
 import { assistantRoutes } from "./routes/assistant.js";
+import { notificationRoutes } from "./routes/notifications.js";
+import type { NotificationStore } from "./notifications/store.js";
 
 export interface AppOptions {
   corsOrigins: readonly string[];
@@ -39,6 +41,7 @@ export interface AppOptions {
   cookies?: CookieSettings;
   accountService?: AccountService;
   assistantProvider?: AssistantProvider;
+  notificationStore?: NotificationStore;
 }
 
 // No listening socket, environment reads, or database connections on import.
@@ -69,6 +72,10 @@ export function createApp(options: AppOptions) {
   }
   if (options.authStore) app.use("/api/auth", authRoutes(options.authStore, options.accountService?.reservedAdminEmail));
   if (options.authStore) app.use("/api/assistant", assistantRoutes(options.authStore, options.assistantProvider));
+  if (options.notificationStore) {
+    if (!options.authStore) throw new Error("Notifications require authentication.");
+    app.use("/api/notifications", notificationRoutes(options.authStore, options.notificationStore));
+  }
   if (options.measurementStore) {
     if (!options.authStore) throw new Error("Measurement routes require authentication.");
     app.use("/api/measurements", measurementRoutes(options.authStore, options.measurementStore));

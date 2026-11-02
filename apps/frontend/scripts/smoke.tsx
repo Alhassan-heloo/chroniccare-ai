@@ -33,6 +33,17 @@ import { findTemplateHabit, habitTemplates } from "../src/lib/habitTemplates";
 import type { User } from "../src/lib/types/user";
 import { Input } from "../src/components/ui/Input";
 import { Card } from "../src/components/ui/Card";
+import { getNotifications, getUnreadCount, markNotificationRead } from "../src/lib/api/notifications";
+const notificationFixture = { id: "fixture-id", type: "connection_approved", createdAt: "2026-11-02T10:00:00.000Z", readAt: null };
+assert.deepEqual(await getNotifications((async () => ({ notifications: [notificationFixture] })) as AuthValue["request"]), [notificationFixture]);
+assert.equal(await getUnreadCount((async () => ({ unreadCount: 2 })) as AuthValue["request"]), 2);
+await assert.rejects(getUnreadCount((async () => ({ unreadCount: -1 })) as AuthValue["request"]));
+await assert.rejects(getNotifications((async () => ({ notifications: [{ ...notificationFixture, patientName: "must-not-leak" }] })) as AuthValue["request"]));
+const markedNotification = await markNotificationRead((async (path, options) => {
+  assert.equal(path, "/notifications/fixture-id/read"); assert.equal(options?.method, "PUT");
+  return { notification: { ...notificationFixture, readAt: "2026-11-02T10:01:00.000Z" } };
+}) as AuthValue["request"], notificationFixture.id);
+assert(markedNotification.readAt);
 import { sendAssistantMessage } from "../src/lib/api/assistant";
 import AssistantPage from "../src/pages/patient/AssistantPage";
 const assistantReply = { reply: "<script>Not HTML</script>", language: "en", disclaimer: "Education only.", emergencyGuidance: "Seek emergency help for urgent danger." };

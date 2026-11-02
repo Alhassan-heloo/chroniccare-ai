@@ -7,5 +7,5 @@ export const queryKeys = {
   measurements: ["patient", "measurements"] as const,
   medications: ["patient", "medications"] as const,
   habits: ["patient", "habits"] as const,
-  notifications: ["patient", "notifications"] as const,
+  notifications: ["notifications"] as const,
 };

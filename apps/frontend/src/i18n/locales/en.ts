@@ -2,6 +2,14 @@ import type { LocaleShape } from "../catalogTypes";
 import type { arCatalog } from "./ar";
 
 export const enCatalog = {
+  notificationsUi: {
+    latest: "Latest 50 account notifications. Previews contain no patient names or medical details.", loading: "Loading notifications…",
+    unreadCount: "{{count}} unread notifications", countError: "The unread count could not be loaded.",
+    empty: "No notifications yet.", failed: "Notifications could not be loaded. Try again.",
+    read: "Read", markRead: "Mark as read", readFailed: "Read status could not be confirmed. Try again.",
+    approvedTitle: "Connection approved", approvedBody: "An authorized Doctor–Patient connection is now active for your account.",
+    revokedTitle: "Connection access removed", revokedBody: "A Doctor–Patient connection for your account has ended.",
+  },
   assistantChat: {
     title: "Your health questions, explained", intro: "A space for general health education. Ask in your own words, without sharing your identity.",
     new: "New conversation", safety: "Education, emergencies and privacy", education: "Educational information only. This assistant does not replace a qualified healthcare professional.",
