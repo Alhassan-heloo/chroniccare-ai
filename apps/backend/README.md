@@ -1,10 +1,20 @@
-# ChronicCare AI — Backend (through Phase 2A / Task 2A.3)
+# ChronicCare AI — Backend (Account foundation and Patient/Doctor integration)
+
+Current account/session deployment instructions are in
+[production account foundation](../../docs/production-account-foundation.md).
+Migration 009 adds persistent HttpOnly Cookie sessions, CSRF checks, idle/absolute
+expiry, trusted first-Admin email invitations and password reset. Browser refresh
+now preserves valid sessions. Apply pending migrations before starting the new
+backend. Older task descriptions below are historical where superseded by that
+guide. Integration work applied new migrations to the separate test database only.
 
 This is a separate Node.js + Express + TypeScript package. Real PostgreSQL-backed
 authentication plus authenticated-patient measurement, medication, and habit
 CRUD are available. Patient pages require authentication and never fall back to
-frontend example data. AI, notifications, and doctor/admin clinical workflows
-remain outside Task 2A.3.
+frontend example data. Phase 2B.1 adds the first read-only Doctor workflow for
+explicitly assigned patients, and the Admin foundation adds browser-based Doctor
+account listing and creation. AI, notifications, other Admin workflows, and
+clinical decision-making remain outside this phase.
 
 ## Requirements and Windows setup
 
@@ -110,6 +120,10 @@ stops startup without logging secrets.
 | `PUT /api/habits/:id?date=YYYY-MM-DD` | Updates an owned habit; target changes preserve progress and unit changes invalidate it. |
 | `DELETE /api/habits/:id` | Deletes an owned habit and its daily progress records. |
 | `PUT /api/habits/:id/progress` | Upserts one exact `{ date, value }` daily progress record. |
+| `GET /api/doctor/patients` | Lists the minimum identity (`id`, `name`) of patients explicitly assigned to the authenticated Doctor. |
+| `GET /api/doctor/patients/:patientId?date=YYYY-MM-DD` | Returns an assigned patient's measurements plus medication and habit state for the explicit local date; unassigned IDs return 404. |
+| `GET /api/admin/doctors` | Lists Doctor-role accounts for an authenticated Admin; never returns password hashes. |
+| `POST /api/admin/doctors` | Creates a Doctor account from exact `{ name, email, password }` input; the server fixes the role to `doctor`. |
 
 Readiness checks **connectivity**, not migration completion. Run `db:migrate`
 explicitly before deployment. The HTTP server remains live during a DB outage
@@ -152,6 +166,10 @@ cannot override verification settings. Never use `rejectUnauthorized: false`.
   `template_key`, safely links known legacy Arabic/English template titles,
   and prevents one patient from activating the same template twice. Custom
   habits remain null and no habit or progress row is deleted.
+- `migrations/007_doctor_patient_relationships.sql` adds the explicit
+  Doctor–Patient authorization boundary. Its composite primary key prevents
+  duplicate assignments, foreign keys remove relationships with deleted users,
+  and a trigger rejects non-Doctor/non-Patient role combinations.
 - The runner creates `public.chroniccare_schema_migrations`, with version,
   filename, SHA-256 checksum, and application timestamp.
 - A PostgreSQL transaction advisory lock serializes concurrent migration runs.
@@ -163,8 +181,7 @@ cannot override verification settings. Never use `rejectUnauthorized: false`.
   applied migration or include `BEGIN`/`COMMIT` in individual files. Use
   transaction-compatible PostgreSQL DDL; e.g. `CREATE INDEX CONCURRENTLY` is not
   supported by this transactional runner.
-- Future tables for alerts and doctor-patient relationships go in the
-  `chroniccare` schema only in their approved tasks.
+- Future tables for alerts go in the `chroniccare` schema only in their approved tasks.
 - No automatic migrations on HTTP startup and no destructive down/reset command.
   Back up a populated database and review new migration SQL before applying it.
 - Build output references the root `migrations/` directory: deploy that directory
@@ -211,19 +228,22 @@ apps/backend/
   tsconfig.json, tsconfig.test.json, eslint.config.js
   migrations/001_backend_foundation.sql, 002_authentication.sql,
              003_patient_measurements.sql, 004_patient_medications.sql,
-             005_patient_habits.sql, 006_habit_template_identity.sql
+             005_patient_habits.sql, 006_habit_template_identity.sql,
+             007_doctor_patient_relationships.sql
   src/
     app.ts, server.ts
     auth/store.ts, security.ts, middleware.ts, provision.ts
     measurements/store.ts, validation.ts
     medications/store.ts, validation.ts
     habits/store.ts, validation.ts
+    doctor/store.ts, validation.ts
+    admin/store.ts
     config/env.ts
     db/pool.ts, check.ts, migrations.ts, migrate.ts
     middleware/errors.ts
-    routes/index.ts, health.ts, auth.ts, measurements.ts, medications.ts, habits.ts
+    routes/index.ts, health.ts, auth.ts, measurements.ts, medications.ts, habits.ts, doctor.ts, admin.ts
   tests/app.test.ts, env.test.ts, database.test.ts, auth.test.ts,
-        measurements.test.ts, medications.test.ts, habits.test.ts
+        measurements.test.ts, medications.test.ts, habits.test.ts, doctor.test.ts, admin.test.ts
 ```
 
 Runtime: Express (HTTP/routing), pg (PostgreSQL pool), Helmet (security headers),
@@ -329,6 +349,90 @@ npm.cmd run dev
 reset or remove existing habits. It is deliberately not run during HTTP server
 startup.
 
+## Phase 2B.1: Doctor foundation
+
+After the initial Admin is provisioned locally, normal Doctor account creation is
+performed in the protected Admin browser workspace. Public registration cannot
+request a staff role. A Doctor sees a patient only
+after an explicit row exists in `doctor_patient_relationships`. There is no
+self-assignment endpoint and no patient search that could disclose unrelated
+accounts. The record is read-only and contains existing measurements together
+with medication-dose and habit-progress state for the requested local calendar
+day. It does not diagnose, recommend, prescribe, or calculate adherence history.
+
+After backing up and confirming that `.env` targets the intended non-production
+application database, apply migration `007` with:
+
+```powershell
+Set-Location C:\Users\msi\Desktop\chroniccare-ai\apps\backend
+npm.cmd run db:check
+npm.cmd run db:migrate
+```
+
+The Admin account workflow deliberately does not create patient relationships.
+Until the separately scoped consent/relationship workflow exists, an authorized
+database operator must create the relationship. In `psql`, use known account emails and verify the
+affected row before leaving the transaction:
+
+```sql
+BEGIN;
+INSERT INTO chroniccare.doctor_patient_relationships (doctor_id, patient_id)
+SELECT doctor.id, patient.id
+FROM chroniccare.users AS doctor
+CROSS JOIN chroniccare.users AS patient
+WHERE doctor.email = 'doctor@example.test' AND doctor.role = 'doctor'
+  AND patient.email = 'patient@example.test' AND patient.role = 'patient'
+ON CONFLICT DO NOTHING;
+SELECT doctor_id, patient_id, created_at
+FROM chroniccare.doctor_patient_relationships
+WHERE doctor_id = (SELECT id FROM chroniccare.users WHERE email = 'doctor@example.test')
+  AND patient_id = (SELECT id FROM chroniccare.users WHERE email = 'patient@example.test');
+COMMIT;
+```
+
+The role-validation trigger makes an invalid pairing fail even for a direct SQL
+insert. The application API uses parameterized queries and always derives the
+Doctor identity from the bearer session. Unauthenticated requests return 401,
+Patient/Admin roles return 403, and an unassigned or unknown patient returns the
+same 404 response.
+
+From `apps/frontend`, `npm.cmd run test:doctor-integration` runs Edge, Vite, the
+compiled Express server, and the dedicated PostgreSQL test database. It checks
+the relationship boundary, two-Doctor isolation, minimum identity disclosure,
+read-only record, failure recovery, persistence, keyboard access, RTL/LTR,
+themes, reduced motion, and 1440/768/390/320 px layouts.
+
+## Browser first-time setup and Doctor account management
+
+Normal first-Admin creation is now browser-based: start the backend, obtain the
+one-time code from the private local development console, open `/setup`, create
+the Admin, and sign in through `/login`. Production requires a separately
+configured trusted `BOOTSTRAP_SECRET` and never prints it. Existing Admin accounts
+close setup automatically. See [account setup](../../docs/account-setup.md) for
+deployment, security, testing, and browser-only account instructions. No new
+migration is needed.
+
+`/admin/dashboard` lists existing Doctor accounts and lets an authenticated Admin
+create one with a name, email, and unique initial password. Express enforces the
+Admin role, validates an exact request body, hashes the password with the same
+Argon2id settings used by public registration, and supplies the `doctor` role
+server-side. Patient and Doctor sessions receive 403, public registration remains
+Patient-only, duplicate emails return 409, and responses never contain password
+hashes.
+
+There is no separate approval or professional-license-verification field in the
+available approved documentation or schema. Creating the account through the
+Admin workspace is treated only as administrative authorization to hold the
+Doctor role; the UI explicitly says it is not evidence of license verification.
+Because account creation inserts no `doctor_patient_relationships` rows, the new
+Doctor can sign in but cannot read any patient record.
+
+From `apps/frontend`, `npm.cmd run test:admin-integration` runs the focused Edge,
+Express, and PostgreSQL workflow. It verifies browser-based first-Admin setup, browser
+Doctor creation, role isolation, duplicate/invalid input, failure without false
+success, shared Login routing, empty Doctor patient access, restart persistence,
+RTL/LTR, themes, reduced motion, mobile layout, and keyboard focus.
+
 ## Task 1B: Authentication and authorization
 
 Apply the new versioned migration (do not edit `001` or reset the database):
@@ -351,9 +455,9 @@ foreign keys, and session indexes. Existing application data is not changed.
 | Endpoint | Request / authorization | Success |
 | --- | --- | --- |
 | POST `/api/auth/register` | JSON `{ "name": "Demo", "email": "demo@example.test", "password": "a-long-unique-password" }` | 201 `{ user }`, patient only; does not log in automatically |
-| POST `/api/auth/login` | JSON `{ email, password }` | 200 `{ user, token, expiresAt }` |
-| GET `/api/auth/me` | `Authorization: Bearer <token>` | 200 `{ user }` |
-| POST `/api/auth/logout` | Same bearer header | 204, current session deleted |
+| POST `/api/auth/login` | JSON `{ email, password }`, browser Origin + CSRF | 200 `{ user, expiresAt }`, HttpOnly session Cookie; non-browser no-Origin clients retain token compatibility |
+| GET `/api/auth/me` | Session Cookie (or non-browser Bearer) | 200 `{ user }` |
+| POST `/api/auth/logout` | Session Cookie + Origin + CSRF (or non-browser Bearer) | 204, session deleted and browser Cookie cleared |
 
 User objects contain **only** `id`, `name`, `email`, `role`. Passwords/hashes are
 never returned. Inputs reject unknown properties (including role/id/isAdmin).
@@ -367,18 +471,20 @@ are exposed. This deliberate behavior supports a straightforward sign-up flow.
 
 Passwords use Argon2id (19 MiB, two iterations, one lane, random per-hash salt).
 Session tokens use 32 cryptographically random bytes. Only SHA-256 digests are
-stored; tokens expire after eight hours, with no sliding refresh. Login creates
-a new independent session. Logout revokes that session immediately server-side;
+stored. Patient/Doctor sessions expire after 30 minutes without authenticated
+requests or eight absolute hours; Admin sessions use 15 minutes/four hours.
+Browser login rotates its prior Cookie session. Logout revokes that session immediately server-side;
 other devices remain logged in. Expired rows do not authenticate; operators can
 periodically execute `DELETE FROM chroniccare.sessions WHERE expires_at <= now()`
 to reclaim storage. No plaintext token or authentication signing secret is stored
 in configuration. Never log Authorization headers or login response bodies.
 
-For future React integration, send the bearer header explicitly, keep the token
-in memory (not localStorage/URLs), and clear it on logout/401. Reload requires
-login again. This task adds no browser persistence or UI. Cookies are not used,
-so no ambient-cookie CSRF flow is introduced. CORS credentials remain disabled;
-CORS is not authorization. Use HTTPS for all non-loopback deployments.
+React sends HttpOnly session Cookies using credentials:include and an Origin/CSRF
+check for writes. It restores identity through /auth/me before rendering protected
+routes, clears protected queries on logout/expiry/switching, and never stores
+session credentials in localStorage. CORS credentials are allowed only for explicit
+trusted origins. CORS is not authorization. Production requires HTTPS and secure
+Cookie/proxy configuration described in the current deployment guide.
 
 `requireAuth(store)` resolves a live session and current account from PostgreSQL
 on every request. Follow it with `requireRoles("patient")`, `requireRoles("doctor")`,
@@ -386,12 +492,13 @@ or `requireRoles("admin")` (explicit allowlists, no implicit admin bypass). Guar
 are tested using test-only routes; no artificial role/data endpoints are exposed.
 There is no role-update endpoint. Role changes require a later reviewed workflow.
 
-### Initial administrator and doctor provisioning (local operator only)
+### Trusted operator provisioning (optional compatibility tool)
 
-Public registration never accepts a role and always creates a patient. Doctors
-are created by a trusted operator after offline identity verification; self-
-declared doctor registration is deliberately not permitted. This avoids granting
-clinical privileges to an unverified user. No doctor approval workflow is added.
+Public registration never accepts a role and always creates a patient. The first
+Admin normally uses the browser setup described above; the local operator tool
+below remains available for compatibility. Subsequent Doctor accounts are created
+by that Admin in the browser. Self-declared Doctor registration is deliberately not permitted.
+There is no claim of professional-license verification.
 
 Provisioning requires local shell access and database credentials. It only inserts
 new accounts; it never changes an existing account or password. Initial admin
@@ -410,8 +517,6 @@ $passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($accoun
 try {
   $env:AUTH_PROVISION_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($passwordPointer)
   npm.cmd run auth:provision -- admin admin@example.test 'Initial Admin'
-  # To provision a verified doctor instead, replace the preceding command with:
-  # npm.cmd run auth:provision -- doctor doctor@example.test 'Verified Doctor'
 } finally {
   Remove-Item Env:AUTH_PROVISION_PASSWORD -ErrorAction SilentlyContinue
   [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordPointer)
