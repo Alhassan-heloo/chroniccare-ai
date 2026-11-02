@@ -21,6 +21,8 @@ import { connectionRoutes } from "./routes/connections.js";
 import { browserSecurity, type CookieSettings } from "./auth/cookies.js";
 import { accountRoutes } from "./routes/accounts.js";
 import type { AccountService } from "./auth/accounts.js";
+import type { AssistantProvider } from "./assistant/provider.js";
+import { assistantRoutes } from "./routes/assistant.js";
 
 export interface AppOptions {
   corsOrigins: readonly string[];
@@ -36,6 +38,7 @@ export interface AppOptions {
   connectionStore?: ConnectionStore;
   cookies?: CookieSettings;
   accountService?: AccountService;
+  assistantProvider?: AssistantProvider;
 }
 
 // No listening socket, environment reads, or database connections on import.
@@ -65,6 +68,7 @@ export function createApp(options: AppOptions) {
     app.use("/api/connections", connectionRoutes(options.authStore, options.connectionStore));
   }
   if (options.authStore) app.use("/api/auth", authRoutes(options.authStore, options.accountService?.reservedAdminEmail));
+  if (options.authStore) app.use("/api/assistant", assistantRoutes(options.authStore, options.assistantProvider));
   if (options.measurementStore) {
     if (!options.authStore) throw new Error("Measurement routes require authentication.");
     app.use("/api/measurements", measurementRoutes(options.authStore, options.measurementStore));

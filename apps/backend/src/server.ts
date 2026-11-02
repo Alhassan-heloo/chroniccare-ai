@@ -12,6 +12,7 @@ import { postgresConnectionStore } from "./connections/store.js";
 import { accountService } from "./auth/accounts.js";
 import { configuredEmail } from "./auth/email.js";
 import { isIP } from "node:net";
+import { configuredAssistant } from "./assistant/provider.js";
 
 async function start() {
   const config = readEnvironment();
@@ -20,6 +21,7 @@ async function start() {
   const trustedProxy = process.env.TRUST_PROXY_IP;
   if (trustedProxy && !isIP(trustedProxy)) throw new Error("TRUST_PROXY_IP must identify one trusted reverse proxy.");
   const email = configuredEmail();
+  const assistantProvider = configuredAssistant();
   const pool = createDatabasePool(config);
   let bootstrap;
   try { bootstrap = config.nodeEnv === "production" && process.env.FIRST_ADMIN_EMAIL && !process.env.BOOTSTRAP_SECRET
@@ -29,6 +31,7 @@ async function start() {
     corsOrigins: config.corsOrigins,
     checkDatabase: () => checkDatabase(pool),
     authStore: postgresAuthStore(pool),
+    assistantProvider,
     measurementStore: postgresMeasurementStore(pool),
     medicationStore: postgresMedicationStore(pool),
     habitStore: postgresHabitStore(pool),
