@@ -8,12 +8,13 @@
   },
   "scripts": {
     "auth:provision": "node --env-file-if-exists=.env --import tsx src/auth/provision.ts",
+    "auth:invite-admin": "node --env-file-if-exists=.env --import tsx src/auth/invite.ts",
     "dev": "node --env-file-if-exists=.env --import tsx --watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node --env-file-if-exists=.env dist/server.js",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
     "lint": "eslint . --max-warnings 0",
-    "test": "node --env-file-if-exists=.env --import tsx --test tests/*.test.ts",
+    "test": "node --env-file-if-exists=.env --import tsx --test --test-concurrency=1 tests/*.test.ts",
     "db:check": "node --env-file-if-exists=.env --import tsx src/db/check.ts",
     "db:migrate": "node --env-file-if-exists=.env --import tsx src/db/migrate.ts"
   },

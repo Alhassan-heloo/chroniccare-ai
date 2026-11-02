@@ -28,9 +28,29 @@ import { routes as applicationRoutes } from "../src/app/routes";
 import { AuthContext, type AuthValue } from "../src/auth/context";
 import { safeReturnTo } from "../src/auth/api";
 import { authenticatedHabits } from "../src/lib/api/persistentHabits";
+import { createAdminDoctor, getAdminDoctors } from "../src/lib/api/admin";
 import { findTemplateHabit, habitTemplates } from "../src/lib/habitTemplates";
 import type { User } from "../src/lib/types/user";
-const testAuth: AuthValue = { user: null, expired: false, login: async () => { throw new Error("Not used in SSR"); }, register: async () => {}, logout: async () => {}, request: async () => { throw new Error("SSR fixture must not call the backend"); } };
+import { Input } from "../src/components/ui/Input";
+import { Card } from "../src/components/ui/Card";
+const describedInput = renderToString(<Input id="foundation-field" label="Label" hint="Help" error="Invalid" aria-describedby="external foundation-field-error" />);
+assert(describedInput.includes('aria-describedby="external foundation-field-error foundation-field-hint"'));
+assert(describedInput.includes('id="foundation-field-error"'));
+assert(describedInput.includes('id="foundation-field-hint"'));
+assert(!renderToString(<Input label="Label" />).includes("aria-describedby"));
+assert(renderToString(<Card padding="comfortable" />).includes('data-padding="comfortable"'));
+assert(!renderToString(<Card />).includes("data-padding"));
+const testAuth: AuthValue = { user: null, loading: false, expired: false, login: async () => { throw new Error("Not used in SSR"); }, register: async () => {}, logout: async () => {}, request: async () => { throw new Error("SSR fixture must not call the backend"); } };
+const adminDoctor = { id: "doctor-fixture", name: "Doctor Fixture", email: "doctor@example.test", role: "doctor" as const };
+const adminCalls: { path: string; method?: string; body?: unknown }[] = [];
+const adminRequest = (async (path: string, options?: { method?: string; body?: unknown }) => {
+  adminCalls.push({ path, method: options?.method, body: options?.body });
+  return options?.method === "POST" ? { doctor: adminDoctor } : { doctors: [adminDoctor] };
+}) as AuthValue["request"];
+assert.deepEqual(await getAdminDoctors(adminRequest), [adminDoctor]);
+assert.deepEqual(await createAdminDoctor(adminRequest, { name: adminDoctor.name, email: adminDoctor.email, password: "not-returned-password" }), adminDoctor);
+assert.deepEqual(adminCalls.map(call => [call.path, call.method]), [["/admin/doctors", undefined], ["/admin/doctors", "POST"]]);
+await assert.rejects(() => getAdminDoctors((async () => ({ doctors: [{ ...adminDoctor, password_hash: "forbidden" }] })) as AuthValue["request"]));
 // Protected-page SSR fixtures are authenticated; production patient routes do not allow guest access.
 export function DemoFixture() {
   const { pathname } = useLocation();

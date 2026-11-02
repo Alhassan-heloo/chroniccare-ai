@@ -7,10 +7,13 @@ import { useI18n } from "@/i18n/context";
 import { Button } from "@/components/ui/Button";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { Feedback } from "@/components/ui/Feedback";
 
 export function ProtectedRoute({ role }: { role: User["role"] }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
+  const { t } = useI18n();
+  if (loading) return <Feedback kind="loading">{t("auth.working")}</Feedback>;
   if (!user) return <Navigate replace to={`/login?returnTo=${encodeURIComponent(location.pathname + location.search + location.hash)}`} />;
   if (user.role !== role) return <Navigate replace to={roleHome(user.role)} />;
   return <Outlet />;

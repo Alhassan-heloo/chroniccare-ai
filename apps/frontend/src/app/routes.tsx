@@ -6,15 +6,17 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PlaceholderPage } from "@/components/ui/PlaceholderPage";
 import HomePage from "@/pages/public/HomePage";
 import AuthPage from "@/pages/auth/AuthPage";
+import AccountEmailPage from "@/pages/auth/AccountEmailPage";
 import DashboardPage from "@/pages/patient/DashboardPage";
 import MeasurementsPage from "@/pages/patient/MeasurementsPage";
 import {
   AssistantPage,
   ProfilePage,
 } from "@/pages/patient/PlaceholderPages";
-import { DoctorDashboard, DoctorPatients } from "@/pages/doctor/DoctorPages";
+import { DoctorDashboard, DoctorPatientDetails, DoctorPatients } from "@/pages/doctor/DoctorPages";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import { ProtectedRoute } from "@/auth/RouteAccess";
+import { ConnectPatientPage, MyDoctorsPage } from "@/pages/connections/ConnectionPages";
 export const routes: RouteObject[] = [
   {
     element: <Outlet />,
@@ -30,6 +32,10 @@ export const routes: RouteObject[] = [
       { path: "/", element: <HomePage /> },
       { path: "/login", element: <AuthPage key="login" mode="login" /> },
       { path: "/register", element: <AuthPage key="register" mode="register" /> },
+      { path: "/setup", element: <AuthPage key="setup" mode="setup" /> },
+      { path: "/activate-admin", element: <AccountEmailPage key="activate" mode="activate-admin" /> },
+      { path: "/forgot-password", element: <AccountEmailPage key="forgot" mode="forgot-password" /> },
+      { path: "/reset-password", element: <AccountEmailPage key="reset" mode="reset-password" /> },
       {
         path: "/patient",
         element: <ProtectedRoute role="patient" />,
@@ -41,6 +47,7 @@ export const routes: RouteObject[] = [
           { path: "reports", element: <ReportsPage /> },
           { path: "assistant", element: <AssistantPage /> },
           { path: "profile", element: <ProfilePage /> },
+          { path: "doctors", element: <MyDoctorsPage /> },
         ] }],
       },
       {
@@ -49,6 +56,8 @@ export const routes: RouteObject[] = [
         children: [{ element: <DashboardLayout role="doctor" />, children: [
           { path: "dashboard", element: <DoctorDashboard /> },
           { path: "patients", element: <DoctorPatients /> },
+          { path: "connect", element: <ConnectPatientPage /> },
+          { path: "patients/:patientId", element: <DoctorPatientDetails /> },
         ] }],
       },
       {

@@ -15,6 +15,8 @@ import "@/styles/living-measurements.css";
 import "@/styles/living-medications.css";
 import "@/styles/living-habits.css";
 import "@/styles/living-reports.css";
+import "@/styles/doctor.css";
+import "@/styles/admin.css";
 export function DashboardLayout({ role = "patient" }: { role?: User["role"] }) {
   const [open, setOpen] = useState(false);
   const { t } = useI18n();
@@ -25,13 +27,14 @@ export function DashboardLayout({ role = "patient" }: { role?: User["role"] }) {
   const medications = role === "patient" && patientPath === "/patient/medications";
   const habits = role === "patient" && patientPath === "/patient/habits";
   const reports = role === "patient" && patientPath === "/patient/reports";
-  const living = role === "patient" && (patientPath === "/patient/dashboard" || measurements || medications || habits || reports);
+  const admin = role === "admin" && patientPath === "/admin/dashboard";
+  const living = admin || (role === "patient" && (patientPath === "/patient/dashboard" || measurements || medications || habits || reports));
   const reduced = useReducedMotion();
   const [paused, setPaused] = useState(() => { try { return localStorage.getItem("cc-public-motion") === "paused"; } catch { return false; } });
   useEffect(() => { if (living) { try { localStorage.setItem("cc-public-motion", paused ? "paused" : "running"); } catch { /* Optional visual preference. */ } } }, [living, paused]);
   return (
     <DashboardContext value={{ openMeasurement: () => setOpen(true) }}>
-      <div className={living ? `living-public living-dashboard${measurements ? " living-measurements" : ""}${medications ? " living-medications" : ""}${habits ? " living-habits" : ""}${reports ? " living-reports" : ""}` : undefined} data-motion={living ? paused || reduced ? "paused" : "running" : undefined}>
+      <div className={living ? `living-public living-dashboard${admin ? " living-admin" : ""}${measurements ? " living-measurements" : ""}${medications ? " living-medications" : ""}${habits ? " living-habits" : ""}${reports ? " living-reports" : ""}` : undefined} data-motion={living ? paused || reduced ? "paused" : "running" : undefined}>
       <a className="skip-link" href="#main" data-i18n="declarative">{t("common.layout.skip")}</a>
       <div className={`app-frame role-${role} clinical-app`}>
         <Header role={role} motion={living ? { paused, reduced, toggle: () => setPaused(value => !value) } : undefined} />

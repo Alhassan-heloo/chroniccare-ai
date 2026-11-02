@@ -245,6 +245,11 @@ svg {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
 }
+/* Opt-in shared spacing: existing role/page card layouts keep their defaults. */
+.card[data-padding="comfortable"] { padding: 24px; }
+@media (max-width: 520px) {
+  .card[data-padding="comfortable"] { padding: 18px; }
+}
 .badge {
   display: inline-flex;
   align-items: center;

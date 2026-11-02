@@ -11,7 +11,7 @@ export interface MedicationSource {
   setDoseTaken(action: { id: string; time: string; taken: boolean }): Promise<void>;
 }
 function date(value: unknown): value is string { return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value); }
-function record(value: unknown): Medication {
+export function parseMedication(value: unknown): Medication {
   if (!value || typeof value !== "object") throw new AuthError("INVALID_RESPONSE");
   const fields = value as Record<string, unknown>, rawDoses = fields.doses;
   if (typeof fields.id !== "string" || !Array.isArray(rawDoses)) throw new AuthError("INVALID_RESPONSE");
@@ -27,7 +27,7 @@ function record(value: unknown): Medication {
 }
 function single(response: unknown): Medication {
   if (!response || typeof response !== "object" || !("medication" in response)) throw new AuthError("INVALID_RESPONSE");
-  return record(response.medication);
+  return parseMedication(response.medication);
 }
 function dayPath(path: string) { return `${path}${path.includes("?") ? "&" : "?"}date=${todayKey()}`; }
 
@@ -36,7 +36,7 @@ export function authenticatedMedications(request: AuthorizedRequest): Medication
     async list(signal) {
       const response = await request<unknown>(dayPath("/medications"), { signal });
       if (!response || typeof response !== "object" || !("medications" in response) || !Array.isArray(response.medications)) throw new AuthError("INVALID_RESPONSE");
-      return response.medications.map(record);
+      return response.medications.map(parseMedication);
     },
     async create(input) { return single(await request<unknown>(dayPath("/medications"), { method: "POST", body: input })); },
     async update({ id, input }) { return single(await request<unknown>(dayPath(`/medications/${encodeURIComponent(id)}`), { method: "PUT", body: input })); },

@@ -11,6 +11,16 @@ import type { MedicationStore } from "./medications/store.js";
 import { medicationRoutes } from "./routes/medications.js";
 import type { HabitStore } from "./habits/store.js";
 import { habitRoutes } from "./routes/habits.js";
+import type { DoctorStore } from "./doctor/store.js";
+import { doctorRoutes } from "./routes/doctor.js";
+import type { AdminStore } from "./admin/store.js";
+import { adminRoutes } from "./routes/admin.js";
+import { bootstrapRoutes, type bootstrapService } from "./auth/bootstrap.js";
+import type { ConnectionStore } from "./connections/store.js";
+import { connectionRoutes } from "./routes/connections.js";
+import { browserSecurity, type CookieSettings } from "./auth/cookies.js";
+import { accountRoutes } from "./routes/accounts.js";
+import type { AccountService } from "./auth/accounts.js";
 
 export interface AppOptions {
   corsOrigins: readonly string[];
@@ -20,13 +30,19 @@ export interface AppOptions {
   measurementStore?: MeasurementStore;
   medicationStore?: MedicationStore;
   habitStore?: HabitStore;
+  doctorStore?: DoctorStore;
+  adminStore?: AdminStore;
+  bootstrap?: ReturnType<typeof bootstrapService>;
+  connectionStore?: ConnectionStore;
+  cookies?: CookieSettings;
+  accountService?: AccountService;
 }
 
 // No listening socket, environment reads, or database connections on import.
 export function createApp(options: AppOptions) {
   const app = express();
   app.disable("x-powered-by");
-  app.set("trust proxy", false);
+  app.set("trust proxy", options.cookies?.trustedProxy ?? false);
   app.use(helmet());
   app.use((_request, response, next) => { response.setHeader("Cache-Control", "no-store"); next(); });
   app.use(cors({
@@ -35,12 +51,20 @@ export function createApp(options: AppOptions) {
       else callback(new HttpError(403, "ORIGIN_NOT_ALLOWED", "Request origin is not allowed."));
     },
     methods: ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: false,
+    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
+    credentials: true,
+    exposedHeaders: ["X-Account-ID"],
     maxAge: 600,
   }));
   app.use(express.json({ limit: "32kb", strict: true, inflate: false }));
-  if (options.authStore) app.use("/api/auth", authRoutes(options.authStore));
+  app.use(browserSecurity(options.corsOrigins, options.cookies ?? { secure: false }));
+  if (options.accountService) app.use("/api/accounts", accountRoutes(options.accountService));
+  app.use("/api/setup", bootstrapRoutes(options.bootstrap));
+  if (options.connectionStore) {
+    if (!options.authStore) throw new Error("Connections require authentication.");
+    app.use("/api/connections", connectionRoutes(options.authStore, options.connectionStore));
+  }
+  if (options.authStore) app.use("/api/auth", authRoutes(options.authStore, options.accountService?.reservedAdminEmail));
   if (options.measurementStore) {
     if (!options.authStore) throw new Error("Measurement routes require authentication.");
     app.use("/api/measurements", measurementRoutes(options.authStore, options.measurementStore));
@@ -52,6 +76,17 @@ export function createApp(options: AppOptions) {
   if (options.habitStore) {
     if (!options.authStore) throw new Error("Habit routes require authentication.");
     app.use("/api/habits", habitRoutes(options.authStore, options.habitStore));
+  }
+  if (options.doctorStore) {
+    if (!options.authStore || !options.measurementStore || !options.medicationStore || !options.habitStore) {
+      throw new Error("Doctor routes require authentication and all patient data stores.");
+    }
+    app.use("/api/doctor", doctorRoutes(options.authStore, options.doctorStore,
+      options.measurementStore, options.medicationStore, options.habitStore));
+  }
+  if (options.adminStore) {
+    if (!options.authStore) throw new Error("Admin routes require authentication.");
+    app.use("/api/admin", adminRoutes(options.authStore, options.adminStore));
   }
   app.use("/api", apiRoutes(options.checkDatabase));
   app.use(notFound);

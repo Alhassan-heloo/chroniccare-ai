@@ -1,0 +1,64 @@
+/* Admin-only adapter. Palette, typography, focus and motion come from Living 3.3. */
+.living-admin .admin-page { max-width:1180px; margin-inline:auto; }
+.living-admin .admin-heading { position:relative; isolation:isolate; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:20px; padding-block:4px 20px; border-bottom:1px solid var(--hairline); }
+.living-admin .admin-heading .signature-artwork { position:absolute; z-index:-1; inset-inline-start:auto; inset-inline-end:0; top:-22px; width:62%; height:180px; overflow:hidden; opacity:.28; pointer-events:none; }
+.living-admin .admin-heading h1 { font-size:clamp(26px,2.5vw,34px); font-weight:650; line-height:1.5; margin-bottom:6px; }
+.living-admin .admin-heading p { max-width:62ch; color:var(--muted); font-size:15px; }
+.living-admin .admin-jump-nav { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; max-width:410px; }
+.living-admin .admin-jump-nav a { display:inline-flex; align-items:center; gap:9px; min-height:44px; padding:8px 14px; border:1px solid var(--hairline); border-radius:12px; background:var(--glass); color:var(--primary); font-size:13px; }
+.living-admin .admin-jump-nav a:hover { border-color:var(--primary); }
+.living-admin .admin-overview { display:grid; grid-template-columns:minmax(230px,.8fr) minmax(0,1.2fr); align-items:center; gap:24px; padding-block:4px 22px; border-bottom:1px solid var(--hairline); }
+.living-admin .admin-overview dl { display:flex; flex-wrap:wrap; gap:18px 28px; margin:0; }
+.living-admin .admin-overview dl>div { display:grid; gap:5px; }
+.living-admin .admin-overview dt { font-size:12px; color:var(--muted); }
+.living-admin .admin-overview dd { display:flex; align-items:center; gap:7px; margin:0; font-size:18px; font-weight:700; color:var(--text); }
+.living-admin .admin-overview p { color:var(--muted); font-size:12px; line-height:1.9; max-width:75ch; }
+.living-admin .admin-workspace { display:grid; grid-template-columns:minmax(360px,1.15fr) minmax(280px,1fr); gap:22px; align-items:start; }
+.living-admin .admin-create-card { position:relative; display:grid; gap:16px; padding:24px; box-shadow:none; }
+.living-admin .admin-section-heading { display:flex; align-items:flex-start; gap:12px; }
+.living-admin .admin-section-heading>svg { flex-shrink:0; color:var(--primary); margin-top:5px; }
+.living-admin .admin-section-heading h2 { font-size:19px; font-weight:650; }
+.living-admin .admin-section-heading p { font-size:13px; line-height:1.9; color:var(--muted); margin-top:5px; max-width:60ch; }
+.living-admin .admin-create-card fieldset { border:0; padding:0; margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; min-width:0; }
+.living-admin .admin-identity-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; grid-column:1/-1; }
+.living-admin .admin-create-card fieldset>:is(small,.btn) { grid-column:1/-1; }
+.living-admin .admin-create-card .field,.living-admin .admin-create-card input { min-width:0; width:100%; }
+.living-admin .admin-create-card .field { gap:7px; }
+.living-admin .admin-create-card .field label { font-size:13px; }
+.living-admin .admin-create-card input { min-height:46px; background:var(--bg); border-color:var(--border); }
+.living-admin .admin-create-card .muted { color:var(--muted); font-size:12px; line-height:1.8; }
+.living-admin .admin-create-card form>.btn,.living-admin .admin-create-card fieldset>.btn { width:100%; min-height:48px; margin-top:4px; }
+.living-admin .admin-create-card .password-field { position:relative; }
+.living-admin .admin-create-card .password-toggle { position:absolute; inset-inline-end:5px; top:31px; width:40px; height:40px; padding:0; background:transparent; color:var(--muted); display:grid; place-items:center; border-radius:8px; }
+.living-admin .admin-create-card .password-field input { padding-inline-end:50px; }
+.living-admin .admin-list-section { min-width:0; display:grid; gap:16px; padding:24px; border:1px solid var(--hairline); border-radius:24px; background:var(--surface); }
+.living-admin .admin-doctor-list { list-style:none; padding:0; margin:0; display:grid; gap:0; border-block:1px solid var(--hairline); }
+.living-admin .admin-doctor-card { display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:12px; padding:16px 0; background:transparent; border:0; border-radius:0; box-shadow:none; }
+.living-admin .admin-doctor-list li+li { border-top:1px solid var(--hairline); }
+.living-admin .admin-doctor-card h3 { font-size:15px; font-weight:650; overflow-wrap:anywhere; }
+.living-admin .admin-doctor-card a { display:block; width:max-content; max-width:100%; min-height:30px; color:var(--muted); font-size:12px; overflow-wrap:anywhere; text-decoration:underline; text-underline-offset:4px; }
+.living-admin .admin-doctor-avatar { width:42px; height:42px; border:1px solid var(--hairline); border-radius:14px; display:grid; place-items:center; background:var(--tint); color:var(--primary); font-weight:700; }
+.living-admin .admin-role-badge { padding:3px 9px; border:1px solid var(--hairline); border-radius:8px; color:var(--primary); font-size:11px; }
+.living-admin :is(#admin-create-title,#admin-doctors-title) { scroll-margin-block:28px; }
+/* Exact Admin scope: the shared Patient/Doctor shell is not restyled. */
+.living-admin.living-public .clinical-app .app-header { min-height:72px; padding-block:10px; }
+.living-admin.living-public .header-breadcrumb>span { display:none; }
+.living-admin.living-public .clinical-app-body { margin-top:24px; }
+@media(min-width:1051px) {
+  .living-admin.living-public .clinical-app-body { grid-template-columns:160px minmax(0,1fr); gap:22px; }
+  .living-admin.living-public .clinical-app .sidebar { width:160px; border-radius:18px; padding:6px; }
+  .living-admin.living-public .clinical-app .sidebar .nav-link { flex-direction:row; justify-content:flex-start; text-align:start; gap:10px; padding:12px; min-height:52px; font-size:13px; border-radius:12px; }
+}
+@media(max-width:1100px) { .living-admin .admin-workspace { grid-template-columns:1fr; } .living-admin .admin-identity-fields { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:900px) { .living-admin .admin-heading { grid-template-columns:1fr; gap:14px; } .living-admin .admin-jump-nav { justify-content:flex-start; max-width:none; } }
+@media(max-width:600px) {
+  .living-admin .admin-overview { grid-template-columns:1fr; gap:16px; }
+  .living-admin .admin-create-card { padding:22px 18px; }
+  .living-admin .admin-list-section { padding:22px 18px; }
+  .living-admin .admin-create-card fieldset { grid-template-columns:1fr; }
+  .living-admin .admin-identity-fields { grid-template-columns:1fr; }
+  .living-admin .admin-heading .signature-artwork { width:100%; opacity:.18; }
+  .living-admin .admin-doctor-card { grid-template-columns:38px minmax(0,1fr); }
+  .living-admin .admin-role-badge { grid-column:2; justify-self:start; }
+  .living-admin .admin-doctor-avatar { width:38px; height:38px; }
+}

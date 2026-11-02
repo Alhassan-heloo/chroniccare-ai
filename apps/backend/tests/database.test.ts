@@ -18,6 +18,10 @@ test("versioned migration files load deterministically", async () => {
   assert.match(templateIdentity.sql, /template_key/);
   assert.match(templateIdentity.sql, /habits_patient_template_key_unique/);
   assert.match(templateIdentity.sql, /ranked\.position = 1/);
+  const doctorRelationships = migrations.find((migration) => migration.name === "007_doctor_patient_relationships.sql");
+  assert(doctorRelationships);
+  assert.match(doctorRelationships.sql, /doctor_patient_relationships/);
+  assert.match(doctorRelationships.sql, /validate_doctor_patient_roles/);
 });
 
 test("real PostgreSQL: connectivity, migrations, idempotence, checksums, rollback", {
@@ -34,7 +38,7 @@ test("real PostgreSQL: connectivity, migrations, idempotence, checksums, rollbac
     await checkDatabase(pool);
     const tables = await pool.query<{ tablename: string }>(`SELECT tablename FROM pg_tables
       WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-      AND NOT (schemaname = 'chroniccare' AND tablename IN ('users', 'sessions', 'measurements', 'medications', 'medication_schedules', 'medication_dose_logs', 'habits', 'habit_progress'))
+      AND NOT (schemaname = 'chroniccare' AND tablename IN ('users', 'sessions', 'measurements', 'medications', 'medication_schedules', 'medication_dose_logs', 'habits', 'habit_progress', 'doctor_patient_relationships', 'doctor_connection_codes', 'account_tokens'))
       AND NOT (schemaname = 'public' AND tablename = 'chroniccare_schema_migrations')`);
     assert.equal(tables.rows.length, 0, "Use a dedicated test database with only known migration-owned tables.");
     const migrations = await loadMigrations();
@@ -49,6 +53,13 @@ test("real PostgreSQL: connectivity, migrations, idempotence, checksums, rollbac
       WHERE schemaname='chroniccare' AND indexname='habits_patient_template_key_unique'
       AND indexdef ILIKE '%UNIQUE%' AND indexdef ILIKE '%WHERE (template_key IS NOT NULL)%'`);
     assert.equal(templateIndex.rowCount, 1);
+    const doctorTable = await pool.query(`SELECT 1 FROM information_schema.tables
+      WHERE table_schema='chroniccare' AND table_name='doctor_patient_relationships'`);
+    assert.equal(doctorTable.rowCount, 1);
+    const doctorTrigger = await pool.query(`SELECT DISTINCT trigger_name FROM information_schema.triggers
+      WHERE event_object_schema='chroniccare' AND event_object_table='doctor_patient_relationships'
+      AND trigger_name='doctor_patient_relationship_roles'`);
+    assert.equal(doctorTrigger.rowCount, 1);
     const changed = migrations.map((migration) => ({ ...migration, checksum: "changed" }));
     await assert.rejects(() => applyMigrations(pool, changed), /missing or changed/);
     await assert.rejects(() => applyMigrations(pool, [...migrations, {

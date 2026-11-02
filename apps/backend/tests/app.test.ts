@@ -54,7 +54,7 @@ test("CORS permits configured origins and rejects others", async (t) => {
   const url = await serve(t, createApp({ corsOrigins: ["http://localhost:5173"], checkDatabase: async () => {} }));
   const allowed = await fetch(`${url}/api/health`, { headers: { Origin: "http://localhost:5173" } });
   assert.equal(allowed.headers.get("access-control-allow-origin"), "http://localhost:5173");
-  assert.equal(allowed.headers.get("access-control-allow-credentials"), null);
+  assert.equal(allowed.headers.get("access-control-allow-credentials"), "true");
   const denied = await fetch(`${url}/api/health`, { headers: { Origin: "https://untrusted.example" } });
   assert.equal(denied.status, 403);
   assert.equal(denied.headers.get("access-control-allow-origin"), null);
