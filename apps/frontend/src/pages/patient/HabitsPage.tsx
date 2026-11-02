@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Plus, Footprints, Info } from "lucide-react";
 import type { Habit } from "@/lib/types/habit";
 import { useHabits } from "@/hooks/queries/useHabits";
@@ -12,30 +12,32 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
 import { useI18n } from "@/i18n/context";
-import { SignatureArtwork } from "@/components/public/living/ui";
+import "@/styles/evolution/records.css";
 import type { HabitTemplate } from "@/lib/habitTemplates";
 export default function HabitsPage() {
-  const { t, formatNumber, direction, locale } = useI18n();
+  const { t, formatNumber, direction, locale, language } = useI18n();
   const { data = [], isPending, isError, refetch } = useHabits();
   const [form, setForm] = useState<Habit | "new" | null>(null);
   const [progress, setProgress] = useState<Habit | null>(null);
   const [deleting, setDeleting] = useState<Habit | null>(null);
   const [template, setTemplate] = useState<HabitTemplate | null>(null);
+  const [view, setView] = useState<"all" | "ongoing" | "completed">("all");
   const deletion = useDeleteHabit();
   const completed = data.filter(
     (item) => progressToday(item) >= item.target,
   ).length;
+  const visible = data.filter(item => view === "all" || (view === "completed" ? progressToday(item) >= item.target : progressToday(item) < item.target));
   return (
-    <div className="stack habits-page" dir={direction}>
-      <div className="habits-heading dashboard-welcome" data-i18n="declarative">
-        <SignatureArtwork />
+    <div className="habits-page records-page grid gap-6" dir={direction}>
+      <div className="habits-heading records-heading" data-i18n="declarative">
         <div>
-          <span className="eyebrow">{t("habits.ui.eyebrow")}</span>
           <h1>{t("habits.title")}</h1>
           <p>{t("habits.ui.description")}</p>
         </div>
-        {!isPending && !isError && <Card className="habit-summary glass">
-            <div className="dashboard-panel-heading"><span className="dashboard-feature-icon" aria-hidden="true"><Footprints size={20} /></span><h2>{t("habits.ui.achievement")}</h2></div>
+        <Button onClick={() => setForm("new")}><Plus size={19} aria-hidden="true" />{t("habits.add")}</Button>
+      </div>
+      {!isPending && !isError && <section className="records-habit-overview" data-i18n="declarative" aria-label={t("habits.ui.achievement")}>
+          <div><h2>{t("habits.ui.achievement")}</h2>
             <p aria-live="polite">
               {t(new Intl.PluralRules(locale).select(data.length) === "one" ? "habits.completedSingle" : "habits.ui.completedSummary", { completed: formatNumber(completed), total: formatNumber(data.length) })}
             </p>
@@ -44,11 +46,9 @@ export default function HabitsPage() {
               max={data.length || 1}
               aria-label={t("habits.ui.completedLabel")}
             />
-          </Card>}
-      </div>
-      <div className="habits-actions dashboard-canvas-actions" data-i18n="declarative">
-        <Button onClick={() => setForm("new")}><Plus size={19} aria-hidden="true" />{t("habits.add")}</Button>
-      </div>
+          </div>
+          <div className="records-habit-ring" style={{ "--completion": `${data.length ? completed / data.length * 100 : 0}%` } as CSSProperties} aria-hidden="true"><strong className="records-habit-count" dir="ltr">{formatNumber(completed)}<small>/ {formatNumber(data.length)}</small></strong></div>
+        </section>}
       {isPending ? (
         <Card className="empty-state glass" role="status" data-i18n="declarative">
           {t("habits.ui.loading")}
@@ -61,8 +61,15 @@ export default function HabitsPage() {
       ) : (
         <>
           {data.length ? (
+            <section aria-label={t("habits.title")}>
+              <div className="records-habit-toolbar" data-i18n="declarative">
+                <h2>{language === "ar" ? "روتينك اليومي" : "Your daily routine"}</h2>
+                <div className="records-chart-tabs" role="group" aria-label={language === "ar" ? "عرض العادات" : "Filter habits"}>
+                  {(["all", "ongoing", "completed"] as const).map(item => <Button key={item} variant="secondary" aria-pressed={view === item} onClick={() => setView(item)}>{item === "all" ? (language === "ar" ? "الكل" : "All") : t(item === "completed" ? "habits.completed" : "habits.ui.inProgress")}</Button>)}
+                </div>
+              </div>
             <div className="habits-grid">
-              {data.map((item) => (
+              {visible.map((item) => (
                 <HabitCard
                   key={item.id}
                   habit={item}
@@ -72,6 +79,8 @@ export default function HabitsPage() {
                 />
               ))}
             </div>
+              {!visible.length && <p className="empty-state" role="status" data-i18n="declarative">{language === "ar" ? "لا توجد عادات في هذا العرض." : "No habits in this view."}</p>}
+            </section>
           ) : (
             <Card className="empty-state measurement-empty glass" data-i18n="declarative">
               <Footprints size={36} aria-hidden="true" />
@@ -80,7 +89,10 @@ export default function HabitsPage() {
               <Button onClick={() => setForm("new")}>{t("habits.add")}</Button>
             </Card>
           )}
-          <HabitTemplateLibrary habits={data} onCustomize={setTemplate} onEdit={setForm} />
+          <details className="records-template-disclosure">
+            <summary data-i18n="declarative">{t("habits.templates.title")}<small>{language === "ar" ? "اختر عادة، ثم اضبط هدفك" : "Choose a habit and set your own goal"}</small></summary>
+            <HabitTemplateLibrary habits={data} onCustomize={setTemplate} onEdit={setForm} />
+          </details>
         </>
       )}
       <p className="dashboard-disclosure" data-i18n="declarative"><Info size={18} aria-hidden="true" /><span>{t("habits.ui.notice")}</span></p>

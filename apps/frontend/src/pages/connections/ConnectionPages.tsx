@@ -10,7 +10,8 @@ import type { DoctorIdentity } from "@/lib/api/connections";
 import type { TranslationKey } from "@/i18n/catalog";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { Modal } from "@/components/ui/Modal";
-import { KeyRound, ShieldCheck } from "lucide-react";
+import { Footprints, HeartPulse, KeyRound, Pill, ShieldCheck, UserRoundCheck } from "lucide-react";
+import "@/styles/evolution/clinical.css";
 
 function message(error: unknown): TranslationKey {
   if (error instanceof AuthError) {
@@ -22,12 +23,12 @@ function message(error: unknown): TranslationKey {
 
 export function ConnectPatientPage() {
   const { generate } = useConnections();
-  const { t, formatDateTime } = useI18n();
+  const { t, formatDateTime, language } = useI18n();
   const lock = useRef(false);
-  return <div className="doctor-page stack connection-page" data-i18n="declarative">
+  return <div className="doctor-page stack connection-page evolution-clinical" data-i18n="declarative">
     <PageHeading title={t("connections.connect")} description={t("connections.doctorIntro")} eyebrow={t("doctor.eyebrow")} />
-    <Card className="stack connection-code-card">
-      <KeyRound className="connection-symbol" size={28} aria-hidden="true" />
+    <div className="connection-generation-workspace"><Card className="stack connection-code-card">
+      <div className="connection-key-heading"><span className="clinical-panel-symbol"><KeyRound size={28} aria-hidden="true" /></span><div><h2>{t("connections.code")}</h2><p>{language === "ar" ? "رمز واحد. مريض واحد." : "One code. One patient."}</p></div></div>
       <Button loading={generate.isPending} onClick={async () => {
         if (lock.current) return;
         lock.current = true; generate.reset();
@@ -36,17 +37,17 @@ export function ConnectPatientPage() {
       }}>{t("connections.generate")}</Button>
       {generate.isError && <Feedback kind="error">{t(message(generate.error))}</Feedback>}
       {generate.data && <>
-        <Input label={t("connections.code")} value={generate.data.code} readOnly dir="ltr" autoComplete="off" onFocus={event => event.target.select()} />
-        <p>{t("connections.expires", { date: formatDateTime(generate.data.expiresAt) })}</p>
+        <div className="field connection-generated-code"><label htmlFor="generated-connection-code">{t("connections.code")}</label><textarea id="generated-connection-code" value={generate.data.code} readOnly dir="ltr" rows={3} spellCheck={false} autoComplete="off" onFocus={event => event.target.select()} /></div>
+        <p className="connection-expiration"><time dateTime={generate.data.expiresAt}>{t("connections.expires", { date: formatDateTime(generate.data.expiresAt) })}</time></p>
         <Feedback>{t("connections.share")}</Feedback>
       </>}
-    </Card>
+    </Card><aside className="connection-process"><h2>{language === "ar" ? "كيف يتم الاتصال؟" : "How connection works"}</h2><ol><li><strong>{language === "ar" ? "أنشئ رمزًا خاصًا" : "Generate a private code"}</strong><p>{language === "ar" ? "الرمز صالح لمدة عشر دقائق ولموافقة واحدة." : "The code is valid for ten minutes and one approval."}</p></li><li><strong>{language === "ar" ? "شاركه مع المريض" : "Share it with your patient"}</strong><p>{language === "ar" ? "يراجع المريض هوية حسابك قبل الموافقة." : "Your patient reviews your account identity before approving."}</p></li><li><strong>{language === "ar" ? "اقرأ السجل المصرّح به" : "View the authorized record"}</strong><p>{t("doctor.readOnlyNotice")}</p></li></ol></aside></div>
   </div>;
 }
 
 export function MyDoctorsPage() {
   const { list, preview, approve, revoke } = useConnections();
-  const { t } = useI18n();
+  const { t, language, formatNumber } = useI18n();
   const [code, setCode] = useState("");
   const [review, setReview] = useState<{ code: string; doctor: DoctorIdentity } | null>(null);
   const [error, setError] = useState<TranslationKey | null>(null);
@@ -62,9 +63,20 @@ export function MyDoctorsPage() {
     try { await action(); } catch (cause) { setError(message(cause)); setReview(null); }
     finally { lock.current = false; }
   }
-  return <div className="doctor-page stack connection-page" data-i18n="declarative">
-    <PageHeading title={t("connections.myDoctors")} description={t("connections.patientIntro")} />
-    <div className="connection-workspace"><Card className="stack connection-review-card"><h2><ShieldCheck size={21} aria-hidden="true" />{t("connections.review")}</h2><form className="stack" noValidate onSubmit={event => {
+  return <div className="doctor-page stack connection-page evolution-clinical" data-i18n="declarative">
+    <PageHeading title={t("connections.myDoctors")} description={t("connections.patientIntro")} action={<a className="btn btn-primary connection-review-jump" href="#connection-code-review">{t("connections.review")}</a>} />
+    <div className="connection-workspace">
+    <section className="stack connection-current" aria-labelledby="connection-current-title"><div className="clinical-region-heading"><h2 id="connection-current-title">{t("connections.current")}</h2>{list.data && <span className="clinical-count">{formatNumber(list.data.doctors.length)}</span>}</div>
+    {list.isPending ? <Feedback kind="loading">{t("doctor.loading")}</Feedback>
+      : list.isError ? <Feedback kind="error" action={<Button onClick={() => void list.refetch()}>{t("common.actions.retry")}</Button>}>{t("connections.failed")}</Feedback>
+        : list.data?.doctors.length ? <ul className="doctor-patient-list">{list.data.doctors.map(doctor => <li key={doctor.id}>
+          <Card className="stack connection-doctor-row"><div className="connection-doctor-identity"><span className="doctor-patient-avatar" aria-hidden="true">{doctor.name.slice(0, 1)}</span><div><h3><bdi>{doctor.name}</bdi></h3><p><bdi>{doctor.email}</bdi></p></div></div>
+            <p className="connection-approval-state"><UserRoundCheck size={17} aria-hidden="true" />{t(doctor.approvedAt ? "connections.patientApproved" : "connections.legacy")}</p>
+            <Button variant="secondary" disabled={busy} onClick={() => setRemoving(doctor)}>{t("connections.revoke")}</Button>
+          </Card></li>)}</ul> : <Feedback kind="empty">{t("connections.empty")}</Feedback>}
+      <div className="connection-permissions"><ShieldCheck size={23} aria-hidden="true" /><div><strong>{language === "ar" ? "أنت تتحكم في الوصول" : "You control access"}</strong><p>{language === "ar" ? "مشاركة للقراءة فقط. يمكنك إلغاء الوصول في أي وقت." : "Share read-only access. Revoke it at any time."}</p></div><ul><li><HeartPulse size={16} aria-hidden="true" />{t("common.navigation.measurements")}</li><li><Pill size={16} aria-hidden="true" />{t("common.navigation.medications")}</li><li><Footprints size={16} aria-hidden="true" />{t("common.navigation.habits")}</li></ul></div>
+    </section>
+    <Card className="stack connection-review-card"><h2 id="connection-code-review" tabIndex={-1}><KeyRound size={21} aria-hidden="true" />{t("connections.review")}</h2><p className="connection-code-intro">{language === "ar" ? "هل لديك رمز من طبيبك؟ أدخله لمراجعة هويته أولًا." : "Have a code from your doctor? Enter it to review their identity first."}</p><form className="stack" noValidate onSubmit={event => {
       event.preventDefault();
       if (!code.trim()) { setCodeError(true); codeInput.current?.focus(); return; }
       void act(async () => { const result = await preview.mutateAsync(code.trim()); setReview({ code: code.trim(), doctor: result.doctor }); });
@@ -82,15 +94,7 @@ export function MyDoctorsPage() {
       </section>}
       {error && <Feedback kind="error">{t(error)}</Feedback>}
       {success && <Feedback kind="success">{t(success)}</Feedback>}
-    </Card>
-    <section className="stack connection-current" aria-labelledby="connection-current-title"><h2 id="connection-current-title">{t("connections.current")}</h2>
-    {list.isPending ? <Feedback kind="loading">{t("doctor.loading")}</Feedback>
-      : list.isError ? <Feedback kind="error" action={<Button onClick={() => void list.refetch()}>{t("common.actions.retry")}</Button>}>{t("connections.failed")}</Feedback>
-        : list.data?.doctors.length ? <ul className="doctor-patient-list">{list.data.doctors.map(doctor => <li key={doctor.id}>
-          <Card className="stack"><h3><bdi>{doctor.name}</bdi></h3><p><bdi>{doctor.email}</bdi></p>
-            <p>{t(doctor.approvedAt ? "connections.patientApproved" : "connections.legacy")}</p>
-            <Button variant="secondary" disabled={busy} onClick={() => setRemoving(doctor)}>{t("connections.revoke")}</Button>
-          </Card></li>)}</ul> : <Feedback kind="empty">{t("connections.empty")}</Feedback>}</section></div>
+    </Card></div>
     <Modal open={Boolean(removing)} dismissible={!busy} onClose={() => { if (!busy) setRemoving(null); }} title={t("connections.revoke")} declarativeTitle>
       <div className="stack" data-i18n="declarative"><p>{t("experience.revokeConfirm", { name: removing?.name ?? "" })}</p>
         {error && <Feedback kind="error">{t(error)}</Feedback>}

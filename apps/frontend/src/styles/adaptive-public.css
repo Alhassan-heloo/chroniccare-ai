@@ -1,0 +1,145 @@
+/* ChronicCare 4.0 public experience. Structural styles stay scoped to public pages. */
+.living-public.adaptive-experience.page-home .atmosphere,
+.living-public.adaptive-experience.page-auth .atmosphere { display: none; }
+.living-public.adaptive-experience .topbar { width: min(1440px, calc(100% - 64px)); min-height: 76px; margin: 0 auto; padding: 14px 0; border: 0; border-bottom: 1px solid var(--hairline); border-radius: 0; box-shadow: none; background: var(--bg); backdrop-filter: none; }
+.living-public.adaptive-experience .brand small { letter-spacing: 0; font-size: 11px; }
+.living-public.adaptive-experience .brand { font-size: 19px; }
+.living-public.adaptive-experience .site-footer { width: min(1440px, calc(100% - 64px)); margin-top: 0; padding-block: 30px; border-top: 1px solid var(--hairline); }
+.living-public .adaptive-home { width: min(1440px, calc(100% - 80px)); margin: 0 auto; }
+.living-public .adaptive-home :is(h1,h2,h3) { color: var(--text); }
+.living-public .adaptive-home h1 { font-size: clamp(40px, 4.25vw, 68px); font-weight: 650; letter-spacing: -.045em; line-height: 1.23; max-width: 11ch; text-wrap: balance; }
+:root[dir=rtl] .living-public .adaptive-home h1 { max-width: 12ch; line-height: 1.5; letter-spacing: -.025em; }
+.living-public .adaptive-home h2 { font-size: clamp(29px, 2.6vw, 41px); line-height: 1.4; font-weight: 600; letter-spacing: -.025em; text-wrap: balance; }
+.living-public .adaptive-home h3 { font-size: 17px; font-weight: 650; }
+.living-public .adaptive-hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: center; gap: clamp(32px, 6vw, 100px); padding-block: 68px 72px; }
+.living-public .adaptive-product-label { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; color: var(--primary); font-size: 14px; font-weight: 650; }
+.living-public .adaptive-hero-copy > p { color: var(--muted); max-width: 46ch; margin-top: 24px; font-size: 17px; line-height: 1.85; }
+.living-public .adaptive-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.living-public .adaptive-hero-actions .btn { min-height: 50px; border-radius: 8px; padding: 12px 20px; }
+.living-public .adaptive-trust-note { display: flex; align-items: center; gap: 9px; margin-top: 22px; color: var(--muted); font-size: 13px; }
+.living-public .adaptive-care-preview { border: 1px solid var(--hairline); background: var(--surface); border-radius: 18px 18px 8px 8px; overflow: hidden; box-shadow: 0 20px 50px rgb(6 50 48 / 7%); min-width: 0; }
+.living-public .adaptive-preview-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 20px 24px; background: var(--primary); color: var(--on-primary); }
+.living-public .adaptive-preview-heading > span { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 650; }
+.living-public .adaptive-preview-heading small { font-size: 11px; }
+.living-public .adaptive-preview-body { padding: 26px 26px 8px; }
+.living-public .adaptive-preview-body h2 { font-size: 15px; margin-bottom: 18px; }
+.living-public .adaptive-preview-values { display: grid; grid-template-columns: 1.15fr 1fr; }
+.living-public .adaptive-preview-values > div { display: grid; justify-items: start; padding-inline-end: 14px; }
+.living-public .adaptive-preview-values > div + div { border-inline-start: 1px solid var(--hairline); padding-inline: 24px 0; }
+.living-public .adaptive-preview-values svg { margin-bottom: 10px; color: var(--pressure); }
+.living-public .adaptive-preview-values > div + div svg { color: var(--glucose); }
+.living-public .adaptive-preview-values span { font-size: 13px; color: var(--muted); }
+.living-public .adaptive-preview-values strong { font-size: clamp(28px, 3vw, 42px); font-weight: 600; letter-spacing: -.04em; line-height: 1.5; white-space: nowrap; }
+.living-public .adaptive-preview-values em { font-style: normal; font-size: .68em; color: var(--muted); letter-spacing: 0; }
+.living-public .adaptive-preview-values small { color: var(--muted); }
+.living-public .adaptive-preview-trend { margin-top: 20px; }
+.living-public .adaptive-preview-trend > span { font-size: 12px; color: var(--muted); }
+.living-public .adaptive-preview-trend svg { width: 100%; height: 65px; }
+.living-public .adaptive-home polyline { fill: none; stroke: var(--primary); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.living-public .adaptive-chart-grid { fill: none; stroke: var(--hairline); stroke-width: 1; }
+.living-public .adaptive-preview-routine { display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--hairline); padding-block: 15px; font-size: 14px; }
+.living-public .adaptive-preview-routine > svg { color: var(--primary); }
+.living-public .adaptive-preview-routine > svg:last-child { margin-inline-start: auto; }
+.living-public .adaptive-preview-routine small { display: block; color: var(--muted); font-size: 11px; }
+.living-public .adaptive-routine-dots { display: flex; gap: 5px; margin-inline-start: auto; }
+.living-public .adaptive-routine-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
+.living-public .adaptive-example-note { color: var(--muted); font-size: 11px; line-height: 1.7; padding: 14px 24px; border-top: 1px solid var(--hairline); }
+.living-public .adaptive-capabilities { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); border-block: 1px solid var(--hairline); padding-block: 25px; gap: 20px; }
+.living-public .adaptive-capabilities a { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; min-height: 44px; }
+.living-public .adaptive-capabilities svg { color: var(--primary); }
+.living-public .adaptive-record-section { display: grid; grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); gap: clamp(32px,6vw,90px); align-items: center; padding-block: 90px; }
+.living-public .adaptive-section-copy > p { color: var(--muted); line-height: 1.9; font-size: 16px; max-width: 54ch; margin-top: 20px; }
+.living-public .adaptive-section-copy > svg, .living-public .adaptive-section-symbol { display: block; color: var(--primary); margin-bottom: 20px; }
+.living-public .adaptive-text-action { display: inline-flex; gap: 10px; align-items: center; color: var(--primary); font-size: 14px; font-weight: 700; min-height: 44px; margin-top: 22px; padding: 8px 0; }
+.living-public .adaptive-measurement-preview { background: var(--surface); border: 1px solid var(--hairline); padding: 24px; border-radius: 12px; min-width: 0; }
+.living-public .adaptive-preview-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.living-public .adaptive-demo-pill { color: var(--muted); font-size: 11px; }
+.living-public .adaptive-measurement-tabs { display: flex; gap: 6px; margin-top: 20px; padding: 4px; background: var(--bg); border: 1px solid var(--hairline); border-radius: 8px; width: fit-content; max-width: 100%; }
+.living-public .adaptive-measurement-tabs button { min-height: 44px; padding: 8px 16px; border-radius: 5px; font-size: 13px; }
+.living-public .adaptive-measurement-tabs button[aria-pressed=true] { background: var(--primary); color: var(--on-primary); }
+.living-public .adaptive-selected-value { display: flex; align-items: center; gap: 14px; margin-top: 22px; }
+.living-public .adaptive-selected-value strong { font-size: 40px; line-height: 1.5; font-weight: 600; letter-spacing: -.03em; }
+.living-public .adaptive-selected-value > span { color: var(--muted); font-size: 12px; }
+.living-public .adaptive-selected-value small { display: block; }
+.living-public .adaptive-measurement-chart { display: flex; align-items: stretch; gap: 4px; margin-top: 12px; }
+.living-public .adaptive-measurement-chart > svg { width: calc(100% - 28px); height: auto; min-width: 0; }
+.living-public .adaptive-chart-axis { width: 24px; padding-block: 6% 2%; display: flex; flex-direction: column; justify-content: space-between; color: var(--muted); font-size: 10px; }
+.living-public .adaptive-home .adaptive-chart-secondary { stroke: var(--glucose); stroke-width: 2; stroke-dasharray: 5 5; }
+.living-public .adaptive-measurement-chart circle { fill: var(--primary); stroke: var(--surface); stroke-width: 2; }
+.living-public .adaptive-chart-days { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); padding-inline-start: 28px; }
+.living-public .adaptive-chart-days button { min-width: 0; min-height: 44px; display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+.living-public .adaptive-chart-days button span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; }
+.living-public .adaptive-chart-days button[aria-pressed=true] span { background: var(--primary); color: var(--on-primary); }
+.living-public .adaptive-chart-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; font-size: 11px; color: var(--muted); margin-block: 12px; }
+.living-public .adaptive-chart-legend span { display: inline-flex; gap: 6px; align-items: center; }
+.living-public .adaptive-chart-legend i { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+.living-public .adaptive-chart-legend span + span i { background: var(--glucose); }
+.living-public .adaptive-chart-legend small { margin-inline-start: auto; font-size: 11px; }
+.living-public .adaptive-measurement-preview > .adaptive-example-note { padding: 14px 0 0; }
+.living-public .adaptive-daily-section { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 64px; align-items: center; background: var(--tint); padding: 48px; border-radius: 18px; }
+.living-public .adaptive-daily-ledger { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px; padding: 8px 24px; }
+.living-public :is(.adaptive-dose-preview,.adaptive-water-preview) { display: flex; align-items: center; gap: 16px; padding-block: 22px; }
+.living-public .adaptive-dose-preview { border-bottom: 1px solid var(--hairline); }
+.living-public :is(.adaptive-dose-preview,.adaptive-water-preview) > svg { color: var(--primary); }
+.living-public :is(.adaptive-dose-preview,.adaptive-water-preview) > div { flex: 1; min-width: 0; }
+.living-public .adaptive-dose-preview span { font-size: 13px; display: block; }
+.living-public .adaptive-dose-preview small { color: var(--muted); display: block; }
+.living-public .adaptive-dose-preview time { font-size: 16px; font-weight: 600; }
+.living-public .adaptive-water-preview span { font-size: 13px; color: var(--muted); }
+.living-public .adaptive-water-preview progress { display: block; width: 100%; height: 5px; accent-color: var(--primary); margin-top: 12px; }
+.living-public .adaptive-water-preview > button { width: 46px; height: 46px; border: 1px solid var(--hairline); border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: var(--on-primary); }
+.living-public .adaptive-daily-caption { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-top: 1px solid var(--hairline); min-height: 48px; color: var(--muted); }
+.living-public .adaptive-daily-caption button { font-size: 12px; text-decoration: underline; min-height: 44px; }
+.living-public .adaptive-doctor-section { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 80px; align-items: center; padding-block: 90px; }
+.living-public .adaptive-consent-flow { display: grid; list-style: none; padding: 0; margin: 0; border-block: 1px solid var(--hairline); }
+.living-public .adaptive-consent-flow li { display: flex; gap: 20px; align-items: center; padding: 24px 8px; font-size: 17px; }
+.living-public .adaptive-consent-flow li + li { border-top: 1px solid var(--hairline); }
+.living-public .adaptive-consent-flow svg { color: var(--primary); }
+.living-public .adaptive-assistant-section { display: grid; grid-template-columns: auto minmax(0,1fr) minmax(0,1fr); gap: 28px; align-items: start; padding-block: 54px; border-top: 1px solid var(--hairline); }
+.living-public .adaptive-assistant-symbol { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 20px; background: var(--tint); color: var(--primary); }
+.living-public .adaptive-question-preview { padding: 28px; border: 1px solid var(--hairline); background: var(--surface); border-radius: 12px; }
+.living-public .adaptive-question-preview > span { font-size: 13px; color: var(--primary); font-weight: 700; }
+.living-public .adaptive-question-preview blockquote { font-size: 23px; line-height: 1.6; margin: 20px 0 16px; }
+.living-public .adaptive-question-preview > small { display: block; color: var(--muted); font-size: 11px; }
+.living-public .adaptive-question-preview > p { display: flex; align-items: start; gap: 9px; border-top: 1px solid var(--hairline); margin-top: 22px; padding-top: 18px; font-size: 12px; color: var(--muted); line-height: 1.8; }
+.living-public .adaptive-closing { display: flex; align-items: center; gap: 28px; padding: 44px; margin-block: 28px 72px; border-radius: 12px; background: var(--primary); color: var(--on-primary); }
+.living-public .adaptive-closing > div { flex: 1; }
+.living-public .adaptive-closing h2 { color: inherit; font-size: 30px; }
+.living-public .adaptive-closing p { margin-top: 12px; max-width: 66ch; font-size: 14px; }
+.living-public .adaptive-closing .btn { background: var(--surface); color: var(--text); flex-shrink: 0; }
+/* Authentication is a quiet two-region workspace; the form is always first on phones. */
+.living-public .adaptive-auth { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); width: min(1200px,calc(100% - 80px)); margin: 56px auto 72px; gap: 0; border: 1px solid var(--hairline); border-radius: 16px; background: var(--surface); overflow: hidden; }
+.living-public .adaptive-auth-story { display: flex; flex-direction: column; align-items: start; padding: 48px; background: var(--tint); min-width: 0; }
+.living-public .adaptive-auth-story > svg { color: var(--primary); margin-bottom: 36px; }
+.living-public .adaptive-auth-story > h2 { font-size: clamp(30px,3vw,42px); line-height: 1.4; font-weight: 600; letter-spacing: -.03em; text-wrap: balance; }
+.living-public .adaptive-auth-story > p { font-size: 15px; color: var(--muted); margin-top: 20px; line-height: 1.9; }
+.living-public .adaptive-auth-story .auth-journey { width: 100%; margin-top: 36px; }
+.living-public .adaptive-auth .auth-card { border: 0; border-radius: 0; box-shadow: none; padding: 40px 48px; background: var(--surface); }
+.living-public .adaptive-auth .auth-card h1 { font-size: 32px; margin-top: 12px; }
+.living-public .adaptive-auth .auth-card .eyebrow { display: flex; align-items: center; gap: 8px; letter-spacing: 0; font-size: 12px; color: var(--primary); }
+.living-public .adaptive-auth .auth-card .auth-switch { margin-top: 14px; font-size: 13px; }
+.living-public .adaptive-auth :is(.auth-identity-fields,.auth-password-fields) { display: grid; gap: 16px; min-width: 0; }
+.living-public .adaptive-auth .auth-password-fields .password-hint { margin: -4px 0 0; }
+.living-public .adaptive-auth.adaptive-register { width: min(1360px,calc(100% - 80px)); grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); }
+.living-public .adaptive-register :is(.auth-identity-fields,.auth-password-fields) { grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; }
+.living-public .adaptive-register .auth-password-fields .password-hint { grid-column: 1 / -1; }
+.living-public .adaptive-recovery { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); align-items: stretch; width: min(1000px,calc(100% - 80px)); margin: 64px auto 80px; border: 1px solid var(--hairline); border-radius: 16px; overflow: hidden; background: var(--surface); }
+.living-public .adaptive-recovery-aside { display: flex; flex-direction: column; justify-content: center; padding: 40px; background: var(--tint); }
+.living-public .adaptive-recovery-aside > svg { color: var(--primary); margin-bottom: 28px; }
+.living-public .adaptive-recovery-aside h2 { font-size: 30px; font-weight: 600; line-height: 1.5; }
+.living-public .adaptive-recovery-aside p { margin-top: 18px; color: var(--muted); font-size: 14px; line-height: 1.9; }
+.living-public .adaptive-recovery .auth-card { padding: 40px; border: 0; border-radius: 0; background: var(--surface); box-shadow: none; }
+.living-public .adaptive-recovery .auth-card > h1 { font-size: 28px; margin-block: 18px 12px; }
+.living-public .adaptive-recovery .auth-card > p { color: var(--muted); font-size: 14px; }
+.living-public .adaptive-recovery .auth-card > a { display: flex; justify-content: center; align-items: center; min-height: 44px; margin-top: 20px; }
+@media(min-width:1600px) { .living-public .adaptive-hero { padding-block: 90px; } }
+@media(max-width:1050px) { .living-public .adaptive-hero { gap: 36px; }.living-public .adaptive-home h1 { font-size: 44px; }.living-public .adaptive-hero-actions .btn { flex: 1 1 auto; }.living-public .adaptive-preview-heading { flex-wrap: wrap; }.living-public .adaptive-daily-section { gap: 32px; padding: 32px; }.living-public .adaptive-doctor-section { gap: 40px; }.living-public .adaptive-assistant-section { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }.living-public .adaptive-assistant-symbol { display: none; }.living-public .adaptive-auth-story { padding: 32px; }.living-public .adaptive-auth .auth-card { padding: 32px; }.living-public .adaptive-register :is(.auth-identity-fields,.auth-password-fields) { grid-template-columns: minmax(0,1fr); } }
+@media(max-width:800px) { .living-public .adaptive-home { width: calc(100% - 40px); }.living-public .adaptive-hero { grid-template-columns: minmax(0,1fr); padding-block: 38px; gap: 30px; }.living-public .adaptive-home h1 { max-width: 17ch; font-size: clamp(36px,6.5vw,52px); }.living-public .adaptive-hero-copy > p { max-width: 58ch; }.living-public .adaptive-care-preview { width: 100%; max-width: 600px; }.living-public .adaptive-preview-heading { flex-wrap: nowrap; }.living-public .adaptive-capabilities { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px 24px; padding-block: 18px; }.living-public .adaptive-record-section { padding-block: 52px; grid-template-columns: minmax(0,1fr); gap: 28px; }.living-public .adaptive-daily-section { grid-template-columns: minmax(0,1fr); gap: 28px; }.living-public .adaptive-doctor-section { grid-template-columns: minmax(0,1fr); padding-block: 52px; gap: 28px; }.living-public .adaptive-consent-flow li { padding-block: 20px; }.living-public .adaptive-assistant-section { grid-template-columns: minmax(0,1fr); padding-block: 40px; gap: 24px; }.living-public .adaptive-closing { flex-wrap: wrap; padding: 30px; gap: 18px; margin-bottom: 40px; }.living-public .adaptive-closing > div { flex-basis: calc(100% - 60px); }.living-public .adaptive-closing .btn { width: 100%; }.living-public .adaptive-auth, .living-public .adaptive-auth.adaptive-register { grid-template-columns: minmax(0,1fr); width: min(600px,calc(100% - 40px)); margin-block: 28px 40px; }.living-public .adaptive-auth .auth-card { order: -1; }.living-public .adaptive-auth-story { padding: 28px 32px; border-top: 1px solid var(--hairline); }.living-public .adaptive-auth-story > h2 { font-size: 25px; }.living-public .adaptive-auth-story > svg { display: none; }.living-public .adaptive-auth-story > p { font-size: 13px; margin-top: 10px; }.living-public .adaptive-auth-story .auth-journey { margin-top: 20px; }.living-public .adaptive-auth-story .auth-journey li { padding-top: 12px; }.living-public .adaptive-recovery { width: min(600px,calc(100% - 40px)); grid-template-columns: minmax(0,1fr); margin-block: 28px 40px; }.living-public .adaptive-recovery-aside { display: none; } }
+@media(max-width:600px) { .living-public.adaptive-experience .topbar { width: calc(100% - 32px); padding-block: 10px; min-height: 64px; gap: 8px; }.living-public.adaptive-experience .topbar .brand { font-size: 16px; }.living-public.adaptive-experience .topbar-controls { width: 100%; border: 0; justify-content: flex-end; padding: 0; }.living-public.adaptive-experience .site-footer { width: calc(100% - 32px); flex-wrap: wrap; padding-block: 24px; }.living-public .adaptive-home { width: calc(100% - 32px); }.living-public .adaptive-hero { padding-top: 28px; }.living-public .adaptive-home h1 { font-size: 38px; line-height: 1.3; letter-spacing: -.04em; }.living-public .adaptive-product-label { font-size: 12px; margin-bottom: 16px; }.living-public .adaptive-hero-copy > p { font-size: 15px; margin-top: 18px; }.living-public .adaptive-hero-actions { margin-top: 22px; gap: 10px; }.living-public .adaptive-hero-actions .btn { width: 100%; min-height: 48px; font-size: 14px; }.living-public .adaptive-trust-note { font-size: 12px; margin-top: 16px; }.living-public .adaptive-preview-heading { padding: 15px 18px; gap: 8px; flex-wrap: wrap; }.living-public .adaptive-preview-heading > span { font-size: 14px; }.living-public .adaptive-preview-heading small { font-size: 10px; }.living-public .adaptive-preview-body { padding: 20px 18px 4px; }.living-public .adaptive-preview-values strong { font-size: 34px; }.living-public .adaptive-preview-values > div + div { padding-inline-start: 18px; }.living-public .adaptive-preview-values span { font-size: 12px; }.living-public .adaptive-preview-routine { font-size: 13px; padding-block: 12px; }.living-public .adaptive-example-note { padding: 12px 18px; font-size: 10px; }.living-public .adaptive-capabilities { gap: 4px 12px; }.living-public .adaptive-capabilities a { font-size: 12px; gap: 9px; }.living-public .adaptive-capabilities svg { width: 20px; }.living-public .adaptive-home h2 { font-size: 29px; }.living-public .adaptive-section-copy > p { font-size: 15px; margin-top: 15px; }.living-public .adaptive-record-section { padding-block: 40px; }.living-public .adaptive-section-symbol { margin-bottom: 16px; }.living-public .adaptive-measurement-preview { padding: 18px 14px; }.living-public .adaptive-preview-toolbar h3 { font-size: 15px; }.living-public .adaptive-demo-pill { font-size: 10px; }.living-public .adaptive-measurement-tabs { width: 100%; }.living-public .adaptive-measurement-tabs button { flex: 1; padding-inline: 8px; font-size: 12px; }.living-public .adaptive-selected-value strong { font-size: 34px; }.living-public .adaptive-chart-legend { gap: 10px; }.living-public .adaptive-chart-legend small { width: 100%; margin: 0; }.living-public .adaptive-daily-section { padding: 24px 18px; border-radius: 12px; }.living-public .adaptive-daily-ledger { padding-inline: 16px; }.living-public :is(.adaptive-dose-preview,.adaptive-water-preview) { gap: 12px; padding-block: 18px; }.living-public .adaptive-dose-preview time { font-size: 14px; }.living-public .adaptive-home .adaptive-dose-preview h3, .living-public .adaptive-home .adaptive-water-preview h3 { font-size: 15px; }.living-public .adaptive-doctor-section { padding-block: 40px; }.living-public .adaptive-consent-flow li { font-size: 15px; gap: 16px; }.living-public .adaptive-question-preview { padding: 22px; }.living-public .adaptive-question-preview blockquote { font-size: 20px; }.living-public .adaptive-closing { padding: 24px 20px; }.living-public .adaptive-closing > svg { width: 26px; }.living-public .adaptive-closing h2 { font-size: 26px; }.living-public .adaptive-closing p { font-size: 13px; }.living-public .adaptive-auth, .living-public .adaptive-auth.adaptive-register { width: calc(100% - 32px); margin-top: 22px; }.living-public .adaptive-auth .auth-card { padding: 26px 20px; }.living-public .adaptive-auth-story { padding: 24px 20px; }.living-public .adaptive-auth-story .auth-journey { display: none; }.living-public .adaptive-auth .auth-card h1 { font-size: 28px; }.living-public .adaptive-recovery { width: calc(100% - 32px); }.living-public .adaptive-recovery .auth-card { padding: 26px 20px; } }
+@media(max-width:350px) { .living-public .adaptive-home h1 { font-size: 34px; }.living-public .adaptive-preview-values strong { font-size: 30px; }.living-public .adaptive-preview-values > div + div { padding-inline-start: 14px; }.living-public .adaptive-capabilities a { font-size: 11px; }.living-public .adaptive-daily-ledger { padding-inline: 12px; }.living-public .adaptive-dose-preview > svg, .living-public .adaptive-water-preview > svg { width: 22px; }.living-public .adaptive-demo-pill { width: 100%; } }
+
+.living-public .adaptive-home .adaptive-preview-body h2 { font-size: 15px; line-height: 1.6; letter-spacing: 0; margin-bottom: 18px; }
+:root[data-theme=light] .living-public :is(.adaptive-auth,.adaptive-recovery) .field input { border-color: var(--border); }
+
+.living-public.adaptive-experience.living-app .topbar { border-radius: 0; background: var(--bg); box-shadow: none; border: 0; border-bottom: 1px solid var(--hairline); }
+.living-public .adaptive-auth .auth-card.glass, .living-public .adaptive-recovery .auth-card.glass { border: 0; border-radius: 0; box-shadow: none; }

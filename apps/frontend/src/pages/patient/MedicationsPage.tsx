@@ -10,25 +10,21 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useI18n } from "@/i18n/context";
-import { SignatureArtwork, LivingPulse } from "@/components/public/living/ui";
+import "@/styles/evolution/records.css";
 export default function MedicationsPage() {
-  const { t, formatNumber } = useI18n();
+  const { t, formatNumber, language } = useI18n();
   const { data = [], isPending, isError, refetch } = useMedications();
   const [form, setForm] = useState<Medication | "new" | null>(null);
   const [deleting, setDeleting] = useState<Medication | null>(null);
   const deletion = useDeleteMedication();
   const summary = summarizeMedications(data);
   return (
-    <div className="stack medications-page">
-      <div className="medications-heading dashboard-welcome">
-        <SignatureArtwork />
+    <div className="medications-page records-page grid gap-6">
+      <div className="medications-heading records-heading">
         <div data-i18n="declarative">
-          <span className="eyebrow">{t("روتينك اليومي، في مكان واحد")}</span>
           <h1>{t("medications.title")}</h1>
           <p>{t("نظّم مواعيدك وسجّل الجرعات التي تناولتها.")}</p>
         </div>
-      </div>
-      <div className="medications-actions dashboard-canvas-actions">
         <Button onClick={() => setForm("new")} data-i18n="declarative">
           <Plus size={19} aria-hidden="true" />
           {t("medications.add")}
@@ -44,24 +40,27 @@ export default function MedicationsPage() {
           <Button onClick={() => void refetch()}>{t("common.actions.retry")}</Button>
         </Card>
       ) : (
-        <>
+        <div className="records-medication-workspace">
           <Card className="medication-summary glass">
-            <LivingPulse cue={`${summary.taken}:${summary.total}`} />
             <div className="dashboard-panel-heading">
               <span className="dashboard-feature-icon" aria-hidden="true"><Pill size={20} /></span>
-              <h2>متابعة جرعات اليوم</h2>
+              <h2 data-i18n="declarative">{language === "ar" ? "جرعات اليوم" : "Today's doses"}</h2>
             </div>
+            <strong className="records-summary-number" data-i18n="declarative">{formatNumber(data.length)} <small>{t("medications.title")}</small></strong>
             <div className="medication-summary-progress">
               <p aria-live="polite" data-i18n="declarative">
                 {t("medications.summary", { taken: formatNumber(summary.taken), total: formatNumber(summary.total), medications: formatNumber(data.length) })}
               </p>
               <progress
-                aria-label="الجرعات المسجلة اليوم"
+                aria-label={t("medications.dosesTaken")}
                 value={summary.taken}
                 max={summary.total || 1}
               />
             </div>
+            <p className="records-summary-note" data-i18n="declarative">{language === "ar" ? "راجع الجرعة والموعد وفق وصفتك، وسجّل التناول من قائمة الأدوية." : "Check the dose and schedule against your prescription, then record each dose below."}</p>
           </Card>
+          <section aria-label={t("medications.title")}>
+          <div className="records-section-title" data-i18n="declarative"><h2>{language === "ar" ? "جدول أدويتك" : "Your medication schedule"}</h2></div>
           {data.length ? (
             <div className="medication-grid">
               {data.map((item) => (
@@ -81,7 +80,8 @@ export default function MedicationsPage() {
               <Button onClick={() => setForm("new")}>إضافة أول دواء</Button>
             </Card>
           )}
-        </>
+          </section>
+        </div>
       )}
       <p className="dashboard-disclosure" data-i18n="declarative">
         <Info size={18} aria-hidden="true" />

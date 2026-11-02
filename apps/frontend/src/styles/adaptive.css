@@ -1,0 +1,273 @@
+/* ChronicCare 4.0. Scope and source order keep historical adapters reusable. */
+.living-public.adaptive-experience {
+  color-scheme: dark;
+  --bg: #102321; --canvas: var(--bg); --text: #edf6f3; --navy: var(--text);
+  --muted: #afc5bf; --subtle: #a5bdb5; --surface: #18312d;
+  --glass: var(--surface); --glass-raised: #203c36; --tint: #24443d;
+  --border: #53776c; --hairline: #36584d; --primary: #94d8bf;
+  --primary-hover: #b6ead5; --on-primary: #10362c; --aqua: var(--primary);
+  --pressure: #e4b0a0; --pressure-secondary: #b8cddf; --glucose: #a7c9ec;
+  --medication: #c5b8e2; --habits: #a4d4ae; --reports: #ddc58e;
+  --error: #ffc1c8; --error-bg: #48272f; --danger: var(--error); --danger-soft: var(--error-bg);
+  --focus: #b5e8d4; --radius: 14px; --radius-small: 8px;
+  --shadow: 0 5px 18px rgb(0 20 15 / 5%); --blue-wash: transparent; --aqua-wash: transparent;
+  --clinical-secondary: var(--tint); --primary-soft: var(--tint); --input-border: var(--border);
+  background: var(--bg); background-image: none; color: var(--text); font-size: 15px;
+}
+:root[data-theme=light] .living-public.adaptive-experience {
+  color-scheme: light; --bg: #f1f6f5; --text: #123332; --muted: #4b6862; --subtle: #526e66;
+  --surface: #fff; --glass-raised: #fff; --tint: #e1eeea; --border: #8aa79e; --hairline: #ccddd6;
+  --primary: #075d5a; --primary-hover: #064b49; --on-primary: #fff; --pressure: #9a4c40;
+  --pressure-secondary: #466a85; --glucose: #346f9c; --medication: #70528c; --habits: #326c49;
+  --reports: #806123; --error: #a62f43; --error-bg: #fff0f2; --focus: #075d5a;
+}
+.living-public.adaptive-experience h1 { letter-spacing: -.035em; }
+:root[dir=rtl] .living-public.adaptive-experience h1 { letter-spacing: 0; }
+.living-public.adaptive-experience .atmosphere, .living-public.adaptive-experience .signature-artwork { display: none; }
+.living-public.adaptive-experience .glass { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; border-radius: 14px; }
+.living-public.adaptive-experience .glass::before { display: none; }
+.living-public.adaptive-experience .btn, .living-public.adaptive-experience .button { min-height: 44px; border-radius: 8px; box-shadow: none; background-image: none; font-size: 14px; }
+.living-public.adaptive-experience .btn-primary, .living-public.adaptive-experience .primary { background: var(--primary); color: var(--on-primary); }
+.living-public.adaptive-experience .btn-secondary { background: var(--surface); border-color: var(--border); color: var(--text); }
+.living-public.adaptive-experience .btn-danger { background: var(--error); color: var(--bg); }
+.living-public.adaptive-experience .field :is(input,select,textarea) { border-radius: 8px; min-height: 48px; background: var(--surface); color: var(--text); border-color: var(--border); }
+.living-public.adaptive-experience .field label { font-size: 14px; font-weight: 650; }
+.living-public.adaptive-experience .ui-feedback { border-radius: 8px; box-shadow: none; border-inline-start-width: 3px; }
+.living-public.adaptive-experience .ui-feedback-empty { border-style: solid; padding: 24px; background: var(--bg); }
+.living-public.adaptive-experience .card { box-shadow: none; }
+.living-public.adaptive-experience .eyebrow { letter-spacing: 0; text-transform: none; }
+.living-public.adaptive-experience .brand small { letter-spacing: 0; font-size: 10px; }
+.living-public.adaptive-experience .brand b { color: var(--primary); }
+.living-dashboard.adaptive-experience .clinical-app .app-header {
+  width: 100%; margin: 0; min-height: 68px; padding: 10px 28px; gap: 24px;
+  border: 0; border-bottom: 1px solid var(--hairline); border-radius: 0;
+  background: var(--surface); box-shadow: none; position: relative; top: auto;
+}
+.living-dashboard.adaptive-experience .app-header > .brand { width: 196px; flex-shrink: 0; }
+.living-dashboard.adaptive-experience .app-header .header-breadcrumb { display: flex; align-items: center; gap: 14px; }
+.living-dashboard.adaptive-experience .header-breadcrumb span { color: var(--muted); margin: 0; }
+.living-dashboard.adaptive-experience .header-breadcrumb strong { border-inline-start: 1px solid var(--hairline); padding-inline-start: 14px; }
+.living-dashboard.adaptive-experience .header-actions { width: auto; flex-wrap: nowrap; gap: 8px; }
+.living-dashboard.adaptive-experience .app-header :is(.icon-button,.btn) { min-width: 44px; min-height: 44px; padding: 8px; border-radius: 8px; }
+.living-dashboard.adaptive-experience .profile-link { max-width: 190px; }
+.living-dashboard.adaptive-experience .session-bar { padding-inline-start: 8px; border-inline-start: 1px solid var(--hairline); }
+.living-dashboard.adaptive-experience .session-logout-text { display: none; }
+.living-dashboard.adaptive-experience .clinical-app-body,
+.living-dashboard.adaptive-experience.experience-doctor .clinical-app-body {
+  width: 100%; max-width: 1920px; margin: 0 auto; padding: 0;
+  display: grid; grid-template-columns: 224px minmax(0,1fr); gap: 0;
+}
+.living-dashboard.adaptive-experience .clinical-app .sidebar,
+.living-dashboard.adaptive-experience.experience-doctor .clinical-app .sidebar {
+  display: flex; width: 224px; height: calc(100dvh - 68px); max-height: none;
+  position: sticky; top: 0; padding: 22px 14px; background: var(--surface);
+  border: 0; border-inline-end: 1px solid var(--hairline); border-radius: 0; box-shadow: none;
+}
+.living-public.adaptive-experience .sidebar :is(.sidebar-brand,.sidebar-note) { display: none; }
+.living-dashboard.adaptive-experience .sidebar .nav-caption,
+.living-dashboard.adaptive-experience.experience-doctor .sidebar .nav-caption { display: block; padding: 4px 12px 16px; margin: 0; font-size: 12px; color: var(--muted); }
+.living-dashboard.adaptive-experience .clinical-app .sidebar .nav-link,
+.living-dashboard.adaptive-experience.experience-doctor .clinical-app .sidebar .nav-link {
+  display: flex; flex-direction: row; justify-content: start; text-align: start; gap: 12px;
+  min-height: 48px; padding: 11px 12px; margin: 4px 0; border-radius: 8px;
+  font-size: 13px; line-height: 1.7; border: 1px solid transparent; color: var(--muted);
+}
+.living-dashboard.adaptive-experience .clinical-app .sidebar .nav-link.active { border-color: var(--hairline); background: var(--tint); color: var(--text); font-weight: 750; }
+.living-dashboard.adaptive-experience .sidebar .sidebar-footer { display: block; margin-top: auto; text-align: start; padding: 24px 12px 0; color: var(--muted); }
+.living-dashboard.adaptive-experience .clinical-app .workspace main { width: 100%; max-width: 1660px; margin: 0 auto; padding: 30px 32px 0; }
+.living-dashboard.adaptive-experience .clinical-app .page-footer { padding: 22px 32px; margin: 24px 0 0; font-size: 11px; }
+.living-dashboard.adaptive-experience.experience-shell .role-mobile-nav { display: none; }
+.living-public.adaptive-experience .workspace-preferences { display: grid; gap: 24px; padding-block: 12px; }
+.living-public.adaptive-experience .workspace-preferences .preferences { flex-wrap: wrap; }
+.living-public.adaptive-experience .workspace-preferences .theme-select { display: block; min-height: 44px; }
+.living-public.adaptive-experience .workspace-preferences .language-toggle { min-height: 44px; }
+.living-public.adaptive-experience .experience-heading { padding-block: 0 24px; }
+.living-public.adaptive-experience .experience-heading h1 { font-size: clamp(28px,2.8vw,40px); line-height: 1.45; }
+.living-public.adaptive-experience .experience-heading p { line-height: 1.85; }
+.living-public.adaptive-experience dialog { width: min(580px,calc(100vw - 32px)); border-radius: 14px; max-height: calc(100dvh - 48px); padding: 24px; border-color: var(--hairline); }
+.living-public.adaptive-experience dialog .dialog-heading { top: -24px; background: var(--surface); }
+.living-public.adaptive-experience dialog::backdrop { background: rgb(8 30 25 / 58%); }
+.living-public.adaptive-experience .notification-center li { padding: 20px 12px; border-radius: 0; }
+.living-public.adaptive-experience .notification-overview { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; padding-bottom: 14px; border-bottom: 1px solid var(--hairline); font-size: 13px; }
+.living-public.adaptive-experience .notification-overview > span { display: flex; gap: 10px; align-items: center; }
+.living-public.adaptive-experience .notification-overview strong { color: var(--primary); }
+.living-public.adaptive-experience .notification-center li.is-unread { border-inline-start: 3px solid var(--primary); background: var(--tint); border-radius: 0; }
+.living-public.adaptive-experience .browser-notification-control { border-radius: 8px; background: var(--bg); }
+.living-public.adaptive-experience .more-nav a { min-height: 48px; border-radius: 8px; }
+/* Patient overview: latest values and trends are different information regions. */
+.living-dashboard.adaptive-experience .adaptive-dashboard { display: grid; gap: 26px; }
+.living-public.adaptive-experience .dashboard-overview { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; padding-bottom: 28px; border-bottom: 1px solid var(--hairline); }
+.living-public.adaptive-experience .dashboard-overview .dashboard-welcome { display: flex; flex-direction: column; justify-content: space-between; border: 0; padding: 0; gap: 18px; }
+.living-public.adaptive-experience .dashboard-welcome h1 { font-size: clamp(27px,2.8vw,40px); margin: 8px 0 12px; line-height: 1.35; }
+.living-public.adaptive-experience .dashboard-welcome p { max-width: 44ch; font-size: 15px; }
+.living-public.adaptive-experience .dashboard-welcome .eyebrow { color: var(--primary); font-weight: 700; }
+.living-public.adaptive-experience .dashboard-welcome .dashboard-date { flex-direction: row; align-items: center; gap: 14px; border: 0; padding: 0; font-size: 12px; }
+.living-public.adaptive-experience .dashboard-quick-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 22px; }
+.living-public.adaptive-experience .dashboard-quick-actions > a { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; color: var(--primary); font-size: 13px; }
+.living-public.adaptive-experience .dashboard-overview .dashboard-readouts { margin: 0; padding: 22px; border-radius: 12px; background: var(--tint); }
+.living-public.adaptive-experience .dashboard-readouts-heading { margin-bottom: 20px; }
+.living-public.adaptive-experience .dashboard-overview .dashboard-metrics { gap: 20px; grid-template-columns: 1.2fr 1fr; }
+.living-public.adaptive-experience .dashboard-overview .metric-card { display: flex; flex-direction: column; gap: 4px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.living-public.adaptive-experience .dashboard-overview .metric-card + .metric-card { border-inline-start: 1px solid var(--border); padding-inline-start: 20px; }
+.living-public.adaptive-experience .dashboard-overview .metric-card .metric-heading { margin-bottom: 6px; }
+.living-public.adaptive-experience .dashboard-overview .metric-card .metric-number { font-size: clamp(26px,2.5vw,38px); line-height: 1.25; }
+.living-public.adaptive-experience .dashboard-overview .metric-unit { align-self: start; }
+.living-public.adaptive-experience .dashboard-overview .dashboard-series-note { margin-top: 16px; font-size: 11px; }
+.living-public.adaptive-experience .adaptive-dashboard .dashboard-living-grid { display: grid; grid-template-columns: minmax(0,1.65fr) minmax(260px,1fr); gap: 24px; align-items: start; }
+.living-public.adaptive-experience .adaptive-dashboard .dashboard-primary { grid-column: 1; }
+.living-public.adaptive-experience .adaptive-dashboard .dashboard-canvas-loading { min-height: 280px; }
+.living-public.adaptive-experience .adaptive-dashboard .weekly-section { padding: 24px; background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; }
+.living-public.adaptive-experience .adaptive-dashboard .weekly-section .section-heading { flex-wrap: wrap; gap: 12px; }
+.living-public.adaptive-experience .adaptive-dashboard .weekly-section .chart { height: 225px; }
+.living-public.adaptive-experience .adaptive-dashboard .weekly-section .chart-data { font-size: 12px; }
+.living-public.adaptive-experience .adaptive-dashboard .dashboard-routine { grid-row: auto; display: grid; gap: 16px; }
+.living-public.adaptive-experience .adaptive-dashboard .dashboard-medication { padding: 24px; border-radius: 12px; border-color: var(--hairline); background: var(--surface); }
+.living-public.adaptive-experience .dashboard-panel-heading { border-color: var(--hairline); }
+.living-public.adaptive-experience .adaptive-dashboard .dashboard-habits { grid-column: 1/-1; padding: 22px 0; border: 0; border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); border-radius: 0; background: transparent; }
+.living-public.adaptive-experience .dashboard-habit-ledger { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 32px; }
+.living-public.adaptive-experience .adaptive-dashboard .dashboard-habits > .dashboard-routine-progress { display: none; }
+.living-public.adaptive-experience .adaptive-dashboard .dashboard-support { grid-column: 1/-1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.living-public.adaptive-experience .adaptive-dashboard .dashboard-support :is(.dashboard-report,.dashboard-assistant) { border-radius: 8px; background: var(--surface); border-color: var(--hairline); }
+.living-public.adaptive-experience .dashboard-disclosure { font-size: 11px; margin: 0; }
+.living-public.adaptive-experience .task-row { align-items: center; }
+.living-public.adaptive-experience .task-copy h3 { overflow-wrap: anywhere; }
+/* The assistant is a conversation workspace with a supporting reference rail. */
+.living-public.adaptive-experience .adaptive-assistant { max-width: none; gap: 22px; }
+.living-public.adaptive-experience .assistant-heading { padding: 0 0 22px; border-bottom: 1px solid var(--hairline); }
+.living-public.adaptive-experience .assistant-identity { display: flex; gap: 9px; align-items: center; font-size: 12px; color: var(--primary); margin-bottom: 8px; }
+.living-public.adaptive-experience .assistant-heading h1 { font-size: clamp(27px,2.6vw,36px); }
+.living-public.adaptive-experience .assistant-heading p { max-width: 72ch; }
+.living-public.adaptive-experience .assistant-layout { display: grid; grid-template-columns: minmax(0,1fr) 240px; gap: 26px; align-items: start; }
+.living-public.adaptive-experience .assistant-context { grid-column: 2; grid-row: 1; display: grid; gap: 22px; }
+.living-public.adaptive-experience .assistant-workspace { grid-column: 1; grid-row: 1; border-radius: 12px; box-shadow: none; }
+.living-public.adaptive-experience .assistant-safety { border: 1px solid var(--hairline); border-inline-start: 3px solid var(--primary); border-radius: 8px; padding: 0; background: var(--surface); display: block; }
+.living-public.adaptive-experience .assistant-safety summary { display: flex; gap: 8px; align-items: center; padding: 14px; min-height: 48px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.living-public.adaptive-experience .assistant-safety summary::after { content: '+'; margin-inline-start: auto; font-size: 18px; }
+.living-public.adaptive-experience .assistant-safety[open] summary::after { content: '−'; }
+.living-public.adaptive-experience .assistant-safety-content { padding: 0 16px 16px; display: grid; gap: 12px; }
+.living-public.adaptive-experience .assistant-guide h2 { font-size: 17px; }
+.living-public.adaptive-experience .assistant-guide p { font-size: 13px; color: var(--muted); margin-top: 16px; line-height: 1.9; }
+.living-public.adaptive-experience .assistant-conversation-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--hairline); color: var(--primary); font-size: 13px; }
+.living-public.adaptive-experience .assistant-conversation-heading small { color: var(--muted); margin-inline-start: auto; font-size: 11px; }
+.living-public.adaptive-experience .assistant-log { height: clamp(240px,36dvh,420px); padding: 24px; border-radius: 0; }
+.living-public.adaptive-experience .assistant-empty { padding: 10px 0; margin: auto 0; text-align: start; justify-items: start; gap: 12px; max-width: none; }
+.living-public.adaptive-experience .assistant-empty h2 { font-size: 24px; }
+.living-public.adaptive-experience .assistant-prompts { display: grid; gap: 0; width: 100%; margin-top: 12px; }
+.living-public.adaptive-experience .assistant-prompts button { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: start; padding: 10px 0; border-top: 1px solid var(--hairline); color: var(--primary); font-size: 13px; }
+.living-public.adaptive-experience .assistant-message { border-radius: 10px; max-width: 88%; }
+.living-public.adaptive-experience .patient-message { background: var(--tint); }
+.living-public.adaptive-experience .model-message { background: var(--surface); border: 0; border-inline-start: 2px solid var(--primary); }
+.living-public.adaptive-experience .assistant-composer { padding: 16px 20px; background: var(--bg); border-radius: 0 0 12px 12px; }
+.living-public.adaptive-experience .assistant-composer textarea { min-height: 76px; background: var(--surface); border-radius: 8px; }
+.living-public.adaptive-experience .assistant-composer-footer { gap: 8px; }
+.living-public.adaptive-experience .assistant-memory { font-size: 11px; }
+@media(min-width:1600px) { .living-public.adaptive-experience .adaptive-dashboard .weekly-section .chart { height: 285px; } }
+@media(max-width:1199px) and (min-width:768px) {
+  .living-dashboard.adaptive-experience .clinical-app-body,.living-dashboard.adaptive-experience.experience-doctor .clinical-app-body { grid-template-columns: 76px minmax(0,1fr); }
+  .living-dashboard.adaptive-experience .clinical-app .sidebar,.living-dashboard.adaptive-experience.experience-doctor .clinical-app .sidebar { width: 76px; padding: 18px 8px; }
+  .living-dashboard.adaptive-experience .clinical-app .sidebar .nav-link,.living-dashboard.adaptive-experience.experience-doctor .clinical-app .sidebar .nav-link { justify-content: center; padding: 12px; }
+  .living-dashboard.adaptive-experience .sidebar :is(.nav-caption,.sidebar-footer),.living-dashboard.adaptive-experience.experience-doctor .sidebar .nav-caption { display: none; }
+  .living-public.adaptive-experience .sidebar .nav-link span { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
+  .living-dashboard.adaptive-experience .clinical-app .workspace main { padding: 24px; }
+  .living-dashboard.adaptive-experience .bottom-nav { display: none; }
+  .living-public.adaptive-experience .dashboard-overview { grid-template-columns: 1fr; gap: 24px; }
+  .living-public.adaptive-experience .dashboard-overview .dashboard-welcome { flex-direction: row; }
+  .living-public.adaptive-experience .adaptive-dashboard .dashboard-living-grid { grid-template-columns: minmax(0,1fr); }
+  .living-public.adaptive-experience .adaptive-dashboard .dashboard-primary { grid-column: 1; }
+  .living-public.adaptive-experience .adaptive-dashboard .dashboard-routine { grid-column: 1; }
+  .living-public.adaptive-experience .assistant-layout { grid-template-columns: minmax(0,1fr); }
+  .living-public.adaptive-experience .assistant-context { grid-column: 1; grid-row: 1; }
+  .living-public.adaptive-experience .assistant-workspace { grid-row: 2; }
+  .living-public.adaptive-experience .assistant-guide { display: none; }
+}
+@media(max-width:1023px) { .living-dashboard.adaptive-experience .app-header .header-breadcrumb { display: none; } }
+@media(max-width:767px) {
+  .living-dashboard.adaptive-experience .clinical-app .app-header { padding: 8px 12px; gap: 8px; min-height: 64px; flex-wrap: nowrap; }
+  .living-dashboard.adaptive-experience .app-header > .brand { width: auto; font-size: 14px; gap: 6px; }
+  .living-dashboard.adaptive-experience .brand-mark,.living-dashboard.adaptive-experience .brand-mark svg { width: 28px; height: 28px; }
+  .living-dashboard.adaptive-experience .brand small { display: none; }
+  .living-dashboard.adaptive-experience .header-actions { width: auto; margin-inline-start: auto; gap: 0; flex: none; }
+  .living-dashboard.adaptive-experience .clinical-app .app-header .header-actions { flex-basis: auto; flex-wrap: nowrap; justify-content: end; gap: 0; }
+  .living-dashboard.adaptive-experience .clinical-app .app-header .brand { font-size: 14px; gap: 6px; }
+  .living-dashboard.adaptive-experience .clinical-app .app-header .brand small { display: none; }
+  .living-dashboard.adaptive-experience .profile-link,.living-dashboard.adaptive-experience .session-identity { display: none; }
+  .living-dashboard.adaptive-experience .session-bar { border: 0; padding: 0; margin: 0; }
+  .living-dashboard.adaptive-experience .clinical-app-body,.living-dashboard.adaptive-experience.experience-doctor .clinical-app-body { display: block; width: 100%; margin: 0; }
+  .living-dashboard.adaptive-experience .clinical-app .sidebar,.living-dashboard.adaptive-experience.experience-doctor .clinical-app .sidebar { display: none; }
+  .living-dashboard.adaptive-experience .clinical-app .workspace main { padding: 22px 16px 0; }
+  .living-dashboard.adaptive-experience .clinical-app .page-footer { margin: 20px 0 0; padding: 20px 16px calc(96px + env(safe-area-inset-bottom)); }
+  .living-dashboard.adaptive-experience .bottom-nav,.living-dashboard.adaptive-experience.experience-shell .role-mobile-nav { position: fixed; inset-inline: 0; bottom: 0; top: auto; z-index: 30; width: 100%; margin: 0; border: 0; border-top: 1px solid var(--hairline); border-radius: 0; background: var(--surface); box-shadow: 0 -3px 18px rgb(10 40 30 / 4%); display: flex; flex-wrap: nowrap; gap: 0; padding: 5px 8px calc(5px + env(safe-area-inset-bottom)); min-height: 70px; }
+  .living-dashboard.adaptive-experience .bottom-nav > *,.living-dashboard.adaptive-experience.experience-shell .role-mobile-nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-width: 0; min-height: 54px; font-size: 10px; padding: 6px 2px; line-height: 1.6; gap: 4px; border-radius: 8px; color: var(--muted); }
+  .living-dashboard.adaptive-experience .bottom-nav .active,.living-dashboard.adaptive-experience.experience-shell .role-mobile-nav a.active { background: var(--tint); color: var(--text); }
+  .living-dashboard.adaptive-experience .bottom-nav .add-nav { width: 44px; height: 44px; min-height: 44px; flex: 0 0 44px; margin: 5px 8px; background: var(--primary); color: var(--on-primary); border-radius: 12px; transform: none; }
+  .living-public.adaptive-experience .experience-heading { gap: 16px; padding-bottom: 20px; }
+  .living-public.adaptive-experience .experience-heading h1 { font-size: 28px; }
+  .living-public.adaptive-experience .experience-heading-action { width: 100%; }
+  .living-public.adaptive-experience .dashboard-overview { grid-template-columns: 1fr; gap: 22px; padding-bottom: 0; border: 0; }
+  .living-public.adaptive-experience .dashboard-welcome h1 { font-size: 29px; }
+  .living-public.adaptive-experience .dashboard-welcome p { font-size: 14px; }
+  .living-public.adaptive-experience .dashboard-welcome .dashboard-date { font-size: 11px; }
+  .living-public.adaptive-experience .dashboard-quick-actions { margin-top: 16px; gap: 12px; }
+  .living-public.adaptive-experience .dashboard-quick-actions .btn { font-size: 12px; padding: 10px 12px; }
+  .living-public.adaptive-experience .dashboard-overview .dashboard-readouts { padding: 18px 16px; }
+  .living-public.adaptive-experience .dashboard-readouts-heading { gap: 8px; }
+  .living-public.adaptive-experience .dashboard-readouts-heading a { font-size: 11px; }
+  .living-public.adaptive-experience .dashboard-overview .dashboard-metrics { gap: 12px; }
+  .living-public.adaptive-experience .dashboard-overview .metric-card + .metric-card { padding-inline-start: 12px; }
+  .living-public.adaptive-experience .dashboard-overview .metric-card .metric-number { font-size: 28px; }
+  .living-public.adaptive-experience .dashboard-overview .metric-heading { flex-wrap: nowrap; }
+  .living-public.adaptive-experience .dashboard-overview .metric-card .metric-heading h2 { font-size: 12px; }
+  .living-public.adaptive-experience .adaptive-dashboard .dashboard-living-grid { grid-template-columns: minmax(0,1fr); gap: 22px; }
+  .living-public.adaptive-experience .adaptive-dashboard .dashboard-routine { grid-row: auto; grid-column: 1; }
+  .living-public.adaptive-experience .adaptive-dashboard .weekly-section,.living-public.adaptive-experience .adaptive-dashboard .dashboard-medication { padding: 18px 16px; }
+  .living-public.adaptive-experience .adaptive-dashboard .weekly-section .chart { height: 190px; }
+  .living-public.adaptive-experience .adaptive-dashboard .weekly-section .section-heading { align-items: start; flex-direction: column; }
+  .living-public.adaptive-experience .adaptive-dashboard .dashboard-support { grid-template-columns: minmax(0,1fr); gap: 12px; }
+  .living-public.adaptive-experience .dashboard-habit-ledger { grid-template-columns: minmax(0,1fr); }
+  .living-public.adaptive-experience .assistant-heading { flex-direction: row; flex-wrap: wrap; align-items: start; gap: 12px; padding-bottom: 18px; }
+  .living-public.adaptive-experience .assistant-heading p { font-size: 12px; margin-top: 6px; }
+  .living-public.adaptive-experience .assistant-heading .btn { min-height: 44px; font-size: 12px; }
+  .living-public.adaptive-experience .assistant-layout { grid-template-columns: minmax(0,1fr); gap: 14px; }
+  .living-public.adaptive-experience .assistant-context { grid-row: 1; grid-column: 1; }
+  .living-public.adaptive-experience .assistant-guide { display: none; }
+  .living-public.adaptive-experience .assistant-safety summary { padding: 10px 14px; }
+  .living-public.adaptive-experience .assistant-workspace { grid-column: 1; grid-row: 2; }
+  .living-public.adaptive-experience .assistant-conversation-heading { padding: 12px 14px; }
+  .living-public.adaptive-experience .assistant-conversation-heading small { flex-basis: 100%; margin: 0; }
+  .living-public.adaptive-experience .assistant-log { height: clamp(230px,38dvh,400px); padding: 18px 14px; }
+  .living-public.adaptive-experience .assistant-empty h2 { font-size: 21px; }
+  .living-public.adaptive-experience .assistant-empty p { font-size: 13px; }
+  .living-public.adaptive-experience .assistant-message { max-width: 95%; padding: 12px; }
+  .living-public.adaptive-experience .assistant-composer { padding: 14px; }
+  .living-public.adaptive-experience .assistant-composer textarea { min-height: 80px; font-size: 16px; }
+  .living-public.adaptive-experience .assistant-composer-footer small { font-size: 10px; }
+  .living-public.adaptive-experience .adaptive-assistant { height: calc(100dvh - 172px - env(safe-area-inset-bottom)); min-height: 500px; gap: 12px; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-heading { flex-wrap: nowrap; align-items: center; padding-bottom: 12px; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-heading > div { min-width: 0; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-heading h1 { font-size: 23px; line-height: 1.5; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-heading :is(p,.assistant-identity) { display: none; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-heading > .btn { font-size: 0; padding: 10px; width: 44px; height: 44px; flex-shrink: 0; gap: 0; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-layout { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-context { width: 100%; flex: none; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-workspace { display: flex; flex-direction: column; width: 100%; min-height: 0; flex: 1; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-conversation-heading { flex: none; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-conversation-heading small { display: none; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-log { flex: 1; height: auto; min-height: 130px; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-empty { margin: 0; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-empty h2 { font-size: 19px; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-empty > p { font-size: 12px; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-prompts { margin-top: 2px; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-composer { flex: none; gap: 7px; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-composer textarea { min-height: 64px; padding: 8px 10px; }
+  .living-public.adaptive-experience .adaptive-assistant .assistant-composer :is(.assistant-memory,.assistant-composer-footer small) { display: none; }
+  .living-public.adaptive-experience.living-assistant .clinical-app .page-footer { display: none; }
+  .living-public.adaptive-experience dialog { width: 100%; max-width: 100%; max-height: calc(100dvh - 16px); border-radius: 16px 16px 0 0; margin: auto 0 0; padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); }
+  .living-public.adaptive-experience dialog .dialog-heading { top: -20px; }
+  .living-public.adaptive-experience dialog:has(.notification-center) { height: calc(100dvh - 16px); }
+  .living-public.adaptive-experience .notification-center li { flex-direction: column; flex-wrap: nowrap; gap: 12px; }
+  .living-public.adaptive-experience .notification-center li > div { flex-basis: auto; width: 100%; }
+  .living-public.adaptive-experience .account-grid { gap: 16px; }
+  .living-public.adaptive-experience .account-grid > .card { padding: 20px; border-radius: 12px; }
+}
+@media(prefers-reduced-motion:reduce) { .living-public.adaptive-experience *, .living-public.adaptive-experience *::before { scroll-behavior: auto; animation: none !important; transition: none !important; } }
+.living-public.adaptive-experience[data-motion=paused] *, .living-public.adaptive-experience[data-motion=paused] *::before { animation: none !important; transition: none !important; }

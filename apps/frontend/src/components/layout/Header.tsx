@@ -1,4 +1,5 @@
-import { Pause, Play } from "lucide-react";
+import { useState } from "react";
+import { Pause, Play, SlidersHorizontal } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router";
 import { Brand } from "./Brand";
 import { NotificationCenter } from "./NotificationCenter";
@@ -8,6 +9,7 @@ import { useAuth } from "@/auth/context";
 import { SessionBar } from "@/auth/RouteAccess";
 import { roleNavigation } from "./navigation";
 import type { User } from "@/lib/types/user";
+import { Modal } from "@/components/ui/Modal";
 
 function PatientTools() {
   const { user } = useAuth();
@@ -20,7 +22,9 @@ function PatientTools() {
   </>;
 }
 export function Header({ role = "patient", motion }: { role?: User["role"]; motion?: { paused: boolean; reduced: boolean; toggle: () => void } }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const [settings, setSettings] = useState(false);
+  const settingsLabel = language === "ar" ? "اللغة والمظهر" : "Language & appearance";
   const { pathname } = useLocation();
   const navigation = roleNavigation(role);
   const current = navigation.find(item => pathname === item.to || pathname.startsWith(`${item.to}/`));
@@ -29,8 +33,9 @@ export function Header({ role = "patient", motion }: { role?: User["role"]; moti
     <header className="header app-header">
       <Brand living={Boolean(motion)} />
       <div className="header-breadcrumb" data-i18n="declarative"><span>{t(`experience.roles.${role}`)}</span><strong>{t(current?.label ?? `auth.${role}`)}</strong></div>
-      <div className="header-actions"><Preferences />{motion && <span className="dashboard-motion" data-i18n="declarative"><button type="button" className="icon-button motion-toggle" disabled={motion.reduced} aria-label={motionLabel} title={motionLabel} aria-pressed={motion.paused || motion.reduced} onClick={motion.toggle}>{motion.paused || motion.reduced ? <Play size={17} aria-hidden="true" /> : <Pause size={17} aria-hidden="true" />}</button></span>}<NotificationCenter />{role === "patient" && <PatientTools />}<SessionBar /></div>
+      <div className="header-actions"><button className="icon-button header-preferences-button" type="button" onClick={() => setSettings(true)} aria-label={settingsLabel} title={settingsLabel} aria-haspopup="dialog" aria-expanded={settings}><SlidersHorizontal size={20} aria-hidden="true" /></button><NotificationCenter />{role === "patient" && <PatientTools />}<SessionBar /></div>
     </header>
     {role !== "patient" && <nav className="role-mobile-nav" aria-label={t("common.layout.mainNav")} data-i18n="declarative">{navigation.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to}><Icon size={18} aria-hidden="true" />{t(label)}</NavLink>)}</nav>}
+    <Modal open={settings} onClose={() => setSettings(false)} title={settingsLabel} declarativeTitle><div className="workspace-preferences"><Preferences />{motion && <button type="button" className="btn btn-secondary motion-toggle" disabled={motion.reduced} aria-label={motionLabel} aria-pressed={motion.paused || motion.reduced} onClick={motion.toggle}>{motion.paused || motion.reduced ? <Play size={17} aria-hidden="true" /> : <Pause size={17} aria-hidden="true" />}{motionLabel}</button>}</div></Modal>
   </>;
 }

@@ -1,4 +1,9 @@
 export const arCatalog = {
+  evolution: {
+    expandNav: "توسيع التنقل", collapseNav: "طي التنقل",
+    chartValues: "عرض المتوسطات اليومية المسجلة", chartAxis: "يتكيف محور القيم مع النطاق المسجل. تعني الفجوات عدم وجود قيمة مسجلة؛ ولا تصل الخطوط بين الأيام المفقودة.",
+    chartSingle: "يوم واحد مسجل. يلزم المزيد من القراءات لإظهار اتجاه.", chartDays: "أيام مسجلة: {{count}}", latest: "أحدث القراءات", healthCanvas: "لوحة صحتك", dailyCare: "رعايتك اليومية", recordedDays: "الأيام المسجلة", tracking: "متابعتك في لمحة", overview: "نظرة على أسبوعك المسجل", noChange: "القيم المسجلة، دون تقييم طبي.",
+  },
   experience: {
     roles: { patient: "مريض", doctor: "طبيب", admin: "مسؤول النظام" },
     openAssistant: "فتح المساعد الصحي",

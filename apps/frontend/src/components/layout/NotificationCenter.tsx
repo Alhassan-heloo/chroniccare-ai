@@ -8,7 +8,6 @@ import { useNotifications } from "@/hooks/queries/useNotifications";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Feedback } from "@/components/ui/Feedback";
-import "@/styles/notifications.css";
 import { BrowserNotificationControl } from "./BrowserNotificationControl";
 export function NotificationCenter() {
   const { user } = useAuth();
@@ -33,8 +32,7 @@ function AccountNotifications() {
     </Button>
     <Modal open={open} onClose={() => setOpen(false)} title={t("common.layout.notifications")} declarativeTitle>
       {open && <div className="notification-center" data-i18n="declarative">
-        <BrowserNotificationControl />
-        <p className="muted">{t("notificationsUi.latest")}</p>
+        <div className="notification-overview"><span><Bell size={19} aria-hidden="true" />{t("notificationsUi.latest")}</span>{!count.isError && count.data !== undefined && <strong aria-live="polite">{t("notificationsUi.unreadCount", { count: formatNumber(count.data) })}</strong>}</div>
         {list.isPending ? <Feedback kind="loading">{t("notificationsUi.loading")}</Feedback>
           : list.isError ? <Feedback kind="error" action={<Button onClick={() => void list.refetch()}>{t("common.actions.retry")}</Button>}>{t("notificationsUi.failed")}</Feedback>
             : !list.data?.length ? <Feedback kind="empty">{t("notificationsUi.empty")}</Feedback>
@@ -47,6 +45,7 @@ function AccountNotifications() {
               </li>)}</ul>}
         {read.isError && <Feedback kind="error">{t("notificationsUi.readFailed")}</Feedback>}
         {count.isError && <Feedback kind="error" action={<Button onClick={() => void count.refetch()}>{t("common.actions.retry")}</Button>}>{t("notificationsUi.countError")}</Feedback>}
+        <BrowserNotificationControl />
       </div>}
     </Modal>
   </>;

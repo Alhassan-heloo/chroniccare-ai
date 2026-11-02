@@ -13,7 +13,7 @@ const output = resolve(root, "artifacts/admin-refinement-phase2c", process.argv.
 const report = { checks: [], errors: [], screenshots: [], transport: "Mocked Admin API; no database integration claimed" };
 let browser, child, stopped;
 try {
-  child = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5198", "--strictPort"], { cwd: root, env: { ...process.env, VITE_API_URL: api }, stdio: "ignore" }); stopped = once(child, "exit");
+  child = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--configLoader", "runner", "--host", "127.0.0.1", "--port", "5198", "--strictPort"], { cwd: root, env: { ...process.env, VITE_API_URL: api }, stdio: "ignore" }); stopped = once(child, "exit");
   for (let n = 0; n < 100; n++) { try { await fetch(base); break; } catch { await new Promise(resolve => setTimeout(resolve, 150)); } }
   browser = await chromium.launch({ channel: "msedge", headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce" });
@@ -48,7 +48,7 @@ try {
   await page.locator(".admin-doctor-card").first().waitFor();
   assert.equal(await page.locator(".living-admin").count(), 1);
   assert.equal(await page.locator(".living-admin").getAttribute("data-motion"), "paused");
-  await page.locator('.admin-jump-nav a[href="#admin-create-title"]').click();
+  await page.locator('.admin-open-create').click();
   await page.locator('.admin-create-card button[type="submit"]').click(); assert.equal(await page.locator('[aria-invalid="true"]').count(), 3); assert.equal(posts, 0);
   await page.waitForFunction(() => document.activeElement?.getAttribute("aria-invalid") === "true");
   await page.locator('.admin-create-card input[autocomplete="name"]').fill("Dr Lina Test"); await page.locator('.admin-create-card input[type="email"]').fill("lina@example.test");
@@ -58,18 +58,24 @@ try {
   await page.locator(".ui-feedback-success").waitFor(); await page.getByRole("heading", { name: "Dr Lina Test", exact: true }).waitFor(); assert.equal(posts, 1);
   const shot = async name => { await page.evaluate(() => { scrollTo(0, 0); document.activeElement?.blur(); }); assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)); const path = resolve(output, name); await page.screenshot({ path, fullPage: true, animations: "disabled" }); report.screenshots.push(path); };
   assert.equal(await page.locator("html").getAttribute("dir"), "ltr");
-  await page.locator(".language-toggle").click();
+  await page.keyboard.press("Escape"); await page.locator('dialog[open]').waitFor({state:'hidden'});
+  assert(await page.locator('.admin-open-create').evaluate(element=>element===document.activeElement),'Creation dialog restores trigger focus');
+  await page.locator(".header-preferences-button").click();
+  await page.locator("dialog[open] .language-toggle").click();
   await page.waitForFunction(() => document.documentElement.dir === "rtl");
+  await page.keyboard.press("Escape");
   await shot("admin-1440-ar-dark.png");
-  await page.setViewportSize({ width: 390, height: 844 }); await page.locator(".theme-select").selectOption("light");
+  await page.setViewportSize({ width: 390, height: 844 }); await page.locator(".header-preferences-button").click(); await page.locator("dialog[open] .theme-select").selectOption("light"); await page.keyboard.press("Escape");
   await page.waitForFunction(() => document.documentElement.dir === "rtl" && document.documentElement.dataset.theme === "light"); await shot("admin-390-ar-light.png");
   await page.setViewportSize({ width: 320, height: 844 }); assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  await page.locator('.admin-open-create').click();
   const nameInput = page.locator('.admin-create-card input[autocomplete="name"]'); await nameInput.focus(); await page.keyboard.press("Tab"); assert(await page.locator('.admin-create-card input[type="email"]').evaluate(element => element === document.activeElement));
+  await page.keyboard.press('Escape');
   state = "empty"; await page.reload(); await page.locator(".ui-feedback-empty").waitFor();
   state = "error"; await page.reload(); await page.locator(".ui-feedback-error").waitFor();
   assert(!await page.locator(".admin-overview dd").first().textContent().then(text => /[0-9٠-٩]/.test(text)));
   state = "ready"; await page.locator('.ui-feedback-error button').click(); await page.locator(".admin-doctor-card").first().waitFor();
-  report.checks = ["Admin-only Living shell", "in-page navigation", "validation and first-error focus", "password visibility", "pending and confirmed creation", "unchanged API payload", "list refresh", "English LTR and Arabic RTL desktop dark", "mobile Arabic light RTL", "320px overflow", "keyboard field order", "empty and error/retry states", "reduced motion and Motion Off"];
+  report.checks = ["Admin-only Living Evolution shell", "focused creation dialog and trigger-focus restoration", "validation and first-error focus", "password visibility", "pending and confirmed creation", "unchanged API payload", "list refresh", "English LTR and Arabic RTL desktop dark", "mobile Arabic light RTL", "320px overflow", "keyboard field order", "empty and error/retry states", "reduced motion and Motion Off"];
   assert.deepEqual(report.errors, []); console.log(JSON.stringify({ status: "PASS", checks: report.checks.length, output }));
 } catch (error) { report.errors.push(error.message); process.exitCode = 1; console.error(error.message); }
 finally { if (browser) await browser.close(); if (child && child.exitCode === null) { child.kill(); await stopped; } await writeFile(resolve(output, "report.json"), JSON.stringify(report, null, 2)); }

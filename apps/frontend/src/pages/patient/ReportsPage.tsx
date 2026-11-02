@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ReportSummary } from "@/components/health/ReportSummary";
 import { useI18n } from "@/i18n/context";
-import { SignatureArtwork, LivingPulse } from "@/components/public/living/ui";
+import "@/styles/evolution/records.css";
 import {
   measurementLabel,
   measurementValue,
@@ -22,17 +22,12 @@ export default function ReportsPage() {
   const [period, setPeriod] = useState<ReportPeriod>(7);
   const { data, isPending, isError, refetch } = usePatientReport(period);
   return (
-    <div className="stack reports-page" data-i18n="declarative">
-      <div className="reports-heading dashboard-welcome">
-        <SignatureArtwork />
+    <div className="reports-page records-page grid gap-6" data-i18n="declarative">
+      <div className="reports-heading records-heading">
         <div>
-          <span className="eyebrow">{t("متابعتك، بصورة أوضح")}</span>
           <h1>{t("reports.title")}</h1>
           <p>{t("ملخص وصفي للقراءات المسجلة خلال الفترة المختارة.")}</p>
         </div>
-      </div>
-      <div className="reports-toolbar dashboard-canvas-actions">
-        <p className="report-range" role="status"><CalendarDays size={17} aria-hidden="true" /><span>{data && t("reports.range", { from: `\u2068${data.from}\u2069`, to: `\u2068${data.to}\u2069`, count: formatNumber(data.measurements.length) })}</span></p>
         <div className="report-periods segmented" role="group" aria-label={t("reports.period")}>
           {periods.map((item) => (
             <Button
@@ -45,6 +40,9 @@ export default function ReportsPage() {
             </Button>
           ))}
         </div>
+      </div>
+      <div className="reports-toolbar dashboard-canvas-actions">
+        <p className="report-range" role="status"><CalendarDays size={17} aria-hidden="true" /><span>{data && t("reports.range", { from: `\u2068${data.from}\u2069`, to: `\u2068${data.to}\u2069`, count: formatNumber(data.measurements.length) })}</span></p>
       </div>
       {isPending ? (
         <Card className="empty-state glass" role="status">
@@ -64,7 +62,6 @@ export default function ReportsPage() {
           <div className="report-charts">
             {(["pressure", "glucose"] as const).map((kind) => (
               <Card key={kind} className="report-chart-panel health-canvas glass" data-kind={kind}>
-                <LivingPulse cue={`${period}:${kind}`} />
                 <div className="dashboard-panel-heading"><span className="dashboard-feature-icon" aria-hidden="true">{kind === "pressure" ? <HeartPulse size={20} /> : <Droplet size={20} />}</span><div>
                   <h2>{t(kind === "pressure" ? "اتجاه ضغط الدم" : "اتجاه سكر الدم")}</h2>
                   <p>{t("متوسط القراءات لكل يوم مسجل، دون ملء الأيام المفقودة.")}</p>

@@ -21,6 +21,17 @@ import {
 import { medicationSchema } from "../src/lib/utils/medicationSchema";
 import { summarizeMedications } from "../src/lib/utils/medications";
 import assert from "node:assert/strict";
+import { buildChartSeries } from "../src/lib/utils/chartSeries";
+const sparseInput = [{ day: "2026-10-30", systolic: 124, diastolic: 82 }, { day: "2026-10-31", glucose: 98 }, { day: "2026-11-02", systolic: 121, diastolic: 79 }];
+const sparseChart = buildChartSeries(sparseInput);
+assert.deepEqual(sparseChart.map(point => point.day), ["2026-10-30", "2026-10-31", "2026-11-01", "2026-11-02"]);
+assert.equal(sparseChart[1]?.systolic, undefined, "Other measurement kinds do not fill a pressure gap");
+assert.equal(sparseChart[2]?.systolic, undefined, "A missing day remains missing");
+assert.equal(sparseChart[2]?.glucose, undefined, "Missing values are never converted to zero");
+assert.equal(buildChartSeries([{ day: "2026-11-02", glucose: 0 }])[0]?.glucose, 0, "The chart formatter preserves a supplied zero");
+assert.deepEqual(buildChartSeries([]), []);
+assert.equal(buildChartSeries([{ day: "2024-02-28", glucose: 90 }, { day: "2024-03-01", glucose: 100 }])[1]?.day, "2024-02-29", "Gap generation follows the calendar");
+assert.equal(sparseInput.length, 3, "Presentation normalization does not mutate source records");
 import { renderToString } from "react-dom/server";
 import { createMemoryRouter, RouterProvider, Outlet, useLocation } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -170,24 +181,24 @@ for (const language of ["ar", "en"] as const) {
   const guest = testAuth;
   for (const [path, element] of [["/", <HomePage />], ["/login", <AuthPage mode="login" />], ["/register", <AuthPage mode="register" />]] as const) {
     const html = renderToString(<I18nContext value={context}><AuthContext value={guest}><RouterProvider router={createMemoryRouter([{ path, element }], { initialEntries: [path] })} /></AuthContext></I18nContext>);
-    assert.equal((html.match(/class="topbar glass"/g) ?? []).length, 1, "One shared public masthead; nested chart headings are semantic headers");
-    assert.equal((html.match(/<footer/g) ?? []).length, 1, "One shared public footer on home and account pages");
+    assert.equal((html.match(/class="public-header\b/g) ?? []).length, 1, "One shared public masthead; nested chart headings are semantic headers");
+    assert.equal((html.match(/class="site-footer"/g) ?? []).length, 1, "One shared site footer; product sections can have semantic footers");
     assert(html.includes('href="/#features"') && html.includes('href="/login"'));
     assert(html.includes(translateCatalogMessage(language, "public.navigation")));
     assert(html.includes('id="public-content"'));
     assert(html.includes('data-i18n="declarative"'));
     assert(!html.includes("public.heroTitle"));
-    assert(html.includes(translateCatalogMessage(language, path === "/" ? "public.living.heroTitle" : path === "/login" ? "auth.signIn" : "auth.register")));
+    if (path === "/") assert(html.includes('id="home-title"') && html.includes(language === "ar" ? "رعايتك اليومية" : "Your daily care, brought into focus."), "Localized Living Evolution headline");
+    else assert(html.includes(translateCatalogMessage(language, path === "/login" ? "auth.signIn" : "auth.register")));
     if (path !== "/") {
       assert(html.includes('aria-controls="auth-password"'));
       assert(html.includes('aria-describedby="password-hint"'));
       assert(/\bautocomplete="username"/i.test(html), "Email keeps its username autocomplete hint");
     } else {
-      for (const section of ["immersive-intro", "signature-artwork", "health-canvas", "story-sequence", "weekly-scene", "medication-scene", "habits-scene", "report-scene", "assistant-scene"]) assert(html.includes(section), `Living homepage renders ${section}`);
+      for (const section of ["home-opening", "product-preview", "weekly-scene", "workflow", "assistant-scene", "home-privacy"]) assert(html.includes(section), `Living Evolution homepage renders ${section}`);
       for (const obsolete of ['class="launch-hero"', 'class="public-hero"', 'class="bento-grid"', 'class="product-window"']) assert(!html.includes(obsolete), "Previous visual compositions are not mounted");
-      assert.equal((html.match(/class="chart-point/g) ?? []).length, 7, "Seven real sample-day controls");
-      assert(html.includes('aria-label="' + translateCatalogMessage(language, "public.living.chooseType") + '"'));
-      assert(html.includes(translateCatalogMessage(language, "public.living.fictional")));
+      assert(html.includes('aria-pressed="true"') && html.includes('aria-pressed="false"'), "Product preview retains accessible series selection");
+      assert(html.includes(language === "ar" ? "بيانات توضيحية فقط" : "Example data only"), "Preview identifies demonstration data");
       assert(html.includes('aria-controls="public-navigation"'));
     }
   }
@@ -328,7 +339,7 @@ for (const language of ["ar", "en", "ar", "en"] as const) {
   client.setQueryData([...queryKeys.dashboard, "account", "fixture"], await getPatientDashboard());
   const context: I18nValue = { language, setLanguage: () => undefined, t: (key: string, values?: Readonly<Record<string, string | number>>) => isTranslationKey(key) ? translateCatalogMessage(language, key, values) : key, ...localeSettings(language), ...createFormatters(language) };
   const html = renderToString(<I18nContext value={context}><QueryClientProvider client={client}><RouterProvider router={createMemoryRouter(routes, { initialEntries: ["/patient/dashboard?demo=1#main"] })} /></QueryClientProvider></I18nContext>);
-  assert(html.includes(translateCatalogMessage(language, "patient.living.welcomeBody")));
+  assert(html.includes(translateCatalogMessage(language, "evolution.overview")));
   assert(html.includes(translateCatalogMessage(language, "patient.living.seriesNote")));
   assert(html.includes(translateCatalogMessage(language, "measurements.persistence.dashboardNotice")));
   assert(html.includes(translateCatalogMessage(language, "patient.overview.tasks")));
@@ -389,21 +400,20 @@ for (const path of paths) {
     </QueryClientProvider>,
   );
   assert(html.includes("<main"), `Missing main for ${path}`);
-  const livingShell = /class="living-public living-dashboard\b[^"\n]*"/.test(html);
+  const livingShell = /class="[^"\n]*\bliving-evolution\b[^"\n]*\bliving-dashboard\b/.test(html);
   assert.equal(livingShell, /^\/(patient|doctor|admin)\//.test(path), `All protected roles share Living foundations: ${path}`);
   assert(!html.includes("تعذر عرض الصفحة"), `Error boundary at ${path}`);
   if (path === "/patient/dashboard")
     for (const value of ["120/80", "98", "2/3", "4,500", "مرحبًا", "ماذا علي"])
-      assert(html.includes(value), `Missing dashboard value: ${value}`);
+      assert(html.replace(/<!--[\s\S]*?-->/g, "").includes(value), `Missing dashboard value: ${value}`);
   if (path === "/patient/dashboard") {
-    assert(html.includes('class="dashboard-living-grid"'), "Living canvas and routine form the primary workspace");
-    assert(html.includes('class="dashboard-primary"') && html.includes('class="dashboard-routine"'), "Chart and daily routine retain distinct regions");
-    assert(html.indexOf('class="dashboard-primary"') < html.indexOf('class="dashboard-routine"'), "The health canvas leads the reading order");
+    assert(html.includes('command-canvas') && html.includes('daily-workspace'), "Health canvas and daily care form distinct regions");
+    assert(html.indexOf('canvas-latest') < html.indexOf('canvas-trend'), "Latest measurements lead the chart reading order");
     assert(livingShell, "Dashboard opts into the approved Living tokens");
     assert(html.includes('class="dashboard-assistant glass"'), "Assistant preview remains accessible through native disclosure");
     assert(!html.includes('class="dashboard-board"') && !html.includes('class="routine-strip metrics-grid"'), "Previous dashboard composition is not mounted");
     assert(html.includes('class="clinical-app-body"') && html.includes('class="app-stage"'), "One shared shell with a quiet navigation rail");
-    assert.equal((html.match(/<header/g) ?? []).length, 1, "One application header");
+    assert.equal((html.match(/class="header app-header"/g) ?? []).length, 1, "One application header");
     assert(html.includes("بيانات مثال"));
     assert(!html.includes("طبيعي"));
   }
@@ -413,31 +423,29 @@ for (const path of paths) {
     assert(/class="[^"]*\bliving-measurements\b/.test(html), "Measurements reuse the approved Living shell");
     assert(html.includes('data-kind="bloodPressure"') && html.includes('data-kind="glucose"'), "Reading types retain distinct visual cues");
     assert(html.includes('class="measurement-filter-heading dashboard-panel-heading"'), "Filters reuse the approved patient panel heading");
-    assert(html.includes('class="measurement-results dashboard-primary health-canvas glass"'), "History reuses the approved patient canvas surface");
-    assert(html.includes('class="measurements-heading dashboard-welcome"'), "Measurements reuse the approved open patient heading");
+    assert(html.includes('measurement-history-heading'), "History has a readable heading and record count");
+    assert(html.includes('measurement-canvas'), "Latest readings and trends precede the history workspace");
   }
   if (path === "/patient/medications") {
     assert(/class="[^"]*\bliving-medications\b/.test(html), "Medications reuse the approved patient shell");
-    assert(html.includes('class="medications-heading dashboard-welcome"'), "Medication management reuses the open patient heading");
+    assert(html.includes('medication-workspace'), "Medication summary and schedule are separate regions");
     assert(html.includes('class="card medication-summary glass"'), "Daily dose summary uses the approved Living surface");
     assert(html.includes('class="card medication-schedule glass"'), "Schedules use the approved Living surface");
     assert(html.includes('class="dashboard-feature-icon"'), "Medication icons reuse the approved feature treatment");
-    assert(html.includes('class="living-pulse"') && html.includes('class="signature-artwork"'), "Shared Pulse and Tidal Weave remain decorative");
     assert(html.includes('aria-pressed="true"') && html.includes('aria-pressed="false"'), "Recorded and pending dose actions remain available");
     assert(!html.includes('class="feature-workbench"'), "Medication management has its own summary-and-schedules composition");
   }
   if (path === "/patient/habits") {
     assert(/class="[^"]*\bliving-habits\b/.test(html), "Habits reuse the approved patient shell");
-    assert(html.includes('class="habits-heading dashboard-welcome"'), "Daily tracking uses the approved open heading");
-    assert(html.includes('class="card habit-summary glass"'), "Today's overview uses the shared surface");
-    assert(html.includes('class="card habit-detail glass"'), "Habit cards use the shared surface");
-    assert(html.includes('class="habit-card-heading dashboard-panel-heading"'), "Habit icons and heading reuse patient primitives");
-    assert(html.includes('class="living-pulse"') && html.includes('class="signature-artwork"'), "Only shared decorative artwork and motion are mounted");
+    assert(html.includes('records-template-disclosure'), "Habit templates use accessible progressive disclosure");
+    assert(html.includes('records-habit-count') && html.includes('<progress'), "Today's progress overview remains available");
+    assert(html.includes('evolution-habit-row') && html.includes('habit-segments'), "Habit rows visualize actual goal progress");
+    assert(html.includes('habit-manage'), "Secondary habit controls use progressive disclosure");
     assert(html.includes('class="habits-grid"') && !html.includes('class="feature-workbench"'), "Daily completion lives alongside the introduction, ahead of the habit cards");
   }
   if (path === "/patient/reports") {
     assert(/class="[^"]*\bliving-reports\b/.test(html), "Reports reuse the approved patient shell");
-    assert(html.includes('class="reports-heading dashboard-welcome"'), "Reports use the shared open heading and artwork");
+    assert(html.includes('records-page'), "Reports share the Living Evolution records system");
     assert.equal((html.match(/class="card report-stat /g) ?? []).length, 4, "Only the four existing statistics are shown");
     assert.equal((html.match(/class="card report-chart-panel health-canvas glass"/g) ?? []).length, 2, "Both existing charts use the Dashboard canvas surface");
     assert(html.includes('class="card report-readings glass"'), "The latest-five ledger uses a shared surface");

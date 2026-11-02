@@ -13,7 +13,7 @@ const output = resolve(root, "artifacts/assistant-frontend"); await mkdir(output
 const report = { checks: [], errors: [], screenshots: [], source: "Mocked backend fixtures; no paid OpenAI or database requests" };
 let child, stopped, browser, stage = "startup";
 try {
-  child = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5194", "--strictPort"], { cwd: root, env: { ...process.env, VITE_API_URL: api }, stdio: "ignore" }); stopped = once(child, "exit");
+  child = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5194", "--strictPort", "--configLoader", "runner"], { cwd: root, env: { ...process.env, VITE_API_URL: api }, stdio: "ignore" }); stopped = once(child, "exit");
   for (let n = 0; n < 100; n++) { try { await fetch(base); break; } catch { await new Promise(resolve => setTimeout(resolve, 150)); } }
   browser = await chromium.launch({ channel: "msedge", headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce" });
@@ -55,10 +55,14 @@ try {
     }
     return send(404, { error: { code: "NOT_FOUND" } });
   });
-  await page.goto(base + "/patient/assistant");
+  await page.goto(base + "/patient/assistant", { waitUntil: "domcontentloaded", timeout: 45_000 });
   const composer = page.locator("#assistant-message"), submit = page.locator('.assistant-composer button[type="submit"]');
   await composer.waitFor(); assert.equal(calls.length, 0); await page.locator(".assistant-empty").waitFor();
   assert.equal(await composer.getAttribute("maxlength"), "2000"); assert(await submit.isDisabled());
+  stage = "collapsible-navigation";
+  await page.locator('.sidebar-toggle').click(); assert.equal(await page.locator('.clinical-app').getAttribute('data-nav'), 'collapsed');
+  await page.reload(); await page.locator('.assistant-empty').waitFor(); assert.equal(await page.locator('.clinical-app').getAttribute('data-nav'), 'collapsed');
+  await page.locator('.sidebar-toggle').click(); assert.equal(await page.locator('.clinical-app').getAttribute('data-nav'), 'expanded');
   stage = "pending-and-keyboard";
   await composer.fill("What is health education?"); await composer.press("Shift+Enter"); assert((await composer.inputValue()).includes("\n")); assert.equal(calls.length, 0);
   await composer.press("Enter"); await page.locator('.assistant-log [role="status"]').waitFor();
@@ -88,12 +92,20 @@ try {
     assert.equal(calls.length, before + 2); assert.equal(await page.locator(".patient-message").count(), 1);
   }
   stage = "mobile-arabic-and-memory";
-  await clear(); await page.locator(".language-toggle").click(); await page.locator(".theme-select").selectOption("light");
+  await clear(); await page.locator(".header-preferences-button").click(); await page.locator(".language-toggle").click(); await page.locator(".theme-select").selectOption("light"); await page.keyboard.press("Escape");
   await page.setViewportSize({ width: 390, height: 844 }); await page.waitForFunction(() => document.documentElement.dir === "rtl" && document.documentElement.dataset.theme === "light");
   mode = "success"; await composer.fill("كيف أفهم المعلومات الصحية العامة؟"); await submit.click(); await page.locator(".model-message").waitFor();
   assert.equal(calls.at(-1).language, "ar"); await shot("assistant-390-ar-light.png");
   await page.setViewportSize({ width: 320, height: 844 }); assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
-  await page.locator(".theme-select").selectOption("system"); await page.emulateMedia({ colorScheme: "dark" }); await page.waitForFunction(() => document.documentElement.dataset.theme === "dark");
+  stage = "visual-viewport-composer";
+  await composer.focus();
+  await page.evaluate(() => { const viewport=window.visualViewport; if(!viewport)throw new Error('VisualViewport unavailable in test browser'); Object.defineProperty(viewport,'height',{configurable:true,get:()=>430});viewport.dispatchEvent(new Event('resize')); });
+  await page.waitForFunction(()=>document.querySelector('.assistant-page')?.dataset.keyboard==='open');
+  assert.equal(await page.locator('.bottom-nav').isVisible(),false,'Keyboard mode removes navigation collision');
+  const composerBounds=await page.locator('.assistant-composer').boundingBox();assert(composerBounds && composerBounds.y+composerBounds.height<=430,'Composer stays inside simulated visual viewport');
+  await page.evaluate(()=>{document.querySelector('#assistant-message')?.blur();delete window.visualViewport.height;window.visualViewport.dispatchEvent(new Event('resize'));});
+  await page.waitForFunction(()=>document.querySelector('.assistant-page')?.dataset.keyboard==='closed');
+  await page.locator(".header-preferences-button").click(); await page.locator(".theme-select").selectOption("system"); await page.emulateMedia({ colorScheme: "dark" }); await page.waitForFunction(() => document.documentElement.dataset.theme === "dark"); await page.keyboard.press("Escape");
   assert.equal(await page.locator(".living-assistant").getAttribute("data-motion"), "paused");
   assert(await page.evaluate(() => !JSON.stringify({ ...localStorage, ...sessionStorage }).includes("كيف أفهم")));
   const beforeReload = calls.length; await page.reload(); await page.locator(".assistant-empty").waitFor(); assert.equal(calls.length, beforeReload);
@@ -102,6 +114,7 @@ try {
   mode = "UNAUTHENTICATED"; await composer.fill("Expiry test"); await composer.press("Enter"); await page.waitForURL("**/login?returnTo=*"); assert.equal(await page.locator(".assistant-page").count(), 0);
   for (const nextRole of ["doctor", "admin"]) { signedIn = true; role = nextRole; await page.goto(base + "/patient/assistant"); await page.waitForURL(`**/${nextRole}/dashboard`); assert.equal(await page.locator(".assistant-page").count(), 0); }
   report.checks = ["Patient-only route and role redirects", "empty state without a request", "2000-character composer", "Enter/Shift+Enter", "pending duplicate lock", "authenticated CSRF API payload", "backend disclaimer/emergency text", "plain text and XSS safety", "manual scroll preserved and latest-message action", "8 failure states and explicit-only retries", "retry does not duplicate patient bubble", "new conversation clears memory", "English LTR desktop dark", "Arabic RTL mobile light and 320px", "System theme and reduced motion/Motion Off", "reload has no conversation persistence or automatic requests", "session expiry clears the page", "no direct OpenAI requests"];
+  report.checks.push('Sidebar collapse/expand and persisted preference', 'Simulated 430px VisualViewport keeps composer visible without bottom-navigation overlap');
   assert.deepEqual(report.errors, []); console.log(JSON.stringify({ status: "PASS", checks: report.checks.length, output }));
 } catch (error) { report.errors.push({ stage, message: error.message }); console.error(stage + ": " + error.message); process.exitCode = 1; }
 finally { if (browser) await browser.close(); if (child && child.exitCode === null) { child.kill(); await stopped; } await writeFile(resolve(output, "report.json"), JSON.stringify(report, null, 2)); }

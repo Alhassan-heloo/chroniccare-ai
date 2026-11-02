@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Plus, Activity, Info } from "lucide-react";
+import { lazy, Suspense, useState } from "react";
+import { Plus, Activity, Info, HeartPulse, Droplet, SlidersHorizontal } from "lucide-react";
 import { useMeasurements } from "@/hooks/queries/usePatientDashboard";
 import { useDeleteMeasurement } from "@/hooks/mutations/useMeasurementMutations";
 import { useDashboardActions } from "@/context/DashboardContext";
@@ -15,10 +15,13 @@ import { MeasurementFilters } from "@/components/health/MeasurementFilters";
 import { MeasurementListCard } from "@/components/health/MeasurementListCard";
 import { MeasurementForm } from "@/components/health/MeasurementForm";
 import { useI18n } from "@/i18n/context";
-import { SignatureArtwork, LivingPulse } from "@/components/public/living/ui";
+import { summarizeReport } from "@/lib/utils/reports";
+import "@/styles/evolution/records.css";
+
+const ReportChart = lazy(() => import("@/components/charts/ReportChart"));
 
 export default function MeasurementsPage() {
-  const { t, formatNumber } = useI18n();
+  const { t, formatNumber, formatDate, formatUnit, language } = useI18n();
   const { data = [], isPending, isError, refetch } = useMeasurements();
   const { openMeasurement } = useDashboardActions();
   const [filters, setFilters] = useState<Filters>({
@@ -28,28 +31,41 @@ export default function MeasurementsPage() {
   });
   const [editing, setEditing] = useState<Measurement | null>(null);
   const [deleting, setDeleting] = useState<Measurement | null>(null);
+  const [trend, setTrend] = useState<"pressure" | "glucose">("pressure");
   const deletion = useDeleteMeasurement();
   const invalidRange =
     !!filters.from && !!filters.to && filters.from > filters.to;
   const filtered = invalidRange ? [] : filterMeasurements(data, filters);
+  const latest = [...data].sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
+  const pressure = latest.find(item => item.kind === "bloodPressure");
+  const glucose = latest.find(item => item.kind === "glucose");
+  const overview = summarizeReport(data, 30);
   return (
-    <div className="stack measurements-page" data-i18n="declarative">
-      <div className="measurements-heading dashboard-welcome">
-        <SignatureArtwork />
+    <div className="measurements-page records-page grid gap-6" data-i18n="declarative">
+      <div className="measurements-heading records-heading">
         <div>
-          <span className="eyebrow">{t("measurements.ui.eyebrow")}</span>
           <h1>{t("measurements.title")}</h1>
           <p>{t("measurements.ui.description")}</p>
         </div>
-      </div>
-      <div className="measurements-actions dashboard-canvas-actions">
-        <span className="sample-label">{data.some(item => item.isExample) && <><i aria-hidden="true" />{t("patient.overview.includesExamples")}</>}</span>
         <Button className="add-reading" onClick={openMeasurement}><Plus size={19} aria-hidden="true" />{t("measurements.add")}</Button>
       </div>
-      <div className="measurements-workbench dashboard-living-grid">
-      <aside className="measurement-filter-panel dashboard-routine" aria-label={t("measurements.living.filters")}><MeasurementFilters value={filters} onChange={setFilters} /></aside>
-      <section className="measurement-results dashboard-primary health-canvas glass" data-kind={filters.kind === "glucose" ? "glucose" : "pressure"} aria-label={t("measurements.ui.history")}>
-      <LivingPulse cue={`${filters.kind}:${filters.from}:${filters.to}`} />
+      {!isPending && !isError && <section className="measurement-canvas" aria-label={t("patient.clinical.latest")}>
+        <div className="records-section-title"><div><h2>{language === "ar" ? "صورة قياساتك" : "Your measurement picture"}</h2><p>{language === "ar" ? "آخر قراءة، واتجاه آخر ٣٠ يوماً" : "Latest readings and your last 30 days"}</p></div><span>{t("reports.count", { count: formatNumber(overview.measurements.length) })}</span></div>
+        <div className="records-latest" role="group" aria-label={t("measurements.ui.filterKind")}>
+          {([pressure, glucose] as const).map((item, index) => <button type="button" className="records-latest-item" data-kind={index === 0 ? "pressure" : "glucose"} key={index} aria-pressed={trend === (index === 0 ? "pressure" : "glucose")} onClick={() => setTrend(index === 0 ? "pressure" : "glucose")}>
+            <span className="records-latest-label">{index === 0 ? <HeartPulse size={20} aria-hidden="true" /> : <Droplet size={20} aria-hidden="true" />}{t(index === 0 ? "measurements.bloodPressure" : "measurements.bloodGlucose")}</span>
+            <span className="records-latest-value"><strong dir="ltr">{item ? item.kind === "bloodPressure" ? `${formatNumber(item.systolic)}/${formatNumber(item.diastolic)}` : formatNumber(item.value) : "—"}</strong><small dir="ltr">{formatUnit(index === 0 ? "mmHg" : "mg/dL")}</small></span>
+            {item ? <><time dateTime={item.recordedAt}>{formatDate(item.recordedAt, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</time>{item.isExample && <span className="records-example">{t("measurements.ui.example")}</span>}</> : <small>{t("patient.overview.noReading")}</small>}
+          </button>)}
+        </div>
+        <div className="records-trend" data-kind={trend}>
+          <Suspense fallback={<p role="status">{t("reports.loadingChart")}</p>}><ReportChart points={overview.points} kind={trend} /></Suspense>
+        </div>
+      </section>}
+      {data.some(item => item.isExample) && <span className="sample-label"><i aria-hidden="true" />{t("patient.overview.includesExamples")}</span>}
+      <div className="measurements-workbench grid gap-4">
+      <details className="measurement-filter-panel"><summary><SlidersHorizontal size={19} aria-hidden="true" />{t("measurements.living.filters")}{(filters.kind !== "all" || filters.from || filters.to) && <span className="badge">{language === "ar" ? "مفعّل" : "Active"}</span>}</summary><MeasurementFilters value={filters} onChange={setFilters} /></details>
+      <section className="measurement-results" aria-label={t("measurements.ui.history")}>
       {isPending ? (
         <Card className="empty-state" role="status">
           {t("measurements.ui.loading")}

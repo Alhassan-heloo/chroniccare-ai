@@ -9,9 +9,10 @@ import { useI18n } from "@/i18n/context";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useAuth } from "@/auth/context";
 import { Eye, EyeOff, KeyRound, ShieldCheck } from "lucide-react";
+import { SignatureArtwork } from "@/components/public/living/ui";
 
 export default function AccountEmailPage({ mode }: { mode: "activate-admin" | "forgot-password" | "reset-password" }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const auth = useAuth();
   const [token] = useState(() => new URLSearchParams(location.hash.slice(1)).get("token") ?? "");
   useLayoutEffect(() => { if (location.hash) history.replaceState(null, "", location.pathname); }, []);
@@ -48,7 +49,7 @@ export default function AccountEmailPage({ mode }: { mode: "activate-admin" | "f
           : cause instanceof AuthError && cause.code === "RATE_LIMITED" ? "auth.rateLimited" : "auth.failed");
     } finally { lock.current = false; setBusy(false); }
   }
-  return <PublicLayout><main id="public-content" tabIndex={-1} className="account-recovery route-content"><section className="auth-card glass">
+  return <PublicLayout><main id="public-content" tabIndex={-1} className="evolution-recovery route-content" data-i18n="declarative"><aside className="recovery-context"><div className="recovery-art"><SignatureArtwork /></div><ShieldCheck size={42} aria-hidden="true" /><h2>{activation ? (language === "ar" ? "بداية آمنة لحسابك." : "A secure start for your account.") : (language === "ar" ? "خطوة واضحة نحو حسابك." : "A clear path back to your account.")}</h2><p>{t(activation ? "accountEmail.activationIntro" : "auth.memoryNotice")}</p></aside><section className="auth-card recovery-form-portal">
     <span className="account-symbol">{activation ? <ShieldCheck size={26} aria-hidden="true" /> : <KeyRound size={26} aria-hidden="true" />}</span>
     <h1>{t(forgot ? "accountEmail.forgot" : activation ? "accountEmail.activate" : "accountEmail.reset")}</h1>
     <p>{t(forgot ? "accountEmail.forgotIntro" : activation ? "accountEmail.activationIntro" : "accountEmail.resetIntro")}</p>

@@ -2,6 +2,11 @@ import type { LocaleShape } from "../catalogTypes";
 import type { arCatalog } from "./ar";
 
 export const enCatalog = {
+  evolution: {
+    expandNav: "Expand navigation", collapseNav: "Collapse navigation",
+    chartValues: "View recorded daily averages", chartAxis: "The value axis adapts to the recorded range. Gaps mean no recorded value; lines do not bridge missing days.",
+    chartSingle: "One recorded day. More readings are needed to show a trend.", chartDays: "Recorded days: {{count}}", latest: "Latest readings", healthCanvas: "Your health canvas", dailyCare: "Daily care", recordedDays: "Recorded days", tracking: "Your tracking, at a glance", overview: "An overview of your recorded week", noChange: "Recorded values, without a medical assessment.",
+  },
   experience: {
     roles: { patient: "Patient", doctor: "Doctor", admin: "Administrator" },
     openAssistant: "Open health assistant",
