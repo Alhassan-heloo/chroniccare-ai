@@ -13,10 +13,6 @@ const backend = join(root, "apps", "backend");
 const frontend = join(root, "apps", "frontend");
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function exists(path) { try { await access(path); return true; } catch { return false; } }
-function port(value) {
-  if (!/^\d+$/.test(String(value)) || Number(value) < 1 || Number(value) > 65535) throw new StartupError("Invalid configured port. Use a number from 1 to 65535.");
-  return Number(value);
-}
 async function freePort(value) {
   for (const host of ["127.0.0.1", "::1"]) {
     const occupied = await new Promise(resolve => {
@@ -75,34 +71,35 @@ async function main() {
   const env = { ...parseEnv(await readFile(join(backend, ".env"), "utf8")), ...process.env };
   if (!env.DATABASE_URL || new URL(env.DATABASE_URL).pathname !== "/chroniccare") throw new StartupError("Backend DATABASE_URL must select the existing chroniccare application database (not the test database). Check it privately in apps/backend/.env.");
   if ((env.NODE_ENV || "development") !== "development") throw new StartupError("This is a development launcher. Set NODE_ENV=development locally or remove an inherited NODE_ENV override.");
-  const host = env.HOST?.trim() || "127.0.0.1";
-  if (!["127.0.0.1", "localhost", "0.0.0.0", "::1", "::"].includes(host)) throw new StartupError("Use a local HOST for this Windows development launcher.");
-  const apiPort = port(env.PORT || 3001);
-  const webPort = port(process.env.CC_FRONTEND_PORT || 5173);
-  if (apiPort === webPort) throw new StartupError("Frontend and backend ports must be different.");
-  const origins = (env.CORS_ORIGINS || "http://localhost:5173,http://127.0.0.1:5173").split(",").map(s => s.trim());
-  const webOrigin = [`http://localhost:${webPort}`, `http://127.0.0.1:${webPort}`].find(s => origins.includes(s));
-  if (!webOrigin) throw new StartupError(`CORS_ORIGINS must allow http://localhost:${webPort} or http://127.0.0.1:${webPort}. Edit apps/backend/.env privately. No servers started.`);
-  const apiHost = host === "0.0.0.0" ? "127.0.0.1" : host === "::" || host === "::1" ? "[::1]" : host;
-  const apiOrigin = `http://${apiHost}:${apiPort}`;
+  const apiPort = 3001, webPort = 5173;
+  const webOrigin = "http://localhost:5173", apiOrigin = "http://localhost:3001";
+  // Override only child development settings; production and local files are untouched.
+  const backendEnv = { ...env, NODE_ENV: "development", HOST: "localhost", PORT: "3001",
+    CORS_ORIGINS: webOrigin, APP_PUBLIC_ORIGIN: webOrigin };
   await freePort(apiPort); await freePort(webPort);
   // cmd expands % even inside quotes; refuse unusual paths rather than execute them incorrectly.
   if (/[\r\n%!"]/.test(root)) throw new StartupError("Move the checkout to a path without percent signs, exclamation marks, or quotes.");
   console.log("Prerequisites passed. Opening Backend and Frontend terminal windows...");
-  serverWindow("ChronicCare AI - Backend", backend, "");
+  serverWindow("ChronicCare AI - Backend", backend, "", backendEnv);
   // Only this child's public API address is overridden. No .env is rewritten and no
   // backend database credentials are passed from its .env into the frontend process.
-  serverWindow("ChronicCare AI - Frontend", frontend, ` -- --host 127.0.0.1 --port ${webPort} --strictPort`,
+  serverWindow("ChronicCare AI - Frontend", frontend, ` -- --host localhost --port ${webPort} --strictPort`,
     { ...process.env, VITE_API_URL: `${apiOrigin}/api` });
   await waitFor(`${apiOrigin}/api/health`, async r => r.status === 200 && (await r.json()).service === "chroniccare-api");
   await waitFor(`${apiOrigin}/api/health/ready`, async r => r.status === 200 && (await r.json()).database === "up");
   await waitFor(webOrigin, async r => r.status === 200 && (await r.text()).includes("/@vite/client"));
   const preflight = await fetch(`${apiOrigin}/api/auth/login`, { method: "OPTIONS", headers: {
-    Origin: webOrigin, "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type,authorization",
+    Origin: webOrigin, "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type,x-csrf-token",
   }, signal: AbortSignal.timeout(5000) });
   const me = await fetch(`${apiOrigin}/api/auth/me`, { headers: { Origin: webOrigin }, signal: AbortSignal.timeout(5000) });
   if (preflight.status !== 204 || preflight.headers.get("access-control-allow-origin") !== webOrigin ||
       me.status !== 401 || (await me.json()).error?.code !== "UNAUTHENTICATED") throw new StartupError("Authentication/CORS checks failed. Check the Backend window and local origin configuration.");
+  const csrf = await fetch(apiOrigin + "/api/auth/csrf", { headers: { Origin: webOrigin } });
+  const csrfBody = await csrf.json();
+  if (csrf.status !== 200 || !/^[a-f0-9]{64}$/.test(csrfBody.csrfToken || "") ||
+      !csrf.headers.getSetCookie().some(value => value.startsWith("cc_csrf=") && value.includes("SameSite=Lax"))) {
+    throw new StartupError("CSRF initialization failed. Use only http://localhost:5173 and check the Backend window.");
+  }
   console.log("PASS: frontend, health (200), PostgreSQL readiness (200), auth protection (401), and CORS preflight (204).");
   console.log(`Opening ${webOrigin}. Stop BOTH titled server windows with Ctrl+C (confirm Y if asked), then close them.`);
   await command(`start "" "${webOrigin}"`);
