@@ -5,33 +5,38 @@ import { postgresAuthStore } from "./store.js";
 import type { EmailDelivery } from "./email.js";
 
 export interface AccountConfig { publicOrigin: string; firstAdminEmail?: string; email?: EmailDelivery; reportDeliveryFailure?: () => void }
-type Purpose = "admin_activation" | "password_reset";
+type Purpose = "admin_activation" | "doctor_activation" | "password_reset";
 const invalid = () => new HttpError(400, "INVALID_ACCOUNT_LINK", "This link is invalid, expired, or already used.");
 export function accountService(pool: pg.Pool, config: AccountConfig) {
   const origin = new URL(config.publicOrigin);
   if (origin.origin !== config.publicOrigin || !["http:", "https:"].includes(origin.protocol)) throw new Error("Invalid public application origin.");
   const adminEmail = config.firstAdminEmail?.trim().toLowerCase();
   if (adminEmail) credentials({ name: "Admin", email: adminEmail, password: "Validation-only-credential!" }, true);
-  async function issue(purpose: Purpose, email: string, userId?: string) {
+  async function issue(purpose: Purpose, email: string, userId?: string, invitedName?: string) {
     if (!config.email) throw new HttpError(503, "EMAIL_UNAVAILABLE", "Email delivery is not configured.");
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
       await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [purpose + ":" + email]);
+      if (purpose === "doctor_activation" && (await client.query("SELECT 1 FROM chroniccare.users WHERE email=$1", [email])).rowCount) {
+        throw new HttpError(409, "ACCOUNT_EXISTS", "An account with this email already exists.");
+      }
       if (purpose === "admin_activation") {
         await client.query("SELECT pg_advisory_xact_lock(20261015, 2)");
         if ((await client.query("SELECT 1 FROM chroniccare.users WHERE role='admin'")).rowCount) throw new HttpError(409, "SETUP_CLOSED", "An Admin already exists.");
         if ((await client.query("SELECT 1 FROM chroniccare.users WHERE email=$1", [email])).rowCount) throw new Error("Pre-authorized Admin address already belongs to an account.");
       }
       const recent = await client.query(`SELECT 1 FROM chroniccare.account_tokens WHERE purpose=$1 AND email=$2
-        AND delivered AND consumed_at IS NULL AND created_at>now()-interval '2 minutes'`, [purpose, email]);
+        AND delivered AND consumed_at IS NULL AND expires_at>clock_timestamp()
+        AND ($1='doctor_activation' OR created_at>now()-interval '2 minutes')`, [purpose, email]);
+      if (recent.rowCount && purpose === "doctor_activation") throw new HttpError(409, "INVITATION_EXISTS", "An active invitation already exists. Wait for it to expire before sending another.");
       if (recent.rowCount) { await client.query("COMMIT"); return; }
       const token = newToken();
       await client.query(`UPDATE chroniccare.account_tokens SET consumed_at=now() WHERE email=$1 AND purpose=$2 AND consumed_at IS NULL`, [email, purpose]);
-      await client.query(`INSERT INTO chroniccare.account_tokens(token_hash,purpose,email,user_id,expires_at)
-        VALUES($1,$2,$3,$4,now()+interval '20 minutes')`, [tokenHash(token), purpose, email, userId ?? null]);
-      const path = purpose === "admin_activation" ? "/activate-admin" : "/reset-password";
-      await config.email.send({ to: email, subject: purpose === "admin_activation" ? "ChronicCare AI — Activate Admin / تفعيل المدير" : "ChronicCare AI — Reset password / إعادة تعيين كلمة المرور",
+      await client.query(`INSERT INTO chroniccare.account_tokens(token_hash,purpose,email,user_id,expires_at,invited_name)
+        VALUES($1,$2,$3,$4,now()+interval '20 minutes',$5)`, [tokenHash(token), purpose, email, userId ?? null, invitedName ?? null]);
+      const path = purpose === "admin_activation" ? "/activate-admin" : purpose === "doctor_activation" ? "/activate-doctor" : "/reset-password";
+      await config.email.send({ to: email, subject: purpose === "admin_activation" ? "ChronicCare AI — Activate Admin / تفعيل المدير" : purpose === "doctor_activation" ? "ChronicCare AI — Activate Doctor / تفعيل الطبيب" : "ChronicCare AI — Reset password / إعادة تعيين كلمة المرور",
         text: `ChronicCare AI\n${config.publicOrigin}${path}#token=${token}\nExpires in 20 minutes. Single use.\nصالح لعشرين دقيقة ولمرة واحدة. تجاهل الرسالة إذا لم تطلبها.`,
       });
       await client.query("UPDATE chroniccare.account_tokens SET delivered=true WHERE token_hash=$1", [tokenHash(token)]);
@@ -44,6 +49,20 @@ export function accountService(pool: pg.Pool, config: AccountConfig) {
     async inviteAdmin() {
       if (!adminEmail) throw new Error("FIRST_ADMIN_EMAIL must be pre-authorized by the operator.");
       await issue("admin_activation", adminEmail);
+    },
+    async inviteDoctor(body: unknown) {
+      if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).some(key => !["name", "email"].includes(key))) {
+        throw new HttpError(400, "INVALID_INPUT", "Provide only the Doctor name and email.");
+      }
+      const input = credentials({ ...body, password: "Validation-only-credential!" }, true);
+      if (input.email === adminEmail) throw new HttpError(400, "INVALID_INPUT", "This address is reserved for Admin setup.");
+      try { await issue("doctor_activation", input.email, undefined, input.name); }
+      catch (error) {
+        if (error instanceof HttpError) throw error;
+        config.reportDeliveryFailure?.();
+        throw new HttpError(503, "EMAIL_DELIVERY_FAILED", "The invitation could not be delivered. Try again.");
+      }
+      return { name: input.name, email: input.email };
     },
     async forgot(body: unknown) {
       if (!config.email) throw new HttpError(503, "EMAIL_UNAVAILABLE", "Email delivery is not configured.");
@@ -60,7 +79,7 @@ export function accountService(pool: pg.Pool, config: AccountConfig) {
       if (!body || typeof body !== "object" || Array.isArray(body)) throw invalid();
       const { token, password, name, ...extra } = body as Record<string, unknown>;
       if (Object.keys(extra).length || typeof token !== "string" || !/^[a-f0-9]{64}$/.test(token) ||
-          (purpose === "password_reset" && name !== undefined)) throw invalid();
+          (purpose !== "admin_activation" && name !== undefined)) throw invalid();
       const input = credentials({ email: "validation@example.test", password, ...(purpose === "admin_activation" ? { name } : {}) }, purpose === "admin_activation");
       const hash = await hashPassword(input.password);
       const client = await pool.connect();
@@ -74,15 +93,15 @@ export function accountService(pool: pg.Pool, config: AccountConfig) {
           if (!candidate.rows[0]) throw invalid();
           await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [purpose + ":" + candidate.rows[0].email]);
         }
-        const result = await client.query<{ email: string; user_id: string | null }>(`SELECT email,user_id FROM chroniccare.account_tokens
+        const result = await client.query<{ email: string; user_id: string | null; invited_name: string | null }>(`SELECT email,user_id,invited_name FROM chroniccare.account_tokens
           WHERE token_hash=$1 AND purpose=$2 AND delivered AND consumed_at IS NULL AND expires_at>clock_timestamp() FOR UPDATE`, [tokenHash(token), purpose]);
         const record = result.rows[0]; if (!record) throw invalid();
         const consumed = await client.query(`UPDATE chroniccare.account_tokens SET consumed_at=clock_timestamp()
           WHERE token_hash=$1 AND consumed_at IS NULL AND expires_at>clock_timestamp()`, [tokenHash(token)]);
         if (!consumed.rowCount) throw invalid();
-        if (purpose === "admin_activation") {
-          if (record.email !== adminEmail) throw invalid();
-          try { await postgresAuthStore(client).createUser(input.name, record.email, hash, "admin"); }
+        if (purpose === "admin_activation" || purpose === "doctor_activation") {
+          if (purpose === "admin_activation" ? record.email !== adminEmail : !record.invited_name || record.user_id !== null) throw invalid();
+          try { await postgresAuthStore(client).createUser(purpose === "admin_activation" ? input.name : record.invited_name!, record.email, hash, purpose === "admin_activation" ? "admin" : "doctor"); }
           catch (error) {
             if (error && typeof error === "object" && "code" in error && error.code === "23505") throw invalid();
             throw error;

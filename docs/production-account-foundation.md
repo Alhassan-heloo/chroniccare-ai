@@ -63,7 +63,11 @@ tracking/URL rewriting on security emails where possible.
 ## Clinic daily browser use
 
 All roles use `/login`. Patients register themselves at `/register`. Admin
-creates Doctors from the Admin dashboard. Doctors and Patients connect through
+invites Doctors from the Admin dashboard; Doctors activate through emailed links
+and choose their own passwords. See [Doctor invitations](doctor-invitations.md)
+for migration 014, delivery requirements and the changed creation API. The original
+account-foundation implementation used initial passwords for Doctors; only Admin
+activation was email-based at that time. Doctors and Patients connect through
 the existing code/review/approval flow; revocation blocks subsequent server reads.
 Admin receives no access to patient clinical records.
 

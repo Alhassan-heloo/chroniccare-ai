@@ -107,7 +107,7 @@ export function createApp(options: AppOptions) {
   }
   if (options.adminStore) {
     if (!options.authStore) throw new Error("Admin routes require authentication.");
-    app.use("/api/admin", adminRoutes(options.authStore, options.adminStore));
+    app.use("/api/admin", adminRoutes(options.authStore, options.adminStore, options.accountService));
   }
   app.use("/api", apiRoutes(options.checkDatabase));
   app.use(notFound);

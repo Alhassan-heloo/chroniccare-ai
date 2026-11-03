@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from "react";
-import { Eye, EyeOff, RefreshCw, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { RefreshCw, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { AuthError } from "@/auth/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -9,12 +9,13 @@ import { Modal } from "@/components/ui/Modal";
 import { useAdminDoctors, useCreateDoctor } from "@/hooks/queries/useAdminDoctors";
 import { useI18n } from "@/i18n/context";
 import type { TranslationKey } from "@/i18n/catalog";
-import type { AdminDoctor } from "@/lib/types/admin";
+import type { DoctorInvitation } from "@/lib/types/admin";
 import "@/styles/evolution/clinical.css";
 
-type Field = "name" | "email" | "password" | "confirmation";
+type Field = "name" | "email";
 const errorKeys: Record<string, TranslationKey> = {
   ACCOUNT_EXISTS: "admin.duplicate", INVALID_INPUT: "admin.invalid", NETWORK: "admin.network",
+  INVITATION_EXISTS: "admin.invitationExists", EMAIL_UNAVAILABLE: "accountEmail.unavailable", EMAIL_DELIVERY_FAILED: "admin.deliveryFailed",
 };
 
 export default function AdminDashboard() {
@@ -23,8 +24,7 @@ export default function AdminDashboard() {
   const create = useCreateDoctor();
   const submitting = useRef(false);
   const [name, setName] = useState(""), [email, setEmail] = useState("");
-  const [password, setPassword] = useState(""), [confirmation, setConfirmation] = useState("");
-  const [show, setShow] = useState(false), [created, setCreated] = useState<AdminDoctor | null>(null);
+  const [created, setCreated] = useState<DoctorInvitation | null>(null);
   const [creationOpen, setCreationOpen] = useState(false);
   const [fields, setFields] = useState<Partial<Record<Field, TranslationKey>>>({});
   const [error, setError] = useState<TranslationKey | null>(null);
@@ -44,8 +44,6 @@ export default function AdminDashboard() {
     const invalid: typeof fields = {};
     if (!name.trim() || name.trim().length > 100) invalid.name = "admin.nameInvalid";
     if (email.trim().length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) invalid.email = "admin.emailInvalid";
-    if (password.length < 12 || password.length > 128) invalid.password = "admin.passwordInvalid";
-    if (confirmation !== password) invalid.confirmation = "admin.passwordMismatch";
     setFields(invalid); setError(null); setCreated(null);
     if (Object.keys(invalid).length) {
       const form = event.currentTarget;
@@ -54,8 +52,8 @@ export default function AdminDashboard() {
     }
     submitting.current = true;
     try {
-      const doctor = await create.mutateAsync({ name: name.trim(), email: email.trim(), password });
-      setCreated(doctor); setName(""); setEmail(""); setPassword(""); setConfirmation("");
+      const invitation = await create.mutateAsync({ name: name.trim(), email: email.trim() });
+      setCreated(invitation); setName(""); setEmail("");
     } catch (cause) {
       setError(cause instanceof AuthError ? errorKeys[cause.code] ?? "admin.failed" : "admin.failed");
     } finally { submitting.current = false; }
@@ -94,12 +92,6 @@ export default function AdminDashboard() {
             <Input label={t("admin.name")} value={name} onChange={event => { setName(event.target.value); clearField("name"); }} autoComplete="name" maxLength={100} required error={fields.name && t(fields.name)} />
             <Input label={t("admin.email")} type="email" dir="ltr" value={email} onChange={event => { setEmail(event.target.value); clearField("email"); }} autoComplete="username" maxLength={254} required error={fields.email && t(fields.email)} />
             </div>
-            <div className="password-field">
-              <Input id="admin-doctor-password" label={t("admin.initialPassword")} aria-describedby="admin-doctor-password-hint" type={show ? "text" : "password"} dir="ltr" value={password} onChange={event => { setPassword(event.target.value); clearField("password"); }} autoComplete="new-password" minLength={12} maxLength={128} required error={fields.password && t(fields.password)} />
-              <button className="password-toggle" type="button" aria-controls="admin-doctor-password" aria-label={t(show ? "auth.hidePassword" : "auth.showPassword")} aria-pressed={show} onClick={() => setShow(!show)}>{show ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}</button>
-            </div>
-            <Input label={t("admin.confirmPassword")} type={show ? "text" : "password"} dir="ltr" value={confirmation} onChange={event => { setConfirmation(event.target.value); clearField("confirmation"); }} autoComplete="new-password" maxLength={128} required error={fields.confirmation && t(fields.confirmation)} />
-            <small id="admin-doctor-password-hint" className="muted">{t("admin.passwordHint")}</small>
             <Button type="submit" loading={create.isPending}><UserPlus size={18} aria-hidden="true" />{t(create.isPending ? "admin.creating" : "admin.create")}</Button>
           </fieldset>
         </form>

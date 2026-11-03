@@ -8,5 +8,6 @@ export interface AdminDoctor {
 export interface CreateDoctorInput {
   name: string;
   email: string;
-  password: string;
 }
+
+export type DoctorInvitation = CreateDoctorInput;

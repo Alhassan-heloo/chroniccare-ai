@@ -77,11 +77,22 @@ try {
   const cookies = await admin.context().cookies(api); const sessionCookie = cookies.find(cookie => cookie.name === "cc_session");
   assert(sessionCookie?.httpOnly && sessionCookie.sameSite === "Lax"); assert(!(await admin.evaluate(() => document.cookie)).includes("cc_session"));
   await admin.reload(); await admin.locator(".admin-page").waitFor(); assert(new URL(admin.url()).pathname.startsWith("/admin/"));
+  await admin.locator(".admin-open-create").click();
   await admin.locator('.admin-create-card input[autocomplete="name"]').fill("Invited Doctor");
   await admin.locator('.admin-create-card input[type="email"]').fill(emails[1]);
-  await admin.locator("#admin-doctor-password").fill(password); await admin.locator('.admin-create-card input[autocomplete="new-password"]').last().fill(password);
-  await admin.locator('.admin-create-card button[type="submit"]').click(); await admin.getByText("Invited Doctor", { exact: true }).waitFor();
-  const doctor = await newPage(); await doctor.goto(base + "/login"); await login(doctor, emails[1], "doctor");
+  assert.equal(await admin.locator('.admin-create-card input[type="password"]').count(), 0);
+  await admin.locator('.admin-create-card button[type="submit"]').click(); await admin.locator('.admin-create-card .ui-feedback-success').waitFor();
+  const doctorMail = messages.find(message => message.to === emails[1]); assert(doctorMail);
+  const doctorLink = link(doctorMail), doctor = await newPage();
+  await doctor.goto(doctorLink); await doctor.locator('#recovery-password').waitFor();
+  assert.equal(new URL(doctor.url()).hash, "");
+  await doctor.locator('input[autocomplete="new-password"]').first().fill(password); await doctor.locator('input[autocomplete="new-password"]').last().fill(password);
+  await doctor.locator('button[type="submit"]').click(); await doctor.locator('.ui-feedback-success').waitFor();
+  // A same-tab fragment navigation must reset the previous success state.
+  await doctor.goto(doctorLink); await doctor.locator('#recovery-password').waitFor();
+  await doctor.locator('input[autocomplete="new-password"]').first().fill(password); await doctor.locator('input[autocomplete="new-password"]').last().fill(password);
+  await doctor.locator('button[type="submit"]').click(); await doctor.locator('.ui-feedback-error').waitFor();
+  await doctor.goto(base + "/login"); await login(doctor, emails[1], "doctor");
   assert.deepEqual(await apiOn(doctor, "/doctor/patients"), { patients: [] });
   stage = "patient-registration-refresh-and-health";
   const patient = await newPage(); await patient.goto(base + "/register");

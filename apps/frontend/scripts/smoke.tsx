@@ -85,10 +85,11 @@ const adminDoctor = { id: "doctor-fixture", name: "Doctor Fixture", email: "doct
 const adminCalls: { path: string; method?: string; body?: unknown }[] = [];
 const adminRequest = (async (path: string, options?: { method?: string; body?: unknown }) => {
   adminCalls.push({ path, method: options?.method, body: options?.body });
-  return options?.method === "POST" ? { doctor: adminDoctor } : { doctors: [adminDoctor] };
+  return options?.method === "POST" ? { invitation: { name: adminDoctor.name, email: adminDoctor.email } } : { doctors: [adminDoctor] };
 }) as AuthValue["request"];
 assert.deepEqual(await getAdminDoctors(adminRequest), [adminDoctor]);
-assert.deepEqual(await createAdminDoctor(adminRequest, { name: adminDoctor.name, email: adminDoctor.email, password: "not-returned-password" }), adminDoctor);
+assert.deepEqual(await createAdminDoctor(adminRequest, { name: adminDoctor.name, email: adminDoctor.email }), { name: adminDoctor.name, email: adminDoctor.email });
+assert.deepEqual(adminCalls[1]?.body, { name: adminDoctor.name, email: adminDoctor.email });
 assert.deepEqual(adminCalls.map(call => [call.path, call.method]), [["/admin/doctors", undefined], ["/admin/doctors", "POST"]]);
 await assert.rejects(() => getAdminDoctors((async () => ({ doctors: [{ ...adminDoctor, password_hash: "forbidden" }] })) as AuthValue["request"]));
 // Protected-page SSR fixtures are authenticated; production patient routes do not allow guest access.

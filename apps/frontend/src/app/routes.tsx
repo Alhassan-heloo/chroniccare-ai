@@ -27,6 +27,7 @@ export const routes: RouteObject[] = [
       { path: "/register", element: <AuthPage key="register" mode="register" /> },
       { path: "/setup", element: <AuthPage key="setup" mode="setup" /> },
       { path: "/activate-admin", element: <AccountEmailPage key="activate" mode="activate-admin" /> },
+      { path: "/activate-doctor", element: <AccountEmailPage key="activate-doctor" mode="activate-doctor" /> },
       { path: "/forgot-password", element: <AccountEmailPage key="forgot" mode="forgot-password" /> },
       { path: "/reset-password", element: <AccountEmailPage key="reset" mode="reset-password" /> },
       {

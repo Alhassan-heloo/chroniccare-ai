@@ -112,7 +112,8 @@ test("PostgreSQL account foundation: trusted invitations, cookies, CSRF, expiry,
     assert(login.headers.getSetCookie().some(value => /cc_session=.*HttpOnly/i.test(value) && /SameSite=Lax/i.test(value)));
     assert.equal((await browserRequest("/auth/me")).status, 200);
     const oldCookie = cookieHeader;
-    const doctorResponse = await browserRequest("/admin/doctors", { name: "Doctor", email: emails[1], password }); assert.equal(doctorResponse.status, 201);
+    const doctorResponse = await browserRequest("/admin/doctors", { name: "Doctor", email: emails[1] }); assert.equal(doctorResponse.status, 201);
+    assert.equal((await browserRequest("/accounts/activate-doctor", { token: tokenFrom(messages[1]!), password })).status, 204);
     assert.equal((await browserRequest("/admin/doctors", { name: "Injected", email: emails[2], password }, "POST", { Origin: "https://evil.example" })).status, 403);
     assert.equal((await browserRequest("/admin/doctors", { name: "Injected", email: emails[2], password }, "POST", { "X-CSRF-Token": "wrong" })).status, 403);
     assert.equal((await browserRequest("/admin/doctors", { name: "Injected", email: emails[2], password }, "POST", { "X-CSRF-Token": "é".repeat(64) })).status, 403);
@@ -141,11 +142,11 @@ test("PostgreSQL account foundation: trusted invitations, cookies, CSRF, expiry,
     const unknown = await browserRequest("/accounts/forgot-password", { email: emails[3] });
     const known = await browserRequest("/accounts/forgot-password", { email: emails[2] });
     assert.equal(unknown.status, 202); assert.equal(known.status, 202); assert.deepEqual(await unknown.json(), await known.json());
-    assert.equal(messages.length, 2); const resetToken = tokenFrom(messages[1]!);
+    assert.equal(messages.length, 3); const resetToken = tokenFrom(messages[2]!);
     await pool.query("UPDATE chroniccare.account_tokens SET expires_at=now()-interval '1 second' WHERE token_hash=$1", [tokenHash(resetToken)]);
     assert.equal((await browserRequest("/accounts/reset-password", { token: resetToken, password: newPassword })).status, 400);
     await pool.query("UPDATE chroniccare.account_tokens SET created_at=now()-interval '3 minutes' WHERE token_hash=$1", [tokenHash(resetToken)]);
-    await service.forgot({ email: emails[2] }); const usableReset = tokenFrom(messages[2]!);
+    await service.forgot({ email: emails[2] }); const usableReset = tokenFrom(messages[3]!);
     await service.redeem("password_reset", { token: usableReset, password: newPassword });
     await assert.rejects(service.redeem("password_reset", { token: usableReset, password: password }));
     assert.equal((await fetch(base + "/auth/me", { headers: { Origin: origin, Cookie: existingCookie } })).status, 401);

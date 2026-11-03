@@ -1,5 +1,5 @@
 import { AuthError, type AuthorizedRequest } from "@/auth/api";
-import type { AdminDoctor, CreateDoctorInput } from "@/lib/types/admin";
+import type { AdminDoctor, CreateDoctorInput, DoctorInvitation } from "@/lib/types/admin";
 
 function doctor(value: unknown): AdminDoctor {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new AuthError("INVALID_RESPONSE");
@@ -18,8 +18,10 @@ export async function getAdminDoctors(request: AuthorizedRequest, signal?: Abort
   return response.doctors.map(doctor);
 }
 
-export async function createAdminDoctor(request: AuthorizedRequest, input: CreateDoctorInput): Promise<AdminDoctor> {
+export async function createAdminDoctor(request: AuthorizedRequest, input: CreateDoctorInput): Promise<DoctorInvitation> {
   const response = await request<unknown>("/admin/doctors", { method: "POST", body: input });
-  if (!response || typeof response !== "object" || !("doctor" in response)) throw new AuthError("INVALID_RESPONSE");
-  return doctor(response.doctor);
+  if (!response || typeof response !== "object" || !("invitation" in response)) throw new AuthError("INVALID_RESPONSE");
+  const invitation = response.invitation as Partial<DoctorInvitation> | null;
+  if (!invitation || Object.keys(invitation).some(key => !["name", "email"].includes(key)) || typeof invitation.name !== "string" || !invitation.name.trim() || typeof invitation.email !== "string") throw new AuthError("INVALID_RESPONSE");
+  return { name: invitation.name, email: invitation.email };
 }
