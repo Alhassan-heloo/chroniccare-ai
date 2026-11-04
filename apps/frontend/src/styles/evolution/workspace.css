@@ -185,3 +185,44 @@
     .living-assistant:has(.evolution-assistant[data-keyboard=open]) .workspace main { padding-bottom: var(--space-3); }
   }
 }
+
+/* Conversation occupies the available application viewport; only messages scroll. */
+@layer components {
+  .living-assistant .clinical-app-body { height: 100dvh; min-height: 0; }
+  .living-assistant .app-stage { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  .living-assistant .app-header { flex: none; }
+  .living-assistant :is(.dashboard-shell,.workspace) { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  .living-assistant .workspace main { flex: 1; min-height: 0; padding-block: 12px; display: flex; }
+  .living-assistant .page-footer { display: none; }
+  .living-assistant .evolution-assistant { width: 100%; height: 100%; min-height: 0; gap: 8px; }
+  .assistant-heading h1 { font-size: clamp(1.25rem,1.8vw,1.625rem); margin: 0; line-height: 1.5; }
+  .assistant-heading :is(p,.assistant-identity) { display: none; }
+  .assistant-safety summary { font-size: var(--text-xs); padding-block: 4px; }
+  .assistant-workspace { border: 0; border-radius: 0; background: transparent; }
+  .assistant-workspace > .living-pulse, .assistant-conversation-heading { display: none; }
+  .assistant-log { padding: 24px clamp(8px,3vw,48px); gap: 28px; }
+  .assistant-turn { max-width: 800px; gap: 24px; }
+  .assistant-message { max-width: 92%; padding: 16px 20px; }
+  .model-message { padding-inline-start: 0; }
+  .assistant-message p { font-size: 17px; line-height: 1.95; max-width: 70ch; }
+  .assistant-message h2 { font-size: 14px; font-weight: 700; }
+  .assistant-message .assistant-disclaimer { font-size: 14px; line-height: 1.8; }
+  .assistant-composer { width: 100%; max-width: 840px; margin: 0 auto; padding: 12px 16px; gap: 4px; background: var(--surface); border-color: var(--border); box-shadow: var(--shadow-card); }
+  .assistant-composer textarea { min-height: 58px; max-height: 110px; font-size: 16px; line-height: 1.7; background: transparent; border: 0; padding: 6px 0; resize: none; }
+  .assistant-composer-footer .btn { min-height: 44px; }
+  .assistant-memory { display: none; }
+  .assistant-empty { max-width: 800px; }
+  @media(max-width:47.99rem) {
+    .living-assistant .dashboard-shell { padding-bottom: calc(var(--layout-mobile-nav) + env(safe-area-inset-bottom)); }
+    .living-assistant .workspace main { padding: 8px 12px; }
+    .living-assistant .evolution-assistant { height: calc(var(--assistant-viewport-height,100dvh) - var(--layout-mobile-header) - var(--layout-mobile-nav) - 16px - env(safe-area-inset-bottom)); min-height: 0; }
+    .assistant-heading { min-height: 44px; }
+    .assistant-heading h1 { font-size: 19px; }
+    .assistant-log { padding: 16px 4px; }
+    .assistant-message { max-width: 100%; padding: 12px; }
+    .model-message { padding-inline-start: 0; }
+    .assistant-message p { font-size: 16px; line-height: 1.9; }
+    .assistant-composer { padding: 8px 12px; }
+    .assistant-composer label { font-size: 13px; }
+  }
+}
