@@ -26,21 +26,25 @@ function bounded(value: string | undefined, fallback: number, min: number, max: 
 function object(value: unknown): value is Record<string, unknown> { return !!value && typeof value === "object" && !Array.isArray(value); }
 
 export function configuredAssistant(env: NodeJS.ProcessEnv = process.env, transport: Transport = fetch): AssistantProvider | undefined {
-  const key = env.OPENAI_API_KEY?.trim(), model = env.OPENAI_MODEL?.trim();
+  const provider = env.AI_PROVIDER?.trim() || "openai";
+  if (provider !== "openai" && provider !== "groq") throw new Error("Invalid assistant provider configuration.");
+  const groq = provider === "groq";
+  const key = (groq ? env.GROQ_API_KEY : env.OPENAI_API_KEY)?.trim();
+  const model = groq ? env.GROQ_MODEL?.trim() || "openai/gpt-oss-120b" : env.OPENAI_MODEL?.trim();
   if (!key || !model) return undefined;
-  if (!/^[a-zA-Z0-9._-]{1,100}$/.test(model)) throw new Error("Invalid assistant model configuration.");
-  const timeout = bounded(env.OPENAI_TIMEOUT_MS, 10000, 1000, 12000);
-  const maxTokens = bounded(env.OPENAI_MAX_OUTPUT_TOKENS, 600, 128, 1000);
+  if (!(groq ? /^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/ : /^[a-zA-Z0-9._-]{1,100}$/).test(model) || model.length > 100) throw new Error("Invalid assistant model configuration.");
+  const timeout = bounded(groq ? env.GROQ_TIMEOUT_MS : env.OPENAI_TIMEOUT_MS, 10000, 1000, 12000);
+  const maxTokens = bounded(groq ? env.GROQ_MAX_OUTPUT_TOKENS : env.OPENAI_MAX_OUTPUT_TOKENS, 600, 128, 1000);
   return {
     async reply(input, clientSignal) {
       const deadline = AbortSignal.timeout(timeout);
       const signal = AbortSignal.any([clientSignal, deadline]);
       try {
-        const response = await transport("https://api.openai.com/v1/responses", {
+        const response = await transport(groq ? "https://api.groq.com/openai/v1/responses" : "https://api.openai.com/v1/responses", {
           method: "POST", redirect: "error", signal,
           headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model, store: false, max_output_tokens: maxTokens,
+            model, ...(!groq ? { store: false } : {}), max_output_tokens: maxTokens,
             instructions: instructions + (input.language === "ar" ? "\nLanguage: Arabic." : "\nLanguage: English."),
             input: [{ role: "user", content: input.message }],
             text: { format: { type: "json_schema", name: "health_education", strict: true,

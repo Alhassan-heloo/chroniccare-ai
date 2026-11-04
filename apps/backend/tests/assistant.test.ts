@@ -19,6 +19,49 @@ const auth: AuthStore = { createUser: unused, createSession: unused, findAccount
 const result = (answer = "General educational information.") => ({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ answer }) }] }] });
 const config = { OPENAI_API_KEY: "unit-test-not-a-real-key", OPENAI_MODEL: "unit-test-model" };
 
+test("Groq Responses: configuration, stateless structured output, RBAC and safe failures", async t => {
+  const groq = { AI_PROVIDER: "groq", GROQ_API_KEY: "test-only-groq-key", GROQ_MODEL: "openai/gpt-oss-120b" };
+  assert.equal(configuredAssistant({ AI_PROVIDER: "groq", ...config }), undefined, "No silent fallback to OpenAI credentials");
+  assert.throws(() => configuredAssistant({ AI_PROVIDER: "unknown", ...config }));
+  for (const settings of [{ GROQ_TIMEOUT_MS: "999999" }, { GROQ_MAX_OUTPUT_TOKENS: "10000" }, { GROQ_MODEL: "https://untrusted.example" }]) {
+    assert.throws(() => configuredAssistant({ ...groq, ...settings }));
+  }
+  let variant = "success", calls = 0;
+  const request = await serve(t, configuredAssistant(groq, async (url, options) => {
+    calls++;
+    assert.equal(url, "https://api.groq.com/openai/v1/responses");
+    assert.equal(new Headers(options.headers).get("Authorization"), "Bearer " + groq.GROQ_API_KEY);
+    assert.equal(options.redirect, "error");
+    const body = JSON.parse(String(options.body));
+    assert.deepEqual(Object.keys(body).sort(), ["input", "instructions", "max_output_tokens", "model", "text"]);
+    assert.equal(body.model, groq.GROQ_MODEL); assert.equal(body.max_output_tokens, 600);
+    assert.deepEqual(body.input, [{ role: "user", content: "سؤال عام" }]);
+    assert.match(body.instructions, /Never diagnose/); assert.match(body.instructions, /Language: Arabic/);
+    assert.equal(body.text.format.type, "json_schema"); assert.equal(body.text.format.strict, true);
+    if (variant === "network") throw new Error(groq.GROQ_API_KEY + " sensitive message");
+    if (variant === "429" || variant === "500") return new Response(groq.GROQ_API_KEY, { status: Number(variant) });
+    if (variant === "invalid") return Response.json({ status: "completed", output: [] });
+    return Response.json({ ...result("معلومات تعليمية عامة."), output: [{ type: "reasoning", content: [{ type: "reasoning_text", text: "not exposed" }] }, ...result("معلومات تعليمية عامة.").output] });
+  }));
+  const body = { message: "سؤال عام", language: "ar" };
+  assert.equal((await request(body, null)).status, 401);
+  for (const role of [doctor, admin]) assert.equal((await request(body, role)).status, 403);
+  assert.equal((await request(body, patient, { "X-CSRF-Token": "invalid" })).status, 403);
+  assert.equal(calls, 0);
+  const response = await request(body); assert.equal(response.status, 200);
+  const json = await response.json() as {data: {reply:string; language:string}};
+  assert.equal(json.data.reply, "معلومات تعليمية عامة."); assert.equal(json.data.language, "ar");
+  for (variant of ["429", "500", "invalid", "network"]) {
+    const failed = await request(body); assert.equal(failed.status, 502);
+    const text = await failed.text(); assert(!text.includes(groq.GROQ_API_KEY)); assert(!text.includes("sensitive"));
+  }
+  assert.equal(calls, 5, "No automatic provider retries");
+  const timeoutRequest = await serve(t, configuredAssistant({ ...groq, GROQ_TIMEOUT_MS: "1000" }, async (_url, options) => new Promise<Response>((_resolve, reject) => {
+    options.signal!.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
+  })));
+  assert.equal((await timeoutRequest(body)).status, 504);
+});
+
 async function serve(t: TestContext, provider?: AssistantProvider) {
   const server = createApp({ corsOrigins: [origin], authStore: auth, assistantProvider: provider, checkDatabase: unused,
     reportError: () => { throw new Error("Unexpected unhandled error."); },
