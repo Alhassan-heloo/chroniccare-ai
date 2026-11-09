@@ -77,11 +77,12 @@ export function createApp(options: AppOptions) {
   }
   if (options.authStore) app.use("/api/auth", authRoutes(options.authStore, options.accountService?.reservedAdminEmail));
   if (options.authStore) app.use("/api/assistant", assistantRoutes(options.authStore, options.assistantProvider));
+  // Receipts authenticate with a read-only query before the general router can refresh session activity.
+  if (options.pushPool) app.use("/api/notifications/push-receipt",pushReceiptRoutes(options.pushPool));
   if (options.notificationStore) {
     if (!options.authStore) throw new Error("Notifications require authentication.");
     app.use("/api/notifications", notificationRoutes(options.authStore, options.notificationStore));
   }
-  if (options.pushPool) app.use("/api/notifications/push-receipt",pushReceiptRoutes(options.pushPool));
   if (options.registrationStore) {
     if (!options.authStore) throw new Error("Browser registrations require authentication.");
     app.use("/api/notifications/browser-registration", registrationRoutes(options.authStore, options.registrationStore));

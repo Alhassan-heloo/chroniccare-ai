@@ -12,6 +12,7 @@ import { applyMigrations } from "../src/db/migrations.js";
 import { postgresAuthStore } from "../src/auth/store.js";
 import { newToken,tokenHash } from "../src/auth/security.js";
 import { postgresRegistrationStore } from "../src/notifications/registrations.js";
+import { postgresNotificationStore } from "../src/notifications/store.js";
 import { configurePush,dispatchOne,type PushProvider } from "../src/notifications/push.js";
 import { configuredPush } from "../src/notifications/firebase.js";
 
@@ -61,22 +62,46 @@ test("PostgreSQL push: commit, no backfill, leases, retries, eligibility, receip
     let sent=0; const success:PushProvider={send:async(f,id)=>{assert.equal(f,fid);assert.match(id,/^[a-f0-9-]{36}$/);sent++;return "sent";}};
     const first=await event(); await Promise.all([dispatchOne(pool,success),dispatchOne(pool,success)]);
     assert.equal(sent,1); assert.equal((await job(first)).state,"sent"); await dispatchOne(pool,success); assert.equal(sent,1);
-    server=createApp({corsOrigins:["http://localhost:5173"],checkDatabase:async()=>{},pushPool:pool}).listen(0,"127.0.0.1");
+    server=createApp({
+      corsOrigins:["http://localhost:5173"], checkDatabase:async()=>{},
+      authStore:auth, notificationStore:postgresNotificationStore(pool), pushPool:pool,
+    }).listen(0,"127.0.0.1");
     await once(server,"listening"); const address=server.address(); assert(address&&typeof address!=="string");
     const receipt=async(id:string,t:string)=>fetch(`http://127.0.0.1:${address.port}/api/notifications/push-receipt/${id}`,{headers:{Cookie:`cc_session=${t}`}});
     const firstId=(await job(first)).id;
-    assert.equal((await receipt(firstId,"")).status,401); assert.equal((await receipt(firstId,otherToken)).status,404); assert.equal((await receipt(firstId,token)).status,200);
+    const lastSeen = async (sessionToken: string) => (await pool.query<{ last_seen_at: string }>(
+      "SELECT last_seen_at::text FROM chroniccare.sessions WHERE token_hash=$1", [tokenHash(sessionToken)],
+    )).rows[0]!.last_seen_at;
+    assert.equal((await receipt(firstId,"")).status,401);
+    const otherLastSeen = await lastSeen(otherToken);
+    assert.equal((await receipt(firstId,otherToken)).status,404);
+    assert.equal(await lastSeen(otherToken), otherLastSeen, "Rejected receipts must not refresh another session.");
+    const before = await lastSeen(token);
+    const accepted = await receipt(firstId,token);
+    assert.equal(accepted.status,200);
+    assert.deepEqual(await accepted.json(), { eligible: true });
+    assert.equal(await lastSeen(token), before, "Accepted receipts must not refresh a session.");
     assert.equal((await receipt("-".repeat(36),token)).status,404);
-    const before=(await pool.query("SELECT last_seen_at FROM chroniccare.sessions WHERE token_hash=$1",[tokenHash(token)])).rows[0].last_seen_at;
-    await receipt(firstId,token);
-    assert.deepEqual((await pool.query("SELECT last_seen_at FROM chroniccare.sessions WHERE token_hash=$1",[tokenHash(token)])).rows[0].last_seen_at,before,"Push must not keep idle sessions alive.");
+    await pool.query("UPDATE chroniccare.users SET must_change_password=true WHERE id=$1", [user.id]);
+    assert.equal((await receipt(firstId,token)).status,404);
+    assert.equal(await lastSeen(token), before);
+    await pool.query("UPDATE chroniccare.users SET must_change_password=false, disabled=true WHERE id=$1", [user.id]);
+    assert.equal((await receipt(firstId,token)).status,404);
+    assert.equal(await lastSeen(token), before);
+    await pool.query("UPDATE chroniccare.users SET disabled=false WHERE id=$1", [user.id]);
     const failed=await event(); const retry:PushProvider={send:async()=>"retry"};
     for(let i=0;i<4;i++){await pool.query("UPDATE chroniccare.push_jobs SET due_at=now() WHERE notification_id=$1",[failed]);await dispatchOne(pool,retry);}
     assert.equal((await job(failed)).state,"failed"); assert.equal((await job(failed)).attempts,4);
     const revoked=await event(); await regs.remove(user.id,tokenHash(token)); await dispatchOne(pool,success); assert.equal((await job(revoked)).state,"skipped");
     assert.equal((await receipt(firstId,token)).status,404);
     await regs.put(user.id,tokenHash(token),fid);
-    const expired=await event(); await pool.query("UPDATE chroniccare.sessions SET last_seen_at=now()-interval '1 hour' WHERE token_hash=$1",[tokenHash(token)]);
+    const expired=await event();
+    const expiredId=(await job(expired)).id;
+    assert.equal((await receipt(expiredId,token)).status,200);
+    await pool.query("UPDATE chroniccare.sessions SET last_seen_at=now()-interval '1 hour' WHERE token_hash=$1",[tokenHash(token)]);
+    const idleLastSeen = await lastSeen(token);
+    assert.equal((await receipt(expiredId,token)).status,404);
+    assert.equal(await lastSeen(token), idleLastSeen, "Push must not revive an idle session.");
     await dispatchOne(pool,success); assert.equal((await job(expired)).state,"skipped");
     await pool.query("UPDATE chroniccare.sessions SET last_seen_at=now() WHERE token_hash=$1",[tokenHash(token)]);
     const invalid=await event(); await dispatchOne(pool,{send:async()=>"invalid"}); assert.equal(await regs.status(user.id,tokenHash(token)),false); assert.equal((await job(invalid)).state,"failed");

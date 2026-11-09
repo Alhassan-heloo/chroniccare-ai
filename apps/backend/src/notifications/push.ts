@@ -14,7 +14,7 @@ const eligibility = `FROM chroniccare.push_jobs j JOIN chroniccare.notifications
  AND r.session_hash=j.session_hash AND r.created_at=j.registration_created_at
  JOIN chroniccare.sessions s ON s.token_hash=r.session_hash AND s.user_id=r.user_id
  JOIN chroniccare.users u ON u.id=s.user_id JOIN chroniccare.push_control c ON c.enabled
- WHERE j.id=$1 AND j.created_at>=c.enabled_at AND j.created_at>clock_timestamp()-interval '5 minutes'
+ WHERE NOT u.disabled AND j.id=$1 AND j.created_at>=c.enabled_at AND j.created_at>clock_timestamp()-interval '5 minutes'
  AND s.expires_at>clock_timestamp() AND s.last_seen_at>clock_timestamp()-
  CASE WHEN u.role='admin' THEN interval '15 minutes' ELSE interval '30 minutes' END
  AND s.created_at>clock_timestamp()-CASE WHEN u.role='admin' THEN interval '4 hours' ELSE interval '8 hours' END`;
@@ -66,7 +66,8 @@ export function pushReceiptRoutes(pool: pg.Pool) {
     const token=cookie(req,cookieName(res.locals.secureCookies===true));
     if (!token) throw new HttpError(401,"UNAUTHENTICATED","Authentication required.");
     if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(req.params.id as string)) throw new HttpError(404,"NOT_FOUND","Not found.");
-    const row=await pool.query(`SELECT 1 ${eligibility} AND j.session_hash=$2 AND j.state IN ('pending','sent')`,[req.params.id,tokenHash(token)]);
+    const row=await pool.query(`SELECT 1 ${eligibility} AND j.session_hash=$2
+      AND NOT u.must_change_password AND j.state IN ('pending','sent')`,[req.params.id,tokenHash(token)]);
     if (!row.rowCount) throw new HttpError(404,"NOT_FOUND","Not found.");
     res.json({eligible:true});
   }); return router;
