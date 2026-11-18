@@ -11,7 +11,7 @@ import { initializeBootstrap } from "./auth/bootstrap.js";
 import { postgresConnectionStore } from "./connections/store.js";
 import { accountService } from "./auth/accounts.js";
 import { configuredEmail } from "./auth/email.js";
-import { isIP } from "node:net";
+import { readTrustedProxy } from "./config/proxy.js";
 import { configuredAssistant } from "./assistant/provider.js";
 import { postgresNotificationStore } from "./notifications/store.js";
 import { postgresRegistrationStore } from "./notifications/registrations.js";
@@ -22,8 +22,7 @@ async function start() {
   const config = readEnvironment();
   const publicOrigin = process.env.APP_PUBLIC_ORIGIN ?? config.corsOrigins[0]!;
   if (config.nodeEnv === "production" && (!publicOrigin.startsWith("https://") || config.corsOrigins.some(origin => !origin.startsWith("https://")))) throw new Error("Production requires HTTPS application origins.");
-  const trustedProxy = process.env.TRUST_PROXY_IP;
-  if (trustedProxy && !isIP(trustedProxy)) throw new Error("TRUST_PROXY_IP must identify one trusted reverse proxy.");
+  const trustedProxy = readTrustedProxy();
   const email = configuredEmail();
   const assistantProvider = configuredAssistant();
   let pushProvider;

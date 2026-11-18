@@ -3,7 +3,7 @@ import type { Request, RequestHandler, Response } from "express";
 import { HttpError } from "../middleware/errors.js";
 import { newToken } from "./security.js";
 
-export interface CookieSettings { secure: boolean; trustedProxy?: string }
+export interface CookieSettings { secure: boolean; trustedProxy?: string | 1 }
 export const cookieName = (secure: boolean, csrf = false) => `${secure ? "__Host-" : ""}cc_${csrf ? "csrf" : "session"}`;
 export function cookie(request: Request, name: string) {
   const matches = (request.headers.cookie ?? "").split(";").map(part => part.trim()).filter(part => part.startsWith(name + "="));
@@ -25,7 +25,13 @@ export function issueCsrf(request: Request, response: Response, secure: boolean)
 export function browserSecurity(origins: readonly string[], settings: CookieSettings): RequestHandler {
   return (request, response, next) => {
     response.locals.secureCookies = settings.secure;
-    if (settings.secure && !request.secure) throw new HttpError(400, "HTTPS_REQUIRED", "HTTPS is required.");
+    // Render probes this read-only endpoint over internal HTTP. No auth/cookies are issued.
+    const readinessProbe = request.method === "GET" && request.path === "/api/health/ready";
+    // A single trusted ingress must supply one protocol, not append a client-owned list.
+    const ambiguousProtocol = settings.trustedProxy === 1 && request.get("X-Forwarded-Proto")?.includes(",");
+    if (settings.secure && (!request.secure || ambiguousProtocol) && !readinessProbe) {
+      throw new HttpError(400, "HTTPS_REQUIRED", "HTTPS is required.");
+    }
     if (["GET", "HEAD", "OPTIONS"].includes(request.method)) return next();
     const origin = request.get("Origin");
     // Non-browser Bearer clients have no ambient cookies. Browser writes always

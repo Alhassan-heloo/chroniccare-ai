@@ -19,11 +19,15 @@ Configure these **backend-only** deployment values through a secret manager:
 | `EMAIL_FROM` | Sender on a domain authorized by your email provider |
 | `CORS_ORIGINS` | Explicit trusted frontend HTTPS origins |
 | `TRUST_PROXY_IP` | Optional exact IP of the trusted TLS proxy; backend must not be publicly bypassable |
+| `TRUST_RENDER_PROXY` | Optional `true` for Render Web Service's single ingress hop; mutually exclusive with `TRUST_PROXY_IP`. See [trust boundary](render-ingress.md) |
 
 Production continues requiring verified PostgreSQL TLS. HTTP application origins
 and insecure forwarded requests are refused in production. Use a TLS reverse
-proxy, set its exact IP, block direct backend access, and configure CORS to contain
-the public application origin. Frontend `VITE_API_URL` must use the same site
+proxy with its exact IP (or the documented Render opt-in), block untrusted direct
+backend access, and configure CORS to contain
+the public application origin. Render's optional one-hop setting and the exact
+read-only HTTP readiness exception are documented in [Render ingress](render-ingress.md).
+Frontend `VITE_API_URL` must use the same site
 (ideally `https://clinic.example/api`). Do not mix localhost and 127.0.0.1 in local
 frontend/API configuration. SameSite=Lax deliberately does not support unrelated
 cross-site frontend/API installations.

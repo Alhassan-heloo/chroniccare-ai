@@ -99,10 +99,13 @@ stops startup without logging secrets.
 
 ## Endpoints and failure behavior
 
+For the opt-in Render proxy setting and its network trust assumptions, see
+[Render ingress and readiness](../../docs/render-ingress.md).
+
 | Endpoint | Meaning |
 | --- | --- |
 | `GET /api/health` | Liveness: HTTP application is running; returns 200 regardless of DB availability. |
-| `GET /api/health/ready` | Runs a real PostgreSQL `SELECT 1`; 200 when reachable, otherwise 503 with no driver details. |
+| `GET /api/health/ready` | Runs a real PostgreSQL `SELECT 1`; 200 when reachable, otherwise 503 with no driver details. This exact GET also accepts internal HTTP probes in production; application routes still require HTTPS. |
 | `GET /api/measurements` | Lists only the authenticated patient's measurements. |
 | `GET /api/measurements/:id` | Gets one owned measurement; another patient's ID returns 404. |
 | `POST /api/measurements` | Creates an owned blood-pressure or glucose measurement. |
