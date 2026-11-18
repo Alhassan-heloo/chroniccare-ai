@@ -6,17 +6,28 @@ export interface AdminDoctor {
   name: string;
   email: string;
   role: "doctor";
+  disabled?: boolean;
 }
 
 export interface AdminStore {
+  deleteDoctor?(id: string): Promise<string>;
+  disableDoctor?(id: string): Promise<boolean>;
   listDoctors(): Promise<AdminDoctor[]>;
   createDoctor(name: string, email: string, passwordHash: string): Promise<AdminDoctor>;
 }
 
 export function postgresAdminStore(pool: Pick<pg.Pool, "query">): AdminStore {
   return {
+    async deleteDoctor(id) {
+      return (await pool.query<{result:string}>("SELECT chroniccare.delete_unreferenced_doctor($1) AS result",[id])).rows[0]!.result;
+    },
+    async disableDoctor(id) {
+      const result=await pool.query(`WITH changed AS (UPDATE chroniccare.users SET disabled=true WHERE id=$1 AND role='doctor' RETURNING id),
+      revoked AS (DELETE FROM chroniccare.sessions WHERE user_id IN (SELECT id FROM changed)) SELECT id FROM changed`,[id]);
+      return !!result.rowCount;
+    },
     async listDoctors() {
-      return (await pool.query<AdminDoctor>(`SELECT id,name,email,role
+      return (await pool.query<AdminDoctor>(`SELECT id,name,email,role,disabled
         FROM chroniccare.users WHERE role='doctor' ORDER BY lower(name),id`)).rows;
     },
     async createDoctor(name, email, passwordHash) {

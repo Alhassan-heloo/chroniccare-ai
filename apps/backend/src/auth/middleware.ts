@@ -6,7 +6,7 @@ import { cookie, cookieName } from "./cookies.js";
 
 export interface AuthLocals { user: User; sessionHash: string }
 
-export function requireAuth(store: AuthStore): RequestHandler {
+export function requireAuth(store: AuthStore, allowPasswordChange = false): RequestHandler {
   return async (request, response, next) => {
     const sessionCookie = cookie(request, cookieName(response.locals.secureCookies === true));
     const header = request.get("Authorization") ?? "";
@@ -15,6 +15,7 @@ export function requireAuth(store: AuthStore): RequestHandler {
     const hash = tokenHash(token);
     const user = await store.sessionUser(hash);
     if (!user) throw new HttpError(401, "UNAUTHENTICATED", "Authentication is required.");
+    if(user.mustChangePassword && !allowPasswordChange) throw new HttpError(403,"PASSWORD_CHANGE_REQUIRED","Change your temporary password first.");
     response.locals.user = user;
     response.setHeader("X-Account-ID", user.id);
     response.locals.sessionHash = hash;

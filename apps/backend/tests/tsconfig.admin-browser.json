@@ -1,0 +1,5 @@
+{
+  "extends": "../tsconfig.test.json",
+  "compilerOptions": { "noEmit": false },
+  "include": ["support/admin-browser-*.ts", "admin-browser-*.unit.test.ts"]
+}

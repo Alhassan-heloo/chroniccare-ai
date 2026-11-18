@@ -44,14 +44,25 @@ export function authRoutes(store: AuthStore, reservedAdminEmail?: string) {
     if (previous) await store.deleteSession(tokenHash(previous));
     await store.createSession(tokenHash(token), account.id, expiresAt, account.password_hash);
     setSession(response, token, response.locals.secureCookies === true, expiresAt);
-    const user: User = { id: account.id, name: account.name, email: account.email, role: account.role };
+    const user: User = { id: account.id, name: account.name, email: account.email, role: account.role, ...(account.mustChangePassword ? {mustChangePassword:true} : {}) };
     response.json({ user, ...(!request.get("Origin") ? { token } : {}), expiresAt: expiresAt.toISOString() });
   });
-  router.get("/me", requireAuth(store), (_request, response) => { response.json({ user: response.locals.user }); });
-  router.post("/logout", requireAuth(store), async (_request, response) => {
+  router.get("/me", requireAuth(store, true), (_request, response) => { response.json({ user: response.locals.user }); });
+  router.post("/logout", requireAuth(store, true), async (_request, response) => {
     await store.deleteSession(response.locals.sessionHash as string);
     clearSession(response, response.locals.secureCookies === true);
     response.status(204).end();
   });
-  return router;
+  router.post("/change-password", limit, requireAuth(store,true), async(request,response)=>{
+ const user=response.locals.user as User, body=request.body;
+ if(!body || typeof body.currentPassword!=="string" || Object.keys(body).some(k=>!["currentPassword","password"].includes(k))) throw new HttpError(400,"INVALID_INPUT","Invalid input.");
+ const input=credentials({email:user.email,password:body.password});
+ if(input.password===body.currentPassword) throw new HttpError(400,"INVALID_INPUT","Choose a new password.");
+ const account=await store.findAccount(user.email);
+ if(!account || !await verifyPassword(account.password_hash,body.currentPassword)) throw new HttpError(401,"INVALID_CREDENTIALS","Password is incorrect.");
+ if(!store.changePassword) throw new HttpError(503,"UNAVAILABLE","Try again later.");
+ await store.changePassword(user.id,account.password_hash,await hashPassword(input.password));
+ clearSession(response,response.locals.secureCookies===true);response.status(204).end();
+ });
+ return router;
 }

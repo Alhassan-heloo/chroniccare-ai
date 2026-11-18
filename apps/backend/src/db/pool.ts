@@ -22,6 +22,7 @@ export function createDatabasePool(config: Environment): pg.Pool {
   return pool;
 }
 
-export async function checkDatabase(pool: pg.Pool): Promise<void> {
-  await pool.query("SELECT 1");
+export async function checkDatabase(pool: Pick<pg.Pool, "query">): Promise<void> {
+  // Readiness must validate columns used by login/session queries, not only connectivity.
+  await pool.query("SELECT must_change_password,disabled FROM chroniccare.users LIMIT 0");
 }

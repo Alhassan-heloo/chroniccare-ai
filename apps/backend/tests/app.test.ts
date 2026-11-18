@@ -4,6 +4,10 @@ import { once } from "node:events";
 import express from "express";
 import { createApp } from "../src/app.js";
 import { errorHandler } from "../src/middleware/errors.js";
+import { gzipSync } from "node:zlib";
+import type { AuthStore } from "../src/auth/store.js";
+import { tokenHash } from "../src/auth/security.js";
+import { registrationContext } from "../src/notifications/registrations.js";
 
 async function serve(t: TestContext, app: ReturnType<typeof express>) {
   const server = app.listen(0, "127.0.0.1");
@@ -96,4 +100,42 @@ test("central error handler does not expose unexpected exception contents", asyn
   assert.equal(response.status, 500);
   assert.deepEqual(await response.json(), { error: { code: "INTERNAL_ERROR", message: "An unexpected error occurred." } });
   assert.equal(reports, 1);
+});
+
+test("compressed JSON including trailing bytes is rejected without terminating the API", async(t)=>{
+  const url=await serve(t,createApp({corsOrigins:[],checkDatabase:async()=>{}}));
+  const compressed=gzipSync(JSON.stringify({value:"test"}));
+  for(const body of [compressed,Buffer.concat([compressed,Buffer.from("invalid trailing bytes")])]) {
+    const response=await fetch(url+"/api/unused",{method:"POST",headers:{"Content-Type":"application/json","Content-Encoding":"gzip"},body});
+    assert.equal(response.status,415);
+    assert.equal((await response.json() as {error:{code:string}}).error.code,"UNSUPPORTED_ENCODING");
+    assert.equal((await fetch(url+"/api/health")).status,200);
+  }
+});
+
+test("notification and FID HTTP contracts survive parser update (in-memory stores, no account writes)",async(t)=>{
+  const token="a".repeat(64), csrf="b".repeat(64), hash=tokenHash(token);
+  const user={id:"fixture-user",name:"Fixture",email:"fixture@example.test",role:"patient" as const};
+  const unexpected=async()=>{throw new Error("Account writes are forbidden in this test");};
+  const auth:AuthStore={createUser:unexpected,findAccount:unexpected,createSession:unexpected,deleteSession:unexpected,sessionUser:async value=>value===hash?user:undefined};
+  let registered=false,read=false;
+  const notification={id:"01234567-1234-1234-1234-0123456789ab",type:"connection_approved" as const,createdAt:new Date().toISOString(),readAt:null as string|null};
+  const owned=(u:string,s?:string)=>{assert.equal(u,user.id);if(s!==undefined)assert.equal(s,hash);};
+  const url=await serve(t,createApp({corsOrigins:["http://localhost:5173"],checkDatabase:async()=>{},authStore:auth,
+    notificationStore:{list:async u=>{owned(u);return [notification];},unreadCount:async u=>{owned(u);return read?0:1;},read:async(u,id)=>{owned(u);if(id!==notification.id)return undefined;read=true;return {...notification,readAt:new Date().toISOString()};}},
+    registrationStore:{status:async(u,s)=>{owned(u,s);return registered;},put:async(u,s,fid)=>{owned(u,s);assert.equal(fid,"c"+"A".repeat(21));registered=true;},remove:async(u,s)=>{owned(u,s);registered=false;}}}));
+  const call=(path:string,method="GET",body?:unknown,csrfValid=true)=>fetch(url+"/api/notifications"+path,{method,
+    headers:{Origin:"http://localhost:5173",Cookie:`cc_session=${token}; cc_csrf=${csrf}`,"X-CSRF-Token":csrfValid?csrf:"invalid","Content-Type":"application/json"},
+    ...(body===undefined?{}:{body:JSON.stringify(body)})});
+  assert.equal((await fetch(url+"/api/notifications")).status,401);
+  assert.deepEqual(await(await call("/unread-count")).json(),{unreadCount:1});
+  assert.equal((await call(`/${notification.id}/read`,"PUT",{})).status,200);
+  assert.deepEqual(await(await call("/unread-count")).json(),{unreadCount:0});
+  const body={fid:"c"+"A".repeat(21),context:registrationContext(hash)};
+  assert.equal((await call("/browser-registration","PUT",body,false)).status,403);
+  assert.equal((await call("/browser-registration","PUT",{...body,userId:"other"})).status,400);
+  assert.equal((await call("/browser-registration","PUT",body)).status,204);
+  assert.equal((await(await call("/browser-registration")).json() as {registered:boolean}).registered,true);
+  assert.equal((await call("/browser-registration","DELETE",{context:body.context})).status,204);
+  assert.equal(registered,false);
 });

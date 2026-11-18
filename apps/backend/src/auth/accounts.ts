@@ -50,6 +50,14 @@ export function accountService(pool: pg.Pool, config: AccountConfig) {
       if (!adminEmail) throw new Error("FIRST_ADMIN_EMAIL must be pre-authorized by the operator.");
       await issue("admin_activation", adminEmail);
     },
+    async createDoctor(body: unknown) {
+ if(!body || typeof body!=="object" || Array.isArray(body) || Object.keys(body).some(k=>!["name","email"].includes(k))) throw new HttpError(400,"INVALID_INPUT","Provide name and email only.");
+ const input=credentials({...body,password:"Validation-only-credential!"},true);
+ if(input.email===adminEmail) throw new HttpError(400,"INVALID_INPUT","Reserved address.");
+ const temporaryPassword="Cc!"+newToken(), hash=await hashPassword(temporaryPassword);
+ try {const result=await pool.query(`INSERT INTO chroniccare.users(id,name,email,password_hash,role,must_change_password) VALUES(gen_random_uuid(),$1,$2,$3,'doctor',true) RETURNING id,name,email,role`,[input.name,input.email,hash]);return {doctor:result.rows[0],temporaryPassword};}
+ catch(error){if(error && typeof error==="object" && "code" in error && error.code==="23505") throw new HttpError(409,"ACCOUNT_EXISTS","An account with this email already exists.");throw error;}
+ },
     async inviteDoctor(body: unknown) {
       if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).some(key => !["name", "email"].includes(key))) {
         throw new HttpError(400, "INVALID_INPUT", "Provide only the Doctor name and email.");
@@ -109,7 +117,7 @@ export function accountService(pool: pg.Pool, config: AccountConfig) {
         } else {
           if (!record.user_id) throw invalid();
           await client.query("SELECT id FROM chroniccare.users WHERE id=$1 FOR UPDATE", [record.user_id]);
-          await client.query("UPDATE chroniccare.users SET password_hash=$1 WHERE id=$2", [hash, record.user_id]);
+          await client.query("UPDATE chroniccare.users SET password_hash=$1,must_change_password=false WHERE id=$2", [hash, record.user_id]);
           await client.query("DELETE FROM chroniccare.sessions WHERE user_id=$1", [record.user_id]);
           await client.query("UPDATE chroniccare.account_tokens SET consumed_at=now() WHERE user_id=$1 AND purpose='password_reset' AND consumed_at IS NULL", [record.user_id]);
         }
