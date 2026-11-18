@@ -26,7 +26,7 @@ export function ConnectPatientPage() {
   const { t, formatDateTime, language } = useI18n();
   const lock = useRef(false);
   return <div className="doctor-page stack connection-page evolution-clinical" data-i18n="declarative">
-    <PageHeading title={t("connections.connect")} description={t("connections.doctorIntro")} eyebrow={t("doctor.eyebrow")} />
+    <PageHeading title={t("connections.connect")} description={t("connections.doctorIntro")} />
     <div className="connection-generation-workspace"><Card className="stack connection-code-card">
       <div className="connection-key-heading"><span className="clinical-panel-symbol"><KeyRound size={28} aria-hidden="true" /></span><div><h2>{t("connections.code")}</h2><p>{language === "ar" ? "رمز واحد. مريض واحد." : "One code. One patient."}</p></div></div>
       <Button loading={generate.isPending} onClick={async () => {
@@ -99,7 +99,7 @@ export function MyDoctorsPage() {
       <div className="stack" data-i18n="declarative"><p>{t("experience.revokeConfirm", { name: removing?.name ?? "" })}</p>
         {error && <Feedback kind="error">{t(error)}</Feedback>}
         <div className="confirmation-actions"><Button variant="secondary" disabled={busy} onClick={() => setRemoving(null)}>{t("connections.cancel")}</Button>
-          <Button loading={revoke.isPending} onClick={() => { if (removing) void act(async () => { await revoke.mutateAsync(removing.id); setRemoving(null); setSuccess("connections.revoked"); }); }}>{t("connections.revoke")}</Button></div>
+          <Button variant="danger" loading={revoke.isPending} onClick={() => { if (removing) void act(async () => { await revoke.mutateAsync(removing.id); setRemoving(null); setSuccess("connections.revoked"); }); }}>{t("connections.revoke")}</Button></div>
       </div>
     </Modal>
   </div>;

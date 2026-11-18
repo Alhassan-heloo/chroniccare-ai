@@ -1,68 +1,107 @@
-import { lazy, Suspense, useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { ArrowUpRight, Bot, CalendarDays, Check, ChevronRight, Droplet, Footprints, HeartPulse, LockKeyhole, Pill, Plus, ShieldCheck, Stethoscope } from "lucide-react";
-import { PublicLayout } from "@/components/public/PublicLayout";
-import { SignatureArtwork, LivingPulse } from "@/components/public/living/ui";
-import { previewReadings, type Kind } from "@/components/public/living/model";
+import { ArrowDown, ArrowDownRight, ClipboardList, HeartPulse, ShieldCheck } from "lucide-react";
+import { useState } from "react";
+import { Link, useLocation } from "react-router";
 import { useAuth } from "@/auth/context";
 import { roleHome } from "@/auth/api";
+import { PublicLayout } from "@/components/public/PublicLayout";
 import { useI18n } from "@/i18n/context";
+import { DailyCareDemo, MorningReadingTime, PressureValue } from "./DailyCareDemo";
+import "./clinical-home.css";
 
-const TrendChart = lazy(() => import("@/components/charts/TrendChart").then(module => ({ default: module.TrendChart })));
 const copy = {
-  en: {
-    title: "Your daily care, brought into focus.", intro: "A clearer view of your measurements. A simpler daily routine. A closer connection with your care team.", start: "Create your account", explore: "Open your health space", preview: "Interactive product demonstration", example: "Example data only. This preview is separate from patient records.", today: "Your health, in view", latest: "Latest measurements", pressure: "Blood pressure", glucose: "Blood glucose", week: "Your seven-day view", medication: "Medication", routine: "Daily habits", recordTitle: "A record you can come back to.", recordBody: "Bring blood pressure and glucose measurements together. Follow the dates, revisit the values, and keep the detail that matters for your next conversation.", recordNote: "Recorded values, without a clinical assessment.", dailyTitle: "A little structure for the everyday.", dailyBody: "Your medication schedule and habit goals live alongside your measurements. Less searching. A clearer place to begin each day.", dose: "Example medication", schedule: "Dose as prescribed", water: "Water", glasses: "glasses", add: "Add a glass", undo: "Undo", try: "Try the habit control", doctorTitle: "Connected care starts with your permission.", doctorBody: "Use your doctor's single-use code, review their identity, and decide whether to share your record. Your doctor receives read-only access. You can remove it at any time.", code: "Enter the doctor's code", approval: "Review and approve", access: "Share read-only access", aiTitle: "Make space for your questions.", aiBody: "Get general health education and plain-language explanations from the AI assistant. Each question is handled independently, without automatically sending earlier messages.", aiPrompt: "What do the two blood pressure numbers mean?", aiAction: "Explore the assistant", aiSafety: "Educational support, not diagnosis, treatment, or emergency care.", privacyTitle: "Your record. Your choice of care team.", privacyBody: "Doctor access begins with your approval and ends when you revoke it. Review connections in your own health space.", privacyAction: "Create your health space", assistant: "Health assistant", patient: "Health overview", collaboration: "Doctor collaboration", privacy: "Patient-controlled sharing", recordAction: "See how it works", complete: "Keep your routine close", days: "Seven days of example readings", measurements: "Measurements", personal: "Patient workspace", day: "Today", next: "Your daily routine", seeRecords: "Open measurement records", productNote: "Explore the same chart language used across the product.", consent: "You stay in control", questionNote: "Example question only. No AI response has been generated.", dailyNote: "Demonstration actions never change patient records.", careLead: "One connected workspace", careBody: "Track your day. Understand your record. Choose who can see it."
-  },
   ar: {
-    title: "رعايتك اليومية، بصورة أوضح.", intro: "رؤية أوضح لقياساتك. روتين يومي أبسط. وتواصل أقرب مع فريق رعايتك.", start: "أنشئ حسابك", explore: "افتح مساحتك الصحية", preview: "عرض تفاعلي توضيحي للمنتج", example: "بيانات توضيحية فقط. هذه المعاينة منفصلة عن سجلات المرضى.", today: "صحتك، بوضوح", latest: "أحدث القياسات", pressure: "ضغط الدم", glucose: "سكر الدم", week: "صورة أسبوعك", medication: "الأدوية", routine: "العادات اليومية", recordTitle: "سجل يمكنك العودة إليه.", recordBody: "اجمع قياسات ضغط الدم والسكر في مكان واحد. تابع التواريخ وراجع القيم، واحتفظ بالتفاصيل المهمة لحوارك القادم عن الرعاية.", recordNote: "القيم المسجلة، دون تقييم طبي.", dailyTitle: "تنظيم بسيط لتفاصيل يومك.", dailyBody: "جدول أدويتك وأهداف عاداتك بجوار قياساتك. بحث أقل، وبداية أوضح لكل يوم.", dose: "دواء توضيحي", schedule: "الجرعة حسب الوصفة", water: "شرب الماء", glasses: "أكواب", add: "أضف كوبًا", undo: "تراجع", try: "جرّب متابعة العادة", doctorTitle: "رعاية متصلة تبدأ بموافقتك.", doctorBody: "استخدم رمز طبيبك أحادي الاستخدام، وراجع هويته، ثم قرر مشاركة سجلك. يحصل الطبيب على وصول للقراءة فقط، ويمكنك إلغاؤه في أي وقت.", code: "أدخل رمز الطبيب", approval: "راجع ووافق", access: "شارك للقراءة فقط", aiTitle: "مساحة لأسئلتك.", aiBody: "معلومات صحية عامة وشروحات مبسطة من المساعد الذكي. يُعالج كل سؤال بشكل مستقل، دون إرسال الرسائل السابقة تلقائيًا.", aiPrompt: "ماذا يعني الرقمان في قياس ضغط الدم؟", aiAction: "استكشف المساعد", aiSafety: "دعم تثقيفي، وليس تشخيصًا أو علاجًا أو رعاية طارئة.", privacyTitle: "سجلك، وفريق الرعاية الذي تختاره.", privacyBody: "يبدأ وصول الطبيب بموافقتك وينتهي عندما تلغيه. راجع اتصالاتك من مساحتك الصحية.", privacyAction: "أنشئ مساحتك الصحية", assistant: "المساعد الصحي", patient: "نظرة صحية عامة", collaboration: "التعاون مع الطبيب", privacy: "مشاركة يتحكم بها المريض", recordAction: "اكتشف التجربة", complete: "روتينك قريب منك", days: "قياسات توضيحية لسبعة أيام", measurements: "القياسات", personal: "مساحة المريض", day: "اليوم", next: "روتينك اليومي", seeRecords: "افتح سجل القياسات", productNote: "استكشف لغة الرسوم البيانية المستخدمة في أنحاء المنتج.", consent: "القرار يبقى لك", questionNote: "سؤال توضيحي فقط. لم تُنشأ إجابة بالذكاء الاصطناعي.", dailyNote: "الإجراءات التوضيحية لا تغيّر سجلات المرضى.", careLead: "مساحة واحدة للرعاية", careBody: "تابع يومك. افهم سجلك. واختر من يمكنه الاطلاع عليه."
-  }
+    title: "رعايتك اليومية",
+    emphasis: "في صورة أوضح.",
+    intro: "تابع قياساتك وأدويتك وعاداتك في مكان واحد، وراجع سجلّك قبل موعدك مع الطبيب.",
+    tryDemo: "جرّب يومًا من رعايتك",
+    demoNav: "العرض التفاعلي",
+    photo: "زوجان يتابعان قياس ضغط الدم في المنزل",
+    sample: "قراءة توضيحية",
+    latest: "ضغط الدم · قياس الصبح",
+    openReading: "استكشف قراءة الصبح",
+    visitTitle: "راجع سجلّك قبل الموعد.",
+    visitBody: "اطّلع على قياساتك الأخيرة وجدول أدويتك وعاداتك. وجودها في مكان واحد يساعدك على تحديد ما تريد مناقشته مع طبيبك.",
+    privacy: "بموافقتك، يمكن لطبيبك قراءة السجل الذي تشاركه. ويمكنك إيقاف المشاركة متى شئت.",
+    openSpace: "افتح مساحتك الصحية",
+  },
+  en: {
+    title: "See your daily care",
+    emphasis: "more clearly.",
+    intro: "Track readings, medications, and habits in one place. Review your record before your next visit.",
+    tryDemo: "Try a day of care",
+    demoNav: "Interactive demo",
+    photo: "An older couple checking blood pressure together at home",
+    sample: "Example reading",
+    latest: "Blood pressure · Morning",
+    openReading: "Explore the morning reading",
+    visitTitle: "Review your record before the visit.",
+    visitBody: "See your latest readings, medication schedule, and daily habits together so you can decide what to discuss with your doctor.",
+    privacy: "Your doctor gets read-only access to the records you share with your approval. You can revoke access at any time.",
+    openSpace: "Open your health space",
+  },
 };
 
 export default function HomePage() {
   const { user } = useAuth();
-  const { language, formatNumber, formatDate } = useI18n();
+  const { search } = useLocation();
+  const { language, t } = useI18n();
+  const [activeScene, setActiveScene] = useState(0);
   const c = copy[language];
-  const navigate = useNavigate();
-  const [readings] = useState(previewReadings);
-  const [kind, setKind] = useState<Kind>("pressure");
-  const [water, setWater] = useState(6);
-  const [previousWater, setPreviousWater] = useState<number | null>(null);
-  const latest = readings.at(-1)!;
-  const chartData = readings.map(row => ({ day: row.date.slice(0, 10), systolic: row.systolic, diastolic: row.diastolic, glucose: row.glucose, isExample: true }));
-  const open = () => navigate(user ? roleHome(user.role) : "/login?returnTo=%2Fpatient%2Fdashboard");
-  const account = () => navigate(user ? roleHome(user.role) : "/register");
+  const demoRoute = { search, hash: "#product-preview" };
+  const accountRoute = user ? roleHome(user.role) : "/register";
 
-  return <PublicLayout><main id="public-content" className="evolution-home route-content" tabIndex={-1} data-i18n="declarative">
-    <section className="home-opening" aria-labelledby="home-title">
-      <div className="home-title-region"><h1 id="home-title">{c.title}</h1></div>
-      <div className="home-opening-actions"><p>{c.intro}</p><div className="flex flex-wrap gap-3"><button className="btn btn-primary" onClick={account}>{user ? c.explore : c.start}<ArrowUpRight size={18} aria-hidden="true" /></button><a className="btn btn-secondary" href="#product-preview">{c.recordAction}</a></div><span className="home-trust-note"><ShieldCheck size={16} aria-hidden="true" />{c.privacy}</span></div>
-      <div className="home-tidal" aria-hidden="true"><SignatureArtwork /></div>
-    </section>
+  return (
+    <PublicLayout homepageDemoLabel={c.demoNav}>
+      <main id="public-content" className="clinical-home" tabIndex={-1}>
+        <section className="clinical-hero" aria-labelledby="home-title">
+          <div className="clinical-hero-copy">
+            <h1 id="home-title">{c.title}<span>{c.emphasis}</span></h1>
+            <p>{c.intro}</p>
+            <Link className="clinical-action clinical-action-hero" to={demoRoute}>
+              {c.tryDemo}<ArrowDown size={19} aria-hidden="true" />
+            </Link>
+            {!user && (
+              <div className="clinical-hero-account">
+                <Link to="/login">{t("auth.signIn")}</Link>
+                <Link to="/register">{t("auth.register")}</Link>
+              </div>
+            )}
+          </div>
+          <figure className="clinical-hero-visual">
+            {/* Yaroslav Shuraev, Pexels 8088856. https://www.pexels.com/license/ */}
+            <img src={(import.meta.env?.BASE_URL ?? "/") + "images/home-blood-pressure.webp"} alt={c.photo} width={1350} height={900} fetchPriority="high" />
+            <Link className="clinical-reading-link" to={demoRoute} onClick={() => setActiveScene(0)}>
+              <span className="clinical-reading-icon"><HeartPulse size={23} aria-hidden="true" /></span>
+              <span className="clinical-reading-copy">
+                <span className="clinical-reading-meta">{c.sample}</span>
+                <strong>{c.latest}</strong>
+                <PressureValue />
+                <span className="sr-only">{c.openReading}</span>
+              </span>
+              <span className="clinical-reading-end">
+                <MorningReadingTime />
+                <ArrowDownRight className="clinical-direction-arrow" size={19} aria-hidden="true" />
+              </span>
+            </Link>
+          </figure>
+        </section>
 
-    <section className="home-product" id="product-preview" aria-labelledby="preview-title">
-      <header className="home-product-top"><div className="flex items-center gap-3"><span className="home-product-mark"><HeartPulse size={22} aria-hidden="true" /></span><div><h2 id="preview-title">{c.today}</h2><p>{c.preview}</p></div></div><span className="home-demo-label">{c.example}</span></header>
-      <div className="home-product-body">
-        <nav className="home-product-nav" aria-label={c.preview}>
-          <span>{c.personal}</span><a href="#product-preview" className="is-current"><HeartPulse size={20} aria-hidden="true" />{c.patient}</a><a href="#weekly-scene"><CalendarDays size={20} aria-hidden="true" />{c.measurements}</a><a href="#workflow"><Footprints size={20} aria-hidden="true" />{c.routine}</a><a href="#assistant-scene"><Bot size={20} aria-hidden="true" />{c.assistant}</a><p><ShieldCheck size={20} aria-hidden="true" />{c.consent}</p>
-        </nav>
-        <div className="home-canvas">
-          <div className="home-canvas-heading"><div><span>{c.latest}</span><h3>{c.week}</h3></div><div className="home-chart-tabs adaptive-measurement-tabs" role="group" aria-label={c.measurements}><button aria-pressed={kind === "pressure"} onClick={() => setKind("pressure")}><HeartPulse size={16} aria-hidden="true" />{c.pressure}</button><button aria-pressed={kind === "glucose"} onClick={() => setKind("glucose")}><Droplet size={16} aria-hidden="true" />{c.glucose}</button></div></div>
-          <div className="home-latest-readings"><div className="home-pressure-reading"><span>{c.pressure}</span><strong dir="ltr">{formatNumber(latest.systolic)}<span> / {formatNumber(latest.diastolic)}</span><small>mmHg</small></strong></div><div className="home-glucose-reading"><span>{c.glucose}</span><strong dir="ltr">{formatNumber(latest.glucose)}<small>mg/dL</small></strong></div><time dateTime={latest.date}>{formatDate(latest.date, { day: "numeric", month: "long" })}<small>{c.recordNote}</small></time></div>
-          <div className="home-chart-region"><Suspense fallback={<div className="home-chart-loading" role="status">{c.week}</div>}><TrendChart data={chartData} kind={kind} /></Suspense></div>
-        </div>
-        <aside className="home-product-routine" aria-label={c.next}><span className="home-routine-title">{c.next}</span><div className="home-preview-dose"><Pill size={23} aria-hidden="true" /><h3>{c.medication}</h3><strong>{c.dose}</strong><span>{c.schedule}</span><time dir="ltr">08:00</time></div><div className="home-preview-habit"><Footprints size={23} aria-hidden="true" /><h3>{c.routine}</h3><strong>{c.water} <bdi dir="ltr">{formatNumber(water)} / {formatNumber(8)}</bdi></strong><div className="home-habit-segments" aria-hidden="true">{Array.from({ length: 8 }, (_, index) => <i key={index} data-filled={index < water} />)}</div><span>{c.example}</span></div></aside>
-      </div>
-      <footer className="home-product-footer"><span><i aria-hidden="true" />{c.days}</span><button className="home-text-link" onClick={open}>{c.explore}<ArrowUpRight size={17} aria-hidden="true" /></button></footer>
-    </section>
+        <DailyCareDemo active={activeScene} onSceneChange={setActiveScene} />
 
-    <section className="home-tracking-story" id="weekly-scene"><div className="home-story-symbol"><HeartPulse size={32} aria-hidden="true" /></div><div><h2>{c.recordTitle}</h2><p>{c.recordBody}</p></div><button className="home-text-link" onClick={open}>{c.seeRecords}<ArrowUpRight size={18} aria-hidden="true" /></button></section>
-
-    <section className="home-everyday" id="workflow" aria-labelledby="routine-title"><div className="home-section-copy"><span className="home-section-icon"><Footprints size={26} aria-hidden="true" /></span><h2 id="routine-title">{c.dailyTitle}</h2><p>{c.dailyBody}</p><small>{c.dailyNote}</small></div><div className="home-routine-workspace"><header><CalendarDays size={19} aria-hidden="true" /><h3>{c.next}</h3><span>{c.try}</span></header><div className="home-routine-row"><span className="home-routine-icon"><Pill size={24} aria-hidden="true" /></span><div><h3>{c.medication}</h3><strong>{c.dose}</strong><small>{c.schedule}</small></div><time dir="ltr">08:00</time></div><div className="home-routine-row home-water-control adaptive-water-preview"><span className="home-routine-icon"><Droplet size={24} aria-hidden="true" /></span><div><h3>{c.water}</h3><strong><bdi dir="ltr">{formatNumber(water)} / {formatNumber(8)}</bdi> <small>{c.glasses}</small></strong><progress value={water} max={8} aria-label={c.water} /></div><button className="icon-button" aria-label={c.add} disabled={water >= 8} onClick={() => { setPreviousWater(water); setWater(value => Math.min(8, value + 1)); }}><Plus size={22} aria-hidden="true" /></button></div><footer className="home-routine-footer adaptive-daily-caption"><span><Check size={16} aria-hidden="true" />{c.preview}</span>{previousWater !== null && <button className="home-text-link" onClick={() => { setWater(previousWater); setPreviousWater(null); }}>{c.undo}</button>}</footer></div></section>
-
-    <section className="home-care-network" id="doctor-collaboration"><div className="home-section-copy"><span className="home-section-icon"><Stethoscope size={27} aria-hidden="true" /></span><h2>{c.doctorTitle}</h2><p>{c.doctorBody}</p></div><ol className="home-consent-path"><li><LockKeyhole size={27} aria-hidden="true" /><span>{c.code}</span><ChevronRight size={18} className="home-path-chevron" aria-hidden="true" /></li><li><ShieldCheck size={27} aria-hidden="true" /><span>{c.approval}</span><ChevronRight size={18} className="home-path-chevron" aria-hidden="true" /></li><li><Stethoscope size={27} aria-hidden="true" /><span>{c.access}</span></li></ol><span className="home-consent-note"><ShieldCheck size={17} aria-hidden="true" />{c.consent}</span></section>
-
-    <section className="home-assistant" id="assistant-scene"><div className="home-assistant-intro"><span className="home-assistant-icon"><Bot size={33} aria-hidden="true" /></span><div><h2>{c.aiTitle}</h2><p>{c.aiBody}</p><Link className="home-text-link" to="/patient/assistant">{c.aiAction}<ArrowUpRight size={18} aria-hidden="true" /></Link></div></div><div className="home-assistant-example"><span>{c.assistant}</span><blockquote>{c.aiPrompt}</blockquote><small>{c.questionNote}</small><p><ShieldCheck size={18} aria-hidden="true" />{c.aiSafety}</p></div></section>
-
-    <section className="home-privacy"><LivingPulse cue="privacy" /><div className="home-privacy-symbol"><LockKeyhole size={32} aria-hidden="true" /></div><div><h2>{c.privacyTitle}</h2><p>{c.privacyBody}</p></div><button className="btn btn-primary" onClick={account}>{user ? c.explore : c.privacyAction}<ArrowUpRight size={18} aria-hidden="true" /></button></section>
-  </main></PublicLayout>;
+        <section className="clinical-visit" id="weekly-scene" aria-labelledby="visit-title">
+          <div>
+            <ClipboardList className="clinical-visit-icon" size={28} aria-hidden="true" />
+            <h2 id="visit-title">{c.visitTitle}</h2>
+          </div>
+          <div className="clinical-visit-copy">
+            <p>{c.visitBody}</p>
+            <p className="clinical-privacy-note"><ShieldCheck size={21} aria-hidden="true" />{c.privacy}</p>
+            <Link className="clinical-action" to={accountRoute}>
+              {user ? c.openSpace : t("auth.register")}<ArrowDownRight className="clinical-direction-arrow" size={19} aria-hidden="true" />
+            </Link>
+          </div>
+        </section>
+      </main>
+    </PublicLayout>
+  );
 }

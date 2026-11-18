@@ -34,6 +34,7 @@ export function HabitCard({
   const displayTitle = habit.id === "steps" && habit.title === "المشي اليومي" ? t("patient.metric.walking") : habit.id === "water" && habit.title === "شرب الماء" ? t("patient.metric.water") : habit.title;
   const percent = habitPercent(displayedHabit);
   const segmentCount = (habit.unit === "cups" || habit.unit === "times") && habit.target <= 12 ? Math.max(1, habit.target) : 12;
+  const status = value >= habit.target ? "habits.today.done" : value > 0 ? "habits.today.partial" : "habits.today.unrecorded";
   if (!onProgress)
     return (
       <div className="task-row">
@@ -59,15 +60,13 @@ export function HabitCard({
         <span className="dashboard-feature-icon" aria-hidden="true">
           <Icon size={20} />
         </span>
-        <h2 data-i18n="declarative">{displayTitle}</h2>
-        <Badge tone={value >= habit.target ? "success" : "info"} data-i18n="declarative">
-          {quick.pending
-            ? t("habits.quick.saving")
-            : value >= habit.target
-              ? `✓ ${t("habits.completed")}`
-              : t("habits.ui.inProgress")}
-        </Badge>
+        <h3><bdi>{displayTitle}</bdi></h3>
       </div>
+      <p className="habit-recorded-status" role="status">
+        <Badge tone={value >= habit.target ? "success" : "info"}>
+          {t(quick.pending ? "habits.quick.saving" : status)}
+        </Badge>
+      </p>
       <p className="habit-value" data-i18n="declarative">
         {t("habits.ui.progress", { value: formatNumber(value), target: formatNumber(habit.target), unit: formatHabitUnit(habit.unit, habit.target) })}
       </p>
@@ -92,9 +91,9 @@ export function HabitCard({
           className="button habit-quick-complete"
           variant={value >= 1 ? "secondary" : "primary"}
           onClick={() => quick.setProgress(value >= 1 ? 0 : 1)}
-          aria-label={t(value >= 1 ? "habits.quick.undoCompletion" : "habits.quick.complete")}
+          aria-label={t(value >= 1 ? "habits.quick.undoCompletion" : "habits.today.record")}
         >
-          {t(value >= 1 ? "habits.quick.undoCompletion" : "habits.quick.complete")}
+          {t(value >= 1 ? "habits.quick.undoCompletion" : "habits.today.record")}
         </Button>
       ) : (
         <div className="habit-quick-actions" role="group" aria-label={t("habits.quick.group", { name: displayTitle })}>
@@ -112,13 +111,10 @@ export function HabitCard({
             onClick={() => quick.adjust(quickStep[habit.unit])}
             aria-label={t("habits.quick.add", { amount: formatNumber(quickStep[habit.unit]), unit: formatHabitUnit(habit.unit, quickStep[habit.unit]) })}
           >
-            +{formatNumber(quickStep[habit.unit])} {formatHabitUnit(habit.unit, quickStep[habit.unit])}
+            {t("habits.today.recordAmount", { amount: formatNumber(quickStep[habit.unit]), unit: formatHabitUnit(habit.unit, quickStep[habit.unit]) })}
           </Button>
         </div>
       )}
-      <p className={`habit-quick-status muted${quick.pending ? "" : " sr-only"}`} role="status" aria-live="polite">
-        {quick.pending ? t("habits.quick.saving") : t("habits.quick.ready")}
-      </p>
       </div>
       <details className="habit-manage">
       <summary aria-label={language === "ar" ? "إدارة العادة" : "Manage habit"}><SlidersHorizontal size={17} aria-hidden="true" /><span>{language === "ar" ? "إدارة العادة" : "Manage habit"}</span></summary>

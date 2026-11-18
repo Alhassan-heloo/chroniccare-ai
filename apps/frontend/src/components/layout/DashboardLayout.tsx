@@ -22,6 +22,7 @@ export function DashboardLayout({ role = "patient" }: { role?: User["role"] }) {
   useEffect(() => { try { localStorage.setItem("cc-sidebar-collapsed", String(collapsed)); } catch { /* Optional navigation preference. */ } }, [collapsed]);
   const patientPath = pathname.replace(/\/$/, "");
   const measurements = role === "patient" && patientPath === "/patient/measurements";
+  const hasReadingHeader = measurements || (role === "patient" && patientPath === "/patient/dashboard");
   const medications = role === "patient" && patientPath === "/patient/medications";
   const habits = role === "patient" && patientPath === "/patient/habits";
   const reports = role === "patient" && patientPath === "/patient/reports";
@@ -32,7 +33,7 @@ export function DashboardLayout({ role = "patient" }: { role?: User["role"] }) {
   useEffect(() => { try { localStorage.setItem("cc-public-motion", paused ? "paused" : "running"); } catch { /* Optional visual preference. */ } }, [paused]);
   return (
     <DashboardContext value={{ openMeasurement: () => setOpen(true) }}>
-      <div className={`living-evolution living-public living-dashboard experience-shell experience-${role}${assistant ? " living-assistant" : ""}${admin ? " living-admin" : ""}${measurements ? " living-measurements" : ""}${medications ? " living-medications" : ""}${habits ? " living-habits" : ""}${reports ? " living-reports" : ""}`} data-motion={paused || reduced ? "paused" : "running"}>
+      <div className={`living-evolution living-public living-dashboard experience-shell experience-${role}${hasReadingHeader ? " patient-reading-shell" : ""}${assistant ? " living-assistant" : ""}${admin ? " living-admin" : ""}${measurements ? " living-measurements" : ""}${medications ? " living-medications" : ""}${habits ? " living-habits" : ""}${reports ? " living-reports" : ""}`} data-motion={paused || reduced ? "paused" : "running"}>
       <a className="skip-link" href="#main" data-i18n="declarative">{t("common.layout.skip")}</a>
       <div className={`app-frame role-${role} clinical-app`} data-nav={collapsed ? "collapsed" : "expanded"}>
         <div className="clinical-app-body">

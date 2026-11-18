@@ -1,34 +1,40 @@
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router";
+import { Link, NavLink, useLocation } from "react-router";
 import { House, HeartPulse, Plus, Footprints, Menu } from "lucide-react";
 import { useDashboardActions } from "@/context/DashboardContext";
 import { Modal } from "@/components/ui/Modal";
-import { patientNavigation } from "./navigation";
+import { patientNavigation, recordPressurePath } from "./navigation";
 import { useI18n } from "@/i18n/context";
 export function BottomNav() {
   const { t } = useI18n();
   const { openMeasurement } = useDashboardActions();
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const page = pathname.replace(/\/$/, "");
+  const hasInlinePressureForm = page === "/patient/dashboard" || page === "/patient/measurements";
   const secondary = patientNavigation.filter(item => !["/patient/dashboard", "/patient/measurements", "/patient/habits"].includes(item.to));
   return (
     <>
       <nav className="bottom-nav" aria-label={t("common.layout.mobileNav")} data-i18n="declarative">
         <NavLink to="/patient/dashboard">
           <House />
-          <span>{t("common.navigation.home")}</span>
+          <span>{t("common.workspace.patient")}</span>
         </NavLink>
         <NavLink to="/patient/measurements">
           <HeartPulse />
           <span>{t("common.layout.health")}</span>
         </NavLink>
-        <button
+        {hasInlinePressureForm ? (
+          <Link className="add-nav patient-record-action" to={recordPressurePath} aria-label={t("measurements.dayLog.recordPressure")}>
+            <Plus size={28} aria-hidden="true" />
+          </Link>
+        ) : <button
           className="add-nav"
           onClick={openMeasurement}
           aria-label={t("measurements.add")}
         >
           <Plus size={28} />
-        </button>
+        </button>}
         <NavLink to="/patient/habits">
           <Footprints />
           <span>{t("habits.title")}</span>

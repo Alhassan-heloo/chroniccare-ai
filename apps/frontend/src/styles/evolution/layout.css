@@ -1,23 +1,18 @@
 @layer components {
   .clinical-app-body { --nav-width: var(--layout-sidebar); display: grid; grid-template-columns: var(--nav-width) minmax(0,1fr); min-height: 100dvh; }
   .clinical-app[data-nav=collapsed] .clinical-app-body { --nav-width: var(--layout-rail); }
-  .sidebar { position: sticky; top: 0; display: flex; flex-direction: column; gap: var(--space-3); width: var(--nav-width); height: 100dvh; padding: var(--space-4) var(--space-3); border-inline-end: 1px solid var(--hairline); background: var(--surface-sunken); }
+  .sidebar { position: sticky; inset-block-start: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); inline-size: calc(var(--nav-width) - var(--space-4)); max-block-size: calc(100dvh - var(--space-8)); min-block-size: min(34rem, calc(100dvh - var(--space-8))); margin-block: var(--space-4) auto; margin-inline-start: var(--space-4); padding: var(--space-4) var(--space-3); border: 1px solid var(--hairline); border-radius: var(--radius-lg); overflow-y: auto; background: var(--bg); }
+  :root[data-theme=dark] .sidebar { background: var(--dark-shell); }
   .sidebar-brand { min-height: var(--space-10); padding-inline: var(--space-2); }
-  .brand { display: inline-flex; align-items: center; gap: var(--space-3); color: var(--text); font-size: var(--text-base); font-weight: 750; line-height: 1.4; }
-  .brand b { color: var(--aqua); }
-  .brand small { display: block; font-size: var(--text-micro); color: var(--muted); font-weight: 500; margin-top: var(--space-1); }
-  .brand-mark { display: block; width: 36px; height: 36px; color: var(--aqua); }
-  .brand-mark svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.5; }
-  .mark-orbit { opacity: .5; stroke-width: 1; }
+  .brand { display: inline-flex; align-items: center; color: var(--text); flex-shrink: 0; }
   .sidebar-section-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding-inline: var(--space-2); }
   .nav-caption { font-size: var(--text-xs); color: var(--subtle); }
   .sidebar-toggle { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border: 0; }
   .sidebar nav { display: grid; gap: var(--space-1); }
-  .nav-link { position: relative; display: flex; align-items: center; gap: var(--space-3); min-height: 48px; padding: var(--space-2) var(--space-3); font-weight: 600; border: 1px solid transparent; border-radius: var(--radius-sm); color: var(--muted); font-size: var(--text-sm); line-height: 1.6; }
+  .nav-link { position: relative; display: flex; align-items: center; gap: var(--space-3); min-height: 48px; padding: var(--space-2) var(--space-3); font-weight: 500; border: 1px solid transparent; border-radius: var(--radius-sm); color: var(--muted); font-size: var(--text-sm); line-height: 1.6; }
   .nav-link svg { width: 20px; height: 20px; opacity: .9; }
   .nav-link:hover { background: var(--tint); color: var(--text); }
-  .nav-link.active { color: var(--text); background: var(--tint); border-color: var(--border); box-shadow: none; }
-  .nav-link.active::before { content: ''; position: absolute; inset-inline-start: -1px; top: 30%; bottom: 30%; width: 3px; border-radius: 4px; background: var(--aqua); }
+  .nav-link.active { color: var(--aqua); background: var(--tint); border-color: transparent; }
   .nav-link.active svg { color: var(--aqua); opacity: 1; }
   .sidebar-note { display: grid; gap: var(--space-2); padding: var(--space-4); margin-top: auto; border-top: 1px solid var(--hairline); color: var(--muted); font-size: var(--text-xs); }
   .sidebar-note svg { color: var(--aqua); width: 22px; height: 22px; }
@@ -25,7 +20,10 @@
   .sidebar-footer { font-size: var(--text-micro); color: var(--subtle); padding-inline: var(--space-3); margin-top: auto; }
   .sidebar-note + .sidebar-footer { margin-top: 0; }
   .app-stage, .workspace, .dashboard-shell { min-width: 0; }
-  .app-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: var(--layout-header); padding: var(--space-2) var(--page-gutter); border-bottom: 1px solid var(--hairline); background: var(--bg); }
+  .app-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: var(--layout-header); margin: var(--space-4) var(--page-gutter) 0; padding: var(--space-2) var(--space-4); border: 1px solid var(--hairline); border-radius: 24px; background: var(--surface); }
+  :root[data-theme="dark"] :is(.app-header, .patient-reading-shell .app-header, .page-footer) { background: var(--dark-shell); }
+  :root[data-theme="dark"] .nav-link.active { color: var(--primary); }
+
   .app-header > .brand { display: none; }
   .header-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); font-size: var(--text-sm); }
   .header-breadcrumb > span { color: var(--muted); }
@@ -45,11 +43,37 @@
   .workspace main { width: 100%; max-width: var(--layout-content); margin-inline: auto; padding: var(--space-7) var(--page-gutter) var(--space-4); }
   .page-footer { display: flex; justify-content: space-between; gap: var(--space-4); border-top: 1px solid var(--hairline); margin: var(--space-6) var(--page-gutter) 0; padding-block: var(--space-5); color: var(--subtle); font-size: var(--text-micro); }
   .bottom-nav, .role-mobile-nav { display: none; }
+  .patient-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--space-3) var(--space-8);
+    padding-block-end: var(--space-4);
+    border-block-end: 1px solid var(--hairline);
+  }
+  .patient-page-title { min-width: 0; overflow-wrap: anywhere; }
+  .patient-page-title h1 { font: var(--care-heading-weight) var(--text-title)/1.2 var(--font-heading); }
+  .patient-page-title p { margin-block-start: var(--space-1); font-size: var(--text-base); color: var(--muted); }
+  .patient-reading-shell .patient-record-action,
+  .measurement-add-panel .btn-primary { --primary: var(--info); }
+  :root[data-theme="dark"] .patient-reading-shell .patient-record-action,
+  :root[data-theme="dark"] .measurement-add-panel .btn-primary {
+    --primary: var(--dark-accent);
+    --primary-hover: color-mix(in srgb, var(--primary) 80%, var(--text));
+  }
+  .patient-reading-surface {
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .patient-reading-shell .patient-reading-time,
+  .patient-reading-shell .patient-reading-unit { font-size: var(--text-base); color: var(--muted); }
   .more-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--space-3); }
   .more-nav a { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); min-height: 56px; border: 1px solid var(--hairline); border-radius: var(--radius-sm); font-size: var(--text-sm); }
   .more-nav a.active { background: var(--tint); border-color: var(--aqua); }
-  .clinical-app[data-nav=collapsed] .sidebar { align-items: stretch; }
-  .clinical-app[data-nav=collapsed] .sidebar-brand .brand > span:last-child,
+  .clinical-app[data-nav=collapsed] .sidebar { align-items: stretch; padding-inline: var(--space-1); }
+  .clinical-app[data-nav=collapsed] .sidebar-brand .care-wordmark,
   .clinical-app[data-nav=collapsed] .sidebar-note,
   .clinical-app[data-nav=collapsed] .sidebar-footer { display: none; }
   .clinical-app[data-nav=collapsed] .nav-caption,
@@ -58,15 +82,18 @@
   .clinical-app[data-nav=collapsed] .nav-link { justify-content: center; padding-inline: var(--space-2); }
   @media(min-width:48rem) and (max-width:74.99rem) {
     .clinical-app-body { --nav-width: var(--layout-rail); }
-    .sidebar-brand .brand > span:last-child, .sidebar-note, .sidebar-footer, .sidebar-section-heading { display: none; }
+    .sidebar { padding-inline: var(--space-1); }
+    .sidebar-brand .care-wordmark, .sidebar-note, .sidebar-footer, .sidebar-section-heading { display: none; }
     .nav-link { justify-content: center; padding-inline: var(--space-2); }
     .nav-link > span { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
     .profile-name { display: none; }
   }
   @media(max-width:47.99rem) {
+    .patient-page-header { align-items: stretch; flex-direction: column; }
+    .patient-page-header > .patient-record-action { inline-size: 100%; }
     .clinical-app-body { display: block; }
     .sidebar { display: none; }
-    .app-header { padding: calc(var(--space-2) + env(safe-area-inset-top,0px)) var(--space-3) var(--space-2); gap: var(--space-2); min-height: var(--layout-mobile-header); }
+    .app-header { margin: var(--space-2) var(--space-3) 0; padding: calc(var(--space-2) + env(safe-area-inset-top,0px)) var(--space-3) var(--space-2); gap: var(--space-2); min-height: var(--layout-mobile-header); border-radius: 22px; }
     .app-header > .brand { display: inline-flex; gap: var(--space-2); font-size: var(--text-sm); }
     .app-header .brand small { display: none; }
     .app-header .brand-mark { width: 28px; height: 28px; }
@@ -81,5 +108,14 @@
     .bottom-nav .add-nav { flex: 0 0 44px; height: 44px; min-height: 44px; width: 44px; margin: 6px var(--space-2); background: var(--primary); color: var(--on-primary); border-radius: var(--radius-md); }
     .more-nav { grid-template-columns: minmax(0,1fr); gap: var(--space-2); }
     .more-nav a { min-height: 48px; padding: var(--space-3); }
+  }
+  @media(max-width:480px) {
+    .patient-reading-shell .app-header { flex-wrap: wrap; }
+    .patient-reading-shell .header-actions { flex-wrap: wrap; max-inline-size: 100%; }
+    .patient-reading-shell .bottom-nav > :is(a, button) > span {
+      max-inline-size: 100%;
+      overflow-wrap: anywhere;
+      text-align: center;
+    }
   }
 }

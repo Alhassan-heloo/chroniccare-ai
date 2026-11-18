@@ -1,4 +1,5 @@
 export interface User {
+  mustChangePassword?: boolean;
   id: string;
   name: string;
   email: string;

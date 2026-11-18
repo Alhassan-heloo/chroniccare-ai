@@ -3,7 +3,7 @@ import { ArrowUpLeft, ArrowUpRight, CircleHelp, type LucideIcon } from 'lucide-r
 import type { Copy } from './presentation';
 import { Button as AppButton } from '@/components/ui/Button';
 
-export function Mark() { return <span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M6 21h9l4-10 7 19 5-11h5"/><path className="mark-orbit" d="M32 8A17 17 0 1 0 36 29"/></svg></span>; }
+export { BrandMark as Mark } from "@/components/ui/BrandIdentity";
 export function Arrow({rtl}:{rtl:boolean}) { const Icon=rtl?ArrowUpLeft:ArrowUpRight; return <Icon size={19} aria-hidden="true"/>; }
 export function Button({children,className='',variant='primary',...props}:ButtonHTMLAttributes<HTMLButtonElement>&{variant?:'primary'|'secondary'|'quiet';children:ReactNode}) {
   return <AppButton {...props} variant={variant === "quiet" ? "ghost" : variant} className={`button ${variant} ${className}`}>{children}</AppButton>;

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type {
@@ -17,11 +17,15 @@ import { useI18n } from "@/i18n/context";
 import { isTranslationKey } from "@/i18n/catalog";
 export function MeasurementForm({
   onSaved,
+  onCancel,
   initial,
 }: {
-  onSaved: () => void;
+  onSaved: (measurement: Measurement) => void;
+  onCancel?: () => void;
   initial?: Measurement;
 }) {
+  const formId = useId();
+  const kindId = onCancel ? formId : "reading-kind";
   const { t, formatUnit } = useI18n();
   const errorMessage = (message?: string) => message ? isTranslationKey(message) ? t(message) : t("measurements.ui.checkReading") : undefined;
   const [kind, setKind] = useState<MeasurementKind>(
@@ -44,9 +48,10 @@ export function MeasurementForm({
         if (submitLock.current) return;
         submitLock.current = true;
         try {
-          if (initial) await update.mutateAsync({ id: initial.id, input: values });
-          else await add.mutateAsync(values);
-          onSaved();
+          const measurement = initial
+            ? await update.mutateAsync({ id: initial.id, input: values })
+            : await add.mutateAsync(values);
+          onSaved(measurement);
         } catch {
           // Mutation hooks own error feedback; keep the form open for retry.
         } finally {
@@ -57,9 +62,11 @@ export function MeasurementForm({
     >
       <p className="muted">{t("measurements.persistence.formNotice")}</p>
       <div className="field">
-        <label htmlFor="reading-kind">{t("measurements.ui.readingKind")}</label>
+        <label htmlFor={kindId}>{t("measurements.ui.readingKind")}</label>
         <select
-          id="reading-kind"
+          id={kindId}
+          name="kind"
+          disabled={isPending}
           value={kind}
           onChange={(event) => {
             const next = event.target.value as MeasurementKind;
@@ -81,6 +88,7 @@ export function MeasurementForm({
             label={t("measurements.ui.systolic")}
             type="number"
             inputMode="numeric"
+            autoFocus={!!onCancel}
             {...register("systolic", { valueAsNumber: true })}
             error={errorMessage(getFieldState("systolic", formState).error?.message)}
           />
@@ -102,9 +110,12 @@ export function MeasurementForm({
           error={errorMessage(getFieldState("value", formState).error?.message)}
         />
       )}
-      <Button type="submit" disabled={isPending}>
-        {t(isPending ? "measurements.ui.saving" : initial ? "measurements.ui.saveChanges" : "measurements.ui.saveReading")}
-      </Button>
+      <div className="measurement-form-actions">
+        <Button type="submit" disabled={isPending}>
+          {t(isPending ? "measurements.ui.saving" : initial ? "measurements.ui.saveChanges" : "measurements.ui.saveReading")}
+        </Button>
+        {onCancel && <Button type="button" variant="secondary" disabled={isPending} onClick={onCancel}>{t("common.actions.cancel")}</Button>}
+      </div>
     </form>
   );
 }

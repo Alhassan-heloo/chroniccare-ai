@@ -17,7 +17,7 @@ export function filterMeasurements(
         (!filters.to || day <= filters.to)
       );
     })
-    .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
+    .sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt));
 }
 export function measurementValue(item: Measurement) {
   return item.kind === "bloodPressure"

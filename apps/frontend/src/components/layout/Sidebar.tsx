@@ -8,7 +8,7 @@ export function Sidebar({ role = "patient", collapsed = false, onToggle }: { rol
   const { t } = useI18n();
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand"><Brand living /></div>
+      <div className="sidebar-brand"><Brand /></div>
       <div className="sidebar-section-heading"><p className="nav-caption" data-i18n="declarative">{t(`experience.roles.${role}`)}</p><button className="icon-button sidebar-toggle" type="button" onClick={onToggle} aria-label={t(collapsed ? "evolution.expandNav" : "evolution.collapseNav")} title={t(collapsed ? "evolution.expandNav" : "evolution.collapseNav")} aria-expanded={!collapsed} aria-controls="sidebar-navigation">{collapsed ? <PanelLeftOpen size={18} aria-hidden="true" /> : <PanelLeftClose size={18} aria-hidden="true" />}</button></div>
       <nav id="sidebar-navigation" aria-label={t("common.layout.mainNav")} data-i18n="declarative">
         {roleNavigation(role).map(({ to, label, icon: Icon }) => (

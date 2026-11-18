@@ -1,0 +1,553 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-16T15:29:50.220Z",
+  "title": "Design System: ChronicCare AI Homepage Review",
+  "extensions": {
+    "colorMeta": {
+      "canvas-light": {
+        "role": "neutral",
+        "displayName": "Page background in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0006 247.8)",
+          "oklch(25% 0.0009 247.8)",
+          "oklch(37% 0.0013 247.8)",
+          "oklch(49% 0.0017 247.8)",
+          "oklch(61% 0.0017 247.8)",
+          "oklch(73% 0.0013 247.8)",
+          "oklch(85% 0.0009 247.8)",
+          "oklch(95% 0.0003 247.8)"
+        ]
+      },
+      "canvas-dark": {
+        "role": "neutral",
+        "displayName": "Page background in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0074 242.9)",
+          "oklch(25% 0.0116 242.9)",
+          "oklch(37% 0.0165 242.9)",
+          "oklch(49% 0.0211 242.9)",
+          "oklch(61% 0.0211 242.9)",
+          "oklch(73% 0.0165 242.9)",
+          "oklch(85% 0.0108 242.9)",
+          "oklch(95% 0.0042 242.9)"
+        ]
+      },
+      "ink-light": {
+        "role": "neutral",
+        "displayName": "Headings and primary text in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0100 236.7)",
+          "oklch(25% 0.0157 236.7)",
+          "oklch(37% 0.0222 236.7)",
+          "oklch(49% 0.0285 236.7)",
+          "oklch(61% 0.0285 236.7)",
+          "oklch(73% 0.0222 236.7)",
+          "oklch(85% 0.0145 236.7)",
+          "oklch(95% 0.0057 236.7)"
+        ]
+      },
+      "ink-dark": {
+        "role": "neutral",
+        "displayName": "Headings and primary text in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0030 225.1)",
+          "oklch(25% 0.0047 225.1)",
+          "oklch(37% 0.0066 225.1)",
+          "oklch(49% 0.0085 225.1)",
+          "oklch(61% 0.0085 225.1)",
+          "oklch(73% 0.0066 225.1)",
+          "oklch(85% 0.0043 225.1)",
+          "oklch(95% 0.0017 225.1)"
+        ]
+      },
+      "body-light": {
+        "role": "neutral",
+        "displayName": "Supporting text in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0107 228.7)",
+          "oklch(25% 0.0168 228.7)",
+          "oklch(37% 0.0238 228.7)",
+          "oklch(49% 0.0305 228.7)",
+          "oklch(61% 0.0305 228.7)",
+          "oklch(73% 0.0238 228.7)",
+          "oklch(85% 0.0156 228.7)",
+          "oklch(95% 0.0061 228.7)"
+        ]
+      },
+      "body-dark": {
+        "role": "neutral",
+        "displayName": "Supporting text in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0073 229.1)",
+          "oklch(25% 0.0114 229.1)",
+          "oklch(37% 0.0162 229.1)",
+          "oklch(49% 0.0207 229.1)",
+          "oklch(61% 0.0207 229.1)",
+          "oklch(73% 0.0162 229.1)",
+          "oklch(85% 0.0106 229.1)",
+          "oklch(95% 0.0041 229.1)"
+        ]
+      },
+      "divider-light": {
+        "role": "neutral",
+        "displayName": "Rules and chart grid in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0064 223.6)",
+          "oklch(25% 0.0101 223.6)",
+          "oklch(37% 0.0144 223.6)",
+          "oklch(49% 0.0184 223.6)",
+          "oklch(61% 0.0184 223.6)",
+          "oklch(73% 0.0144 223.6)",
+          "oklch(85% 0.0094 223.6)",
+          "oklch(95% 0.0037 223.6)"
+        ]
+      },
+      "divider-dark": {
+        "role": "neutral",
+        "displayName": "Rules and chart grid in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0109 233.2)",
+          "oklch(25% 0.0172 233.2)",
+          "oklch(37% 0.0243 233.2)",
+          "oklch(49% 0.0312 233.2)",
+          "oklch(61% 0.0312 233.2)",
+          "oklch(73% 0.0243 233.2)",
+          "oklch(85% 0.0159 233.2)",
+          "oklch(95% 0.0062 233.2)"
+        ]
+      },
+      "plot-bg-light": {
+        "role": "neutral",
+        "displayName": "Measurements background in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0027 228.9)",
+          "oklch(25% 0.0042 228.9)",
+          "oklch(37% 0.0059 228.9)",
+          "oklch(49% 0.0076 228.9)",
+          "oklch(61% 0.0076 228.9)",
+          "oklch(73% 0.0059 228.9)",
+          "oklch(85% 0.0039 228.9)",
+          "oklch(95% 0.0015 228.9)"
+        ]
+      },
+      "plot-bg-dark": {
+        "role": "neutral",
+        "displayName": "Measurements background in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0108 236.0)",
+          "oklch(25% 0.0170 236.0)",
+          "oklch(37% 0.0241 236.0)",
+          "oklch(49% 0.0309 236.0)",
+          "oklch(61% 0.0309 236.0)",
+          "oklch(73% 0.0241 236.0)",
+          "oklch(85% 0.0158 236.0)",
+          "oklch(95% 0.0062 236.0)"
+        ]
+      },
+      "accent-light": {
+        "role": "primary",
+        "displayName": "Primary action and first data series in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0550 33.4)",
+          "oklch(25% 0.0864 33.4)",
+          "oklch(37% 0.1226 33.4)",
+          "oklch(49% 0.1571 33.4)",
+          "oklch(61% 0.1571 33.4)",
+          "oklch(73% 0.1226 33.4)",
+          "oklch(85% 0.0801 33.4)",
+          "oklch(95% 0.0314 33.4)"
+        ]
+      },
+      "accent-dark": {
+        "role": "primary",
+        "displayName": "Primary action and first data series in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0380 37.6)",
+          "oklch(25% 0.0597 37.6)",
+          "oklch(37% 0.0846 37.6)",
+          "oklch(49% 0.1085 37.6)",
+          "oklch(61% 0.1085 37.6)",
+          "oklch(73% 0.0846 37.6)",
+          "oklch(85% 0.0553 37.6)",
+          "oklch(95% 0.0217 37.6)"
+        ]
+      },
+      "on-accent-light": {
+        "role": "neutral",
+        "displayName": "Primary action and selection text in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0000 0.0)",
+          "oklch(25% 0.0000 0.0)",
+          "oklch(37% 0.0000 0.0)",
+          "oklch(49% 0.0000 0.0)",
+          "oklch(61% 0.0000 0.0)",
+          "oklch(73% 0.0000 0.0)",
+          "oklch(85% 0.0000 0.0)",
+          "oklch(95% 0.0000 0.0)"
+        ]
+      },
+      "on-accent-dark": {
+        "role": "neutral",
+        "displayName": "Primary action and selection text in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0118 38.3)",
+          "oklch(25% 0.0185 38.3)",
+          "oklch(37% 0.0262 38.3)",
+          "oklch(49% 0.0336 38.3)",
+          "oklch(61% 0.0336 38.3)",
+          "oklch(73% 0.0262 38.3)",
+          "oklch(85% 0.0171 38.3)",
+          "oklch(95% 0.0067 38.3)"
+        ]
+      },
+      "accent-hover-light": {
+        "role": "primary",
+        "displayName": "Primary action on hover in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0487 32.4)",
+          "oklch(25% 0.0766 32.4)",
+          "oklch(37% 0.1086 32.4)",
+          "oklch(49% 0.1393 32.4)",
+          "oklch(61% 0.1393 32.4)",
+          "oklch(73% 0.1086 32.4)",
+          "oklch(85% 0.0710 32.4)",
+          "oklch(95% 0.0279 32.4)"
+        ]
+      },
+      "accent-hover-dark": {
+        "role": "primary",
+        "displayName": "Primary action on hover in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0286 37.5)",
+          "oklch(25% 0.0449 37.5)",
+          "oklch(37% 0.0637 37.5)",
+          "oklch(49% 0.0816 37.5)",
+          "oklch(61% 0.0816 37.5)",
+          "oklch(73% 0.0637 37.5)",
+          "oklch(85% 0.0416 37.5)",
+          "oklch(95% 0.0163 37.5)"
+        ]
+      },
+      "accent-active-light": {
+        "role": "primary",
+        "displayName": "Primary action while pressed in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0428 32.3)",
+          "oklch(25% 0.0673 32.3)",
+          "oklch(37% 0.0955 32.3)",
+          "oklch(49% 0.1224 32.3)",
+          "oklch(61% 0.1224 32.3)",
+          "oklch(73% 0.0955 32.3)",
+          "oklch(85% 0.0624 32.3)",
+          "oklch(95% 0.0245 32.3)"
+        ]
+      },
+      "accent-active-dark": {
+        "role": "primary",
+        "displayName": "Primary action while pressed in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0453 38.5)",
+          "oklch(25% 0.0712 38.5)",
+          "oklch(37% 0.1010 38.5)",
+          "oklch(49% 0.1295 38.5)",
+          "oklch(61% 0.1295 38.5)",
+          "oklch(73% 0.1010 38.5)",
+          "oklch(85% 0.0660 38.5)",
+          "oklch(95% 0.0259 38.5)"
+        ]
+      },
+      "plot-secondary-light": {
+        "role": "secondary",
+        "displayName": "Dashed secondary series in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0183 236.7)",
+          "oklch(25% 0.0288 236.7)",
+          "oklch(37% 0.0409 236.7)",
+          "oklch(49% 0.0524 236.7)",
+          "oklch(61% 0.0524 236.7)",
+          "oklch(73% 0.0409 236.7)",
+          "oklch(85% 0.0267 236.7)",
+          "oklch(95% 0.0105 236.7)"
+        ]
+      },
+      "plot-secondary-dark": {
+        "role": "secondary",
+        "displayName": "Dashed secondary series in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0157 234.7)",
+          "oklch(25% 0.0246 234.7)",
+          "oklch(37% 0.0349 234.7)",
+          "oklch(49% 0.0448 234.7)",
+          "oklch(61% 0.0448 234.7)",
+          "oklch(73% 0.0349 234.7)",
+          "oklch(85% 0.0228 234.7)",
+          "oklch(95% 0.0090 234.7)"
+        ]
+      },
+      "focus-light": {
+        "role": "secondary",
+        "displayName": "Keyboard focus ring in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0305 234.2)",
+          "oklch(25% 0.0479 234.2)",
+          "oklch(37% 0.0679 234.2)",
+          "oklch(49% 0.0871 234.2)",
+          "oklch(61% 0.0871 234.2)",
+          "oklch(73% 0.0679 234.2)",
+          "oklch(85% 0.0444 234.2)",
+          "oklch(95% 0.0174 234.2)"
+        ]
+      },
+      "focus-dark": {
+        "role": "secondary",
+        "displayName": "Keyboard focus ring in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0260 226.5)",
+          "oklch(25% 0.0408 226.5)",
+          "oklch(37% 0.0579 226.5)",
+          "oklch(49% 0.0742 226.5)",
+          "oklch(61% 0.0742 226.5)",
+          "oklch(73% 0.0579 226.5)",
+          "oklch(85% 0.0378 226.5)",
+          "oklch(95% 0.0148 226.5)"
+        ]
+      },
+      "visit-light": {
+        "role": "neutral",
+        "displayName": "Visit section background in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0117 237.4)",
+          "oklch(25% 0.0183 237.4)",
+          "oklch(37% 0.0260 237.4)",
+          "oklch(49% 0.0333 237.4)",
+          "oklch(61% 0.0333 237.4)",
+          "oklch(73% 0.0260 237.4)",
+          "oklch(85% 0.0170 237.4)",
+          "oklch(95% 0.0067 237.4)"
+        ]
+      },
+      "visit-dark": {
+        "role": "neutral",
+        "displayName": "Visit section background in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0071 239.6)",
+          "oklch(25% 0.0111 239.6)",
+          "oklch(37% 0.0158 239.6)",
+          "oklch(49% 0.0203 239.6)",
+          "oklch(61% 0.0203 239.6)",
+          "oklch(73% 0.0158 239.6)",
+          "oklch(85% 0.0103 239.6)",
+          "oklch(95% 0.0041 239.6)"
+        ]
+      },
+      "on-visit-light": {
+        "role": "neutral",
+        "displayName": "Visit section foreground in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0021 223.5)",
+          "oklch(25% 0.0033 223.5)",
+          "oklch(37% 0.0046 223.5)",
+          "oklch(49% 0.0060 223.5)",
+          "oklch(61% 0.0060 223.5)",
+          "oklch(73% 0.0046 223.5)",
+          "oklch(85% 0.0030 223.5)",
+          "oklch(95% 0.0012 223.5)"
+        ]
+      },
+      "on-visit-dark": {
+        "role": "neutral",
+        "displayName": "Visit section foreground in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0021 223.5)",
+          "oklch(25% 0.0033 223.5)",
+          "oklch(37% 0.0046 223.5)",
+          "oklch(49% 0.0060 223.5)",
+          "oklch(61% 0.0060 223.5)",
+          "oklch(73% 0.0046 223.5)",
+          "oklch(85% 0.0030 223.5)",
+          "oklch(95% 0.0012 223.5)"
+        ]
+      },
+      "visit-muted-light": {
+        "role": "neutral",
+        "displayName": "Visit supporting text in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0054 229.0)",
+          "oklch(25% 0.0084 229.0)",
+          "oklch(37% 0.0119 229.0)",
+          "oklch(49% 0.0153 229.0)",
+          "oklch(61% 0.0153 229.0)",
+          "oklch(73% 0.0119 229.0)",
+          "oklch(85% 0.0078 229.0)",
+          "oklch(95% 0.0031 229.0)"
+        ]
+      },
+      "visit-muted-dark": {
+        "role": "neutral",
+        "displayName": "Visit supporting text in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0077 230.6)",
+          "oklch(25% 0.0122 230.6)",
+          "oklch(37% 0.0173 230.6)",
+          "oklch(49% 0.0221 230.6)",
+          "oklch(61% 0.0221 230.6)",
+          "oklch(73% 0.0173 230.6)",
+          "oklch(85% 0.0113 230.6)",
+          "oklch(95% 0.0044 230.6)"
+        ]
+      },
+      "sheet-light": {
+        "role": "neutral",
+        "displayName": "Visit record background in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0006 247.8)",
+          "oklch(25% 0.0009 247.8)",
+          "oklch(37% 0.0013 247.8)",
+          "oklch(49% 0.0017 247.8)",
+          "oklch(61% 0.0017 247.8)",
+          "oklch(73% 0.0013 247.8)",
+          "oklch(85% 0.0009 247.8)",
+          "oklch(95% 0.0003 247.8)"
+        ]
+      },
+      "sheet-dark": {
+        "role": "neutral",
+        "displayName": "Visit record background in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0109 239.8)",
+          "oklch(25% 0.0172 239.8)",
+          "oklch(37% 0.0244 239.8)",
+          "oklch(49% 0.0312 239.8)",
+          "oklch(61% 0.0312 239.8)",
+          "oklch(73% 0.0244 239.8)",
+          "oklch(85% 0.0159 239.8)",
+          "oklch(95% 0.0062 239.8)"
+        ]
+      },
+      "visit-focus-light": {
+        "role": "secondary",
+        "displayName": "Visit section focus ring in light theme",
+        "tonalRamp": [
+          "oklch(15% 0.0260 227.8)",
+          "oklch(25% 0.0408 227.8)",
+          "oklch(37% 0.0578 227.8)",
+          "oklch(49% 0.0742 227.8)",
+          "oklch(61% 0.0742 227.8)",
+          "oklch(73% 0.0578 227.8)",
+          "oklch(85% 0.0378 227.8)",
+          "oklch(95% 0.0148 227.8)"
+        ]
+      },
+      "visit-focus-dark": {
+        "role": "secondary",
+        "displayName": "Visit section focus ring in dark theme",
+        "tonalRamp": [
+          "oklch(15% 0.0260 227.8)",
+          "oklch(25% 0.0408 227.8)",
+          "oklch(37% 0.0578 227.8)",
+          "oklch(49% 0.0742 227.8)",
+          "oklch(61% 0.0742 227.8)",
+          "oklch(73% 0.0578 227.8)",
+          "oklch(85% 0.0378 227.8)",
+          "oklch(95% 0.0148 227.8)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Hero title",
+        "purpose": "Hero title"
+      },
+      "headline": {
+        "displayName": "Section heading",
+        "purpose": "Section heading"
+      },
+      "title": {
+        "displayName": "Record heading",
+        "purpose": "Record heading"
+      },
+      "body": {
+        "displayName": "Arabic page text",
+        "purpose": "Arabic page text"
+      },
+      "reading-value": {
+        "displayName": "Tabular latest-reading value",
+        "purpose": "Tabular latest-reading value"
+      },
+      "control-label": {
+        "displayName": "Primary action text",
+        "purpose": "Primary action text"
+      }
+    },
+    "breakpoints": [
+      {
+        "name": "visit-tight",
+        "value": "900px"
+      },
+      {
+        "name": "compact",
+        "value": "700px"
+      },
+      {
+        "name": "narrow",
+        "value": "360px"
+      }
+    ],
+    "motion": [
+      {
+        "name": "primary-fill",
+        "value": "150ms ease",
+        "purpose": "Registration button background change. Suppressed for reduced motion."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Registration",
+      "kind": "button",
+      "refersTo": "button-primary-light",
+      "description": "Filled registration link.",
+      "html": "<a class=\"ds-primary\" dir=\"rtl\" href=\"/register\">ابدأ سجلك <svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" aria-hidden=\"true\"><path d=\"M19 12H5m6-6-6 6 6 6\"/></svg></a>",
+      "css": ".ds-primary{display:inline-flex;align-items:center;justify-content:center;gap:17px;min-height:54px;padding:9px 24px;border-radius:7px;background:var(--accent,#aa351d);color:var(--on-accent,#fff);font:700 17px/1.85 Tahoma,sans-serif;text-decoration:none;transition:background-color 150ms ease}.ds-primary:hover{background:var(--accent-hover,#8c2715)}.ds-primary:active{background:var(--accent-active,#731d0e)}.ds-primary:focus-visible{outline:3px solid var(--focus,#1c6385);outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}"
+    },
+    {
+      "name": "Measurements link",
+      "kind": "button",
+      "description": "Underlined text link to the chart.",
+      "html": "<a class=\"ds-link\" dir=\"rtl\" href=\"#measurements\">شاهد مثالًا للقياسات</a>",
+      "css": ".ds-link{display:inline-flex;align-items:center;min-height:46px;color:var(--ink,#182832);font:600 16px/1.85 Tahoma,sans-serif;text-decoration:underline;text-underline-offset:5px}.ds-link:hover{color:var(--accent,#aa351d)}.ds-link:active{text-decoration-thickness:3px}.ds-link:focus-visible{outline:3px solid var(--focus,#1c6385);outline-offset:4px}"
+    },
+    {
+      "name": "Masthead navigation",
+      "kind": "nav",
+      "description": "Section links with an underline on hover.",
+      "html": "<nav class=\"ds-nav\" dir=\"rtl\" aria-label=\"التنقّل الرئيسي\"><a href=\"#measurements\">القياسات</a><a href=\"#visit\">قبل الموعد</a></nav>",
+      "css": ".ds-nav{display:flex;gap:30px}.ds-nav a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink,#182832);font:600 15px/1.85 Tahoma,sans-serif;text-decoration:none;text-underline-offset:5px}.ds-nav a:hover{text-decoration:underline}.ds-nav a:focus-visible{outline:3px solid var(--focus,#1c6385);outline-offset:4px}"
+    },
+    {
+      "name": "Metric choices",
+      "kind": "input",
+      "description": "Native radio selector with a visible accent rule and focus outline.",
+      "html": "<fieldset class=\"ds-metric\" dir=\"rtl\" aria-label=\"نوع القياس في المثال\"><label><input type=\"radio\" name=\"ds-metric\" checked><span>ضغط الدم</span></label><label><input type=\"radio\" name=\"ds-metric\"><span>سكر الدم</span></label></fieldset>",
+      "css": ".ds-metric{display:inline-flex;gap:23px;margin:0;padding:0;border:0}.ds-metric label{position:relative;cursor:pointer}.ds-metric input{position:absolute;width:1px;height:1px;clip-path:inset(50%)}.ds-metric span{display:flex;align-items:center;min-height:53px;padding:3px 2px;border-bottom:3px solid transparent;color:var(--body,#415660);font:600 17px/1.85 Tahoma,sans-serif}.ds-metric label:hover span,.ds-metric input:checked+span{color:var(--ink,#182832)}.ds-metric input:checked+span{border-color:var(--accent,#aa351d)}.ds-metric input:focus-visible+span{outline:3px solid var(--focus,#1c6385);outline-offset:2px}"
+    },
+    {
+      "name": "Visit record",
+      "kind": "card",
+      "description": "Flat sheet with ruled reading rows.",
+      "html": "<article class=\"ds-record\" dir=\"rtl\"><h3>ما أراجعه قبل الزيارة</h3><dl><div><dt>ضغط الدم</dt><dd><bdi dir=\"ltr\">١٢٤/٧٩</bdi> ملم زئبق</dd></div></dl></article>",
+      "css": ".ds-record{padding:clamp(22px,3.4vw,46px);background:var(--sheet,#fbfcfd);color:var(--ink,#182832);font:400 18px/1.85 Tahoma,sans-serif}.ds-record h3{margin:0;font:500 clamp(28px,2.9vw,42px)/1.25 \"Times New Roman\",serif}.ds-record dl{margin:21px 0 0;border-top:1px solid var(--divider,#bccbd1)}.ds-record dl>div{display:grid;grid-template-columns:minmax(110px,.8fr) minmax(0,1.2fr);gap:3px 16px;padding:11px 0;border-bottom:1px solid var(--divider,#bccbd1)}.ds-record dt,.ds-record bdi{font-weight:650}.ds-record dd{margin:0;color:var(--body,#415660)}.ds-record bdi{color:var(--ink,#182832)}"
+    }
+  ],
+  "narrative": {
+    "overview": "The Arabic homepage pairs Naskh headlines with a photograph of a blood pressure reading at home. A cool measurements surface and a dark visit section carry the reader from a weekly trend to the record they can review before an appointment.",
+    "keyCharacteristics": [
+      "Naskh headings",
+      "Arabic right-to-left reading order",
+      "Theme-specific supporting surfaces"
+    ],
+    "rules": [],
+    "dos": [],
+    "donts": []
+  }
+}

@@ -14,8 +14,10 @@ import type { TranslationKey } from "@/i18n/catalog";
 import type { User } from "@/lib/types/user";
 import type { LucideIcon } from "lucide-react";
 export interface NavigationItem { to: string; label: TranslationKey; icon: LucideIcon }
+export const pressureRecordQuery = { key: "record", value: "pressure" } as const;
+export const recordPressurePath = `/patient/measurements?${pressureRecordQuery.key}=${pressureRecordQuery.value}`;
 export const patientNavigation = [
-  { to: "/patient/dashboard", label: "common.navigation.home", icon: House },
+  { to: "/patient/dashboard", label: "common.workspace.patient", icon: House },
   { to: "/patient/measurements", label: "common.navigation.measurements", icon: HeartPulse },
   { to: "/patient/medications", label: "common.navigation.medications", icon: Pill },
   { to: "/patient/habits", label: "common.navigation.habits", icon: Footprints },
@@ -26,10 +28,10 @@ export const patientNavigation = [
 ] as const;
 export function roleNavigation(role: User["role"]): readonly NavigationItem[] {
   if (role === "doctor") return [
-    { to: "/doctor/dashboard", label: "doctor.dashboard", icon: LayoutDashboard },
+    { to: "/doctor/dashboard", label: "common.workspace.doctor", icon: LayoutDashboard },
     { to: "/doctor/patients", label: "doctor.patients", icon: Users },
     { to: "/doctor/connect", label: "connections.connect", icon: Link2 },
   ];
-  if (role === "admin") return [{ to: "/admin/dashboard", label: "admin.dashboard", icon: LayoutDashboard }];
+  if (role === "admin") return [{ to: "/admin/dashboard", label: "common.workspace.admin", icon: LayoutDashboard }];
   return patientNavigation;
 }
