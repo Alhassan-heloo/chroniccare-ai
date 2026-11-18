@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 export function scrollToSection(id:string) {
   requestAnimationFrame(()=>{
     const target=document.getElementById(id);if(!target)return;
-    const header=document.querySelector('.topbar')?.getBoundingClientRect().bottom??0;
+    const header=Math.max(0,document.querySelector('.topbar')?.getBoundingClientRect().bottom??0);
     const still=matchMedia('(prefers-reduced-motion: reduce)').matches||!!document.querySelector('.living-public[data-motion=paused]');
     window.scrollTo({top:Math.max(0,window.scrollY+target.getBoundingClientRect().top-header-24),behavior:still?'instant':'smooth'});
   });

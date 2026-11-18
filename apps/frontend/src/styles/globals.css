@@ -1,5 +1,7 @@
 @layer theme, base, components, utilities;
 @import "tailwindcss";
+@import "./evolution/identity.css" layer(base);
+@import "./evolution/dark-palette.css" layer(base);
 @import "./evolution/tokens.css";
 @import "./evolution/base.css";
 @import "./evolution/components.css";

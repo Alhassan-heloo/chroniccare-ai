@@ -5,7 +5,7 @@ import { PublicLayout } from "@/components/public/PublicLayout";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Feedback } from "@/components/ui/Feedback";
-import { SignatureArtwork, LivingPulse } from "@/components/public/living/ui";
+import carePhoto from "../../../homepage-hybrid/hero-mobile.jpg";
 import { useI18n } from "@/i18n/context";
 import { useAuth } from "@/auth/context";
 import { apiRequest, AuthError, safeReturnTo } from "@/auth/api";
@@ -81,9 +81,10 @@ export default function AuthPage({ mode }: { mode: "login" | "register" | "setup
   return <PublicLayout>
     <main id="public-content" className={`evolution-auth route-content${register ? " register-auth" : ""}`} tabIndex={-1} data-i18n="declarative">
     <section className="auth-card auth-form-portal" aria-labelledby="auth-title">
-      <div className="auth-portal-heading"><span className="auth-purpose"><ShieldCheck size={18} aria-hidden="true" />{t(setup ? "setup.title" : register ? "public.patientOnly" : "public.authEyebrow")}</span>
+      <div className="auth-portal-heading">
       <h1 id="auth-title">{t(setup ? "setup.title" : register ? "auth.register" : "auth.signIn")}</h1>
-      <p className="muted">{t(setup ? "setup.intro" : register ? "auth.registerIntro" : "auth.loginIntro")}</p></div>
+      <p className="muted">{t(setup ? "setup.intro" : register ? "auth.registerIntro" : "auth.loginIntro")}</p>
+      {register && !setup && <p className="muted">{t("public.patientOnly")}</p>}</div>
       {auth.expired && <Feedback>{t("auth.expired")}</Feedback>}
       {!register && params.get("registered") === "1" && <Feedback kind="success">{t("auth.created")}</Feedback>}
       {!register && params.get("setup") === "1" && <Feedback kind="success">{t("setup.created")}</Feedback>}
@@ -116,8 +117,8 @@ export default function AuthPage({ mode }: { mode: "login" | "register" | "setup
       <Link className="auth-home-link" to="/"><ArrowRight size={17} aria-hidden="true" />{t("auth.backHome")}</Link>
     </section>
     <aside className="evolution-auth-story" aria-labelledby="auth-story-title">
-      <div className="auth-story-art"><SignatureArtwork /></div>
-      <div className="auth-story-copy"><span className="auth-story-emblem"><HeartPulse size={32} aria-hidden="true" /></span>
+      <img className="auth-story-photo" src={carePhoto} alt="" width="650" height="365" />
+      <div className="auth-story-copy">
       <h2 id="auth-story-title">{language === "ar" ? "رعايتك اليومية، في صورة واحدة." : "Your daily care, in one connected view."}</h2>
       <p>{t("public.living.productSummary")}</p></div>
       <div className="auth-story-overview">
@@ -126,7 +127,6 @@ export default function AuthPage({ mode }: { mode: "login" | "register" | "setup
         <div><Footprints size={22} aria-hidden="true" /><span>{t("habits.title")}</span></div>
       </div>
       <div className="auth-story-assurance"><ShieldCheck size={21} aria-hidden="true" /><p>{language === "ar" ? "أنت تختار الطبيب الذي يمكنه الاطلاع على سجلاتك." : "You choose which doctor can view your records."}</p></div>
-      <LivingPulse cue={mode} />
     </aside>
     </main>
   </PublicLayout>;

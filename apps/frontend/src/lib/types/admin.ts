@@ -3,6 +3,7 @@ export interface AdminDoctor {
   name: string;
   email: string;
   role: "doctor";
+  disabled?: boolean;
 }
 
 export interface CreateDoctorInput {

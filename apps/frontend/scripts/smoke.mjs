@@ -11,6 +11,7 @@ try {
     absWorkingDir: root,
     entryPoints: [join(root, "scripts", "smoke.tsx")],
     bundle: true,
+    loader: { ".jpg": "file", ".woff2": "file" },
     platform: "node",
     format: "esm",
     banner: {

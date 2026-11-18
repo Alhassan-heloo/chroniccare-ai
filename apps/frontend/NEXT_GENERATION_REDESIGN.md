@@ -1,5 +1,7 @@
 # ChronicCare AI — الجيل الجديد من التصميم
 
+> Historical design report. Current visual direction and verification are documented in [Living Evolution](../../docs/living-evolution-redesign.md). Ocean Graphite character is retained while prior layout restrictions and the rejected ChronicCare 4.0 direction are superseded.
+
 ## النطاق والفحص الأولي
 
 رُوجعت الصفحات والمسارات الحالية، وملفا `globals.css` وThemeProvider، وهيكل الأدوار

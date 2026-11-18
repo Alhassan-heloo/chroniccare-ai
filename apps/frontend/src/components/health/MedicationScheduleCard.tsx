@@ -1,4 +1,4 @@
-import { Pill, Pencil, Trash2, Check } from "lucide-react";
+import { Pencil, Trash2, Check } from "lucide-react";
 import type { Medication } from "@/lib/types/medication";
 import { todayKey } from "@/lib/utils/medications";
 import { useSetDoseTaken } from "@/hooks/mutations/useMedicationMutations";
@@ -17,37 +17,34 @@ export function MedicationScheduleCard({
 }) {
   const { t, formatNumber } = useI18n();
   const mutation = useSetDoseTaken();
-  const taken = item.doses.filter((dose) => dose.takenOn === todayKey()).length;
+  const today = todayKey();
+  const taken = item.doses.filter((dose) => dose.takenOn === today).length;
   return (
-    <Card className="medication-schedule glass">
+    <Card className="medication-schedule glass" data-i18n="declarative">
       <div className="medication-card-heading">
-        <span className="dashboard-feature-icon" aria-hidden="true">
-          <Pill size={20} />
-        </span>
         <div className="medication-title">
-          <h2>{item.name}</h2>
-          <p className="medication-dosage"><span data-i18n="declarative">{t("الجرعة")}:</span><bdi>{item.dosage}</bdi></p>
+          <h3><bdi>{item.name}</bdi></h3>
+          {item.dosage && <p className="medication-dosage"><span>{t("الجرعة")}</span><bdi>{item.dosage}</bdi></p>}
         </div>
-        <Badge tone={taken === item.doses.length ? "success" : "info"} data-i18n="declarative">
+        {item.doses.length > 0 && <Badge tone={taken === item.doses.length ? "success" : "info"}>
           {t("medications.recorded", { taken: formatNumber(taken), total: formatNumber(item.doses.length) })}
-        </Badge>
+        </Badge>}
       </div>
-      {item.notes && <p className="medication-notes">{item.notes}</p>}
-      <ul className="dose-list">
+      {item.doses.length > 0 && <ul className="dose-list">
         {item.doses.map((dose) => {
-          const done = dose.takenOn === todayKey();
+          const done = dose.takenOn === today;
           return (
             <li key={dose.time}>
               <div>
-                <time dir="ltr">{dose.time}</time>
-                <span>{done ? "✓ تم تسجيل التناول" : "لم يُسجّل التناول"}</span>
+                <time dateTime={dose.time}><bdi dir="ltr">{dose.time}</bdi></time>
+                <span>{t(done ? "تم تسجيل التناول" : "لم يُسجّل التناول")}</span>
               </div>
               <Button
                 className="button dose-action"
                 variant={done ? "secondary" : "primary"}
                 disabled={mutation.isPending}
                 aria-pressed={done}
-                aria-label={`${done ? "إلغاء تسجيل تناول" : "تسجيل تناول"} ${item.name} الساعة ${dose.time}`}
+                aria-label={t(done ? "medications.undoDoseLabel" : "medications.recordDoseLabel", { name: `\u2068${item.name}\u2069`, time: `\u2068${dose.time}\u2069` })}
                 onClick={() =>
                   mutation.mutate({
                     id: item.id,
@@ -59,34 +56,35 @@ export function MedicationScheduleCard({
                 {done ? (
                   <>
                     <Check size={17} aria-hidden="true" />
-                    إلغاء التسجيل
+                    {t("إلغاء التسجيل")}
                   </>
                 ) : (
-                  "تم التناول"
+                  t("تم التناول")
                 )}
               </Button>
             </li>
           );
         })}
-      </ul>
+      </ul>}
+      {item.notes && <p className="medication-notes"><bdi>{item.notes}</bdi></p>}
       <div className="medication-card-actions">
         <Button
           className="button"
           variant="secondary"
           onClick={() => onEdit(item)}
-          aria-label={`تعديل ${item.name}`}
+          aria-label={t("medications.editItemLabel", { name: `\u2068${item.name}\u2069` })}
         >
           <Pencil size={17} aria-hidden="true" />
-          تعديل
+          {t("common.actions.edit")}
         </Button>
         <Button
           variant="ghost"
           className="delete-action"
           onClick={() => onDelete(item)}
-          aria-label={`حذف ${item.name}`}
+          aria-label={t("medications.deleteItemLabel", { name: `\u2068${item.name}\u2069` })}
         >
           <Trash2 size={17} aria-hidden="true" />
-          حذف
+          {t("common.actions.delete")}
         </Button>
       </div>
     </Card>

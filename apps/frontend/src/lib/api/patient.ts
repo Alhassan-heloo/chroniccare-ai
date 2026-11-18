@@ -10,7 +10,7 @@ import { summarizeReport } from "@/lib/utils/reports";
 const measurements: Measurement[] = createMeasurementPlaceholders();
 export async function getPatientDashboard(readings: Measurement[] = measurements, medications?: Medication[], habits?: Habit[]) {
   const ordered = [...readings].sort((a, b) =>
-    b.recordedAt.localeCompare(a.recordedAt),
+    Date.parse(b.recordedAt) - Date.parse(a.recordedAt),
   );
   const pressure = ordered.find((item) => item.kind === "bloodPressure");
   const glucose = ordered.find((item) => item.kind === "glucose");
@@ -21,12 +21,13 @@ export async function getPatientDashboard(readings: Measurement[] = measurements
         ? {
             systolic: pressure.systolic,
             diastolic: pressure.diastolic,
+            recordedAt: pressure.recordedAt,
             isExample: pressure.isExample === true,
           }
         : null,
     glucose:
       glucose?.kind === "glucose"
-        ? { value: glucose.value, isExample: glucose.isExample === true }
+        ? { value: glucose.value, recordedAt: glucose.recordedAt, isExample: glucose.isExample === true }
         : null,
     weekly: summarizeReport(ordered, 7).points,
     medication: getMedicationSummary(medications),

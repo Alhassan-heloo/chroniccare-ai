@@ -1,8 +1,7 @@
 // Frontend integration with explicit mocked backend responses. No LLM/database calls.
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { spawn } from "node:child_process";
-import { once } from "node:events";
+import { createServer } from "vite";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,10 +10,12 @@ const { chromium } = createRequire(import.meta.url)(process.env.PLAYWRIGHT_MODUL
 const base = "http://127.0.0.1:5194", api = "http://127.0.0.1:3314/api";
 const output = resolve(root, "artifacts/assistant-frontend"); await mkdir(output, { recursive: true });
 const report = { checks: [], errors: [], screenshots: [], source: "Mocked backend fixtures; no paid OpenAI or database requests" };
-let child, stopped, browser, stage = "startup";
+let vite, browser, stage = "startup";
 try {
-  child = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5194", "--strictPort", "--configLoader", "runner"], { cwd: root, env: { ...process.env, VITE_API_URL: api }, stdio: "ignore" }); stopped = once(child, "exit");
-  for (let n = 0; n < 100; n++) { try { await fetch(base); break; } catch { await new Promise(resolve => setTimeout(resolve, 150)); } }
+  process.env.VITE_API_URL = api;
+  vite = await createServer({ root, cacheDir: resolve(root, "node_modules/.vite-assistant-browser"),
+    server: { host: "127.0.0.1", port: 5194, strictPort: true }, logLevel: "error" });
+  await vite.listen();
   browser = await chromium.launch({ channel: "msedge", headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce" });
   await context.addInitScript(() => { localStorage.setItem("cc-language", "en"); localStorage.setItem("cc-theme", "dark"); localStorage.setItem("cc-public-motion", "paused"); });
@@ -117,4 +118,4 @@ try {
   report.checks.push('Sidebar collapse/expand and persisted preference', 'Simulated 430px VisualViewport keeps composer visible without bottom-navigation overlap');
   assert.deepEqual(report.errors, []); console.log(JSON.stringify({ status: "PASS", checks: report.checks.length, output }));
 } catch (error) { report.errors.push({ stage, message: error.message }); console.error(stage + ": " + error.message); process.exitCode = 1; }
-finally { if (browser) await browser.close(); if (child && child.exitCode === null) { child.kill(); await stopped; } await writeFile(resolve(output, "report.json"), JSON.stringify(report, null, 2)); }
+finally { if (browser) await browser.close(); if (vite) await vite.close(); await writeFile(resolve(output, "report.json"), JSON.stringify(report, null, 2)); }

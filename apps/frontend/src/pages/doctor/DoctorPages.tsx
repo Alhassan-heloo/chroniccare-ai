@@ -27,7 +27,7 @@ function PatientRoster({ patients }: { patients: DoctorPatient[] }) {
 
 function PageHeading({ title, description, connect = false }: { title: string; description: string; connect?: boolean }) {
   const { t } = useI18n();
-  return <WorkspaceHeading title={title} description={description} eyebrow={t("doctor.eyebrow")} action={connect ? <Link className="btn btn-secondary" to="/doctor/connect">{t("connections.connect")}</Link> : undefined} />;
+  return <WorkspaceHeading title={title} description={description} action={connect ? <Link className="btn btn-secondary" to="/doctor/connect">{t("connections.connect")}</Link> : undefined} />;
 }
 
 export function DoctorDashboard() {

@@ -14,9 +14,10 @@ export interface PatientDashboard {
   bloodPressure: {
     systolic: number;
     diastolic: number;
+    recordedAt: string;
     isExample: boolean;
   } | null;
-  glucose: { value: number; isExample: boolean } | null;
+  glucose: { value: number; recordedAt: string; isExample: boolean } | null;
   medication: MedicationSummary;
   habits: Habit[];
   reminder: Notification | null;

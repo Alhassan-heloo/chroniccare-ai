@@ -1,0 +1,59 @@
+@font-face {
+  font-family: Hybrid Naskh;
+  src: url('../../../homepage-hybrid/naskh-arabic.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: Hybrid Arabic;
+  src: url('../../../homepage-hybrid/sans-arabic.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+/* Shared visual identity from the approved public homepage. */
+:root {
+  --care-paper: #fbf8f0;
+  --care-quiet: #ebf5f0;
+  --care-surface: #fffdf8;
+  --care-raised: #ffffff;
+  --care-recessed: #f2f0e9;
+  --care-stage: #e1ebe5;
+  --care-ink: #102b2d;
+  --care-muted: #3d5354;
+  --care-rule: #c6d5ce;
+  --care-accent: #075b55;
+  --care-on-accent: #fff;
+  --care-body: Hybrid Arabic, Tahoma, sans-serif;
+  --care-display: Hybrid Naskh, 'Times New Roman', serif;
+  --care-pill: 999px;
+  --care-heading-weight: 400;
+  --care-body-leading: 1.7;
+  --care-panel-radius: 16px;
+  --care-panel-padding: 32px;
+  --care-action-height: 48px;
+  --care-action-weight: 600;
+}
+
+/* Navigation branding follows the approved homepage in every locale. */
+.care-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  white-space: nowrap;
+  font: 650 var(--care-brand-size, 20px)/1 "Segoe UI", sans-serif;
+}
+.care-brand-mark {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  inline-size: var(--care-brand-mark-size, 28px);
+  block-size: var(--care-brand-mark-size, 28px);
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+.care-brand-mark svg { display: block; inline-size: 17px; block-size: 17px; }
+@media (max-width: 700px) {
+  .care-brand { --care-brand-size: 15px; --care-brand-mark-size: 23px; gap: 5px; }
+  .care-brand-mark svg { inline-size: 14px; block-size: 14px; }
+}

@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { Plus, Footprints, Info } from "lucide-react";
 import type { Habit } from "@/lib/types/habit";
 import { useHabits } from "@/hooks/queries/useHabits";
@@ -11,6 +11,7 @@ import { HabitTemplateLibrary } from "@/components/health/HabitTemplateLibrary";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
+import { PatientPageHeader } from "@/components/layout/PatientPageHeader";
 import { useI18n } from "@/i18n/context";
 import "@/styles/evolution/records.css";
 import type { HabitTemplate } from "@/lib/habitTemplates";
@@ -29,26 +30,12 @@ export default function HabitsPage() {
   const visible = data.filter(item => view === "all" || (view === "completed" ? progressToday(item) >= item.target : progressToday(item) < item.target));
   return (
     <div className="habits-page records-page grid gap-6" dir={direction}>
-      <div className="habits-heading records-heading" data-i18n="declarative">
-        <div>
-          <h1>{t("habits.title")}</h1>
-          <p>{t("habits.ui.description")}</p>
-        </div>
-        <Button onClick={() => setForm("new")}><Plus size={19} aria-hidden="true" />{t("habits.add")}</Button>
-      </div>
-      {!isPending && !isError && <section className="records-habit-overview" data-i18n="declarative" aria-label={t("habits.ui.achievement")}>
-          <div><h2>{t("habits.ui.achievement")}</h2>
-            <p aria-live="polite">
-              {t(new Intl.PluralRules(locale).select(data.length) === "one" ? "habits.completedSingle" : "habits.ui.completedSummary", { completed: formatNumber(completed), total: formatNumber(data.length) })}
-            </p>
-            <progress
-              value={completed}
-              max={data.length || 1}
-              aria-label={t("habits.ui.completedLabel")}
-            />
-          </div>
-          <div className="records-habit-ring" style={{ "--completion": `${data.length ? completed / data.length * 100 : 0}%` } as CSSProperties} aria-hidden="true"><strong className="records-habit-count" dir="ltr">{formatNumber(completed)}<small>/ {formatNumber(data.length)}</small></strong></div>
-        </section>}
+      <PatientPageHeader
+        className="habits-heading"
+        title={t("habits.title")}
+        description={t("habits.ui.description")}
+        action={<Button onClick={() => setForm("new")}><Plus size={18} aria-hidden="true" />{t("habits.add")}</Button>}
+      />
       {isPending ? (
         <Card className="empty-state glass" role="status" data-i18n="declarative">
           {t("habits.ui.loading")}
@@ -61,9 +48,15 @@ export default function HabitsPage() {
       ) : (
         <>
           {data.length ? (
-            <section aria-label={t("habits.title")}>
+            <section aria-labelledby="habits-today-heading">
               <div className="records-habit-toolbar" data-i18n="declarative">
-                <h2>{language === "ar" ? "روتينك اليومي" : "Your daily routine"}</h2>
+                <div className="records-habit-overview">
+                  <h2 id="habits-today-heading">{t("habits.today.title")}</h2>
+                  <p role="status">
+                    {t(new Intl.PluralRules(locale).select(data.length) === "one" ? "habits.completedSingle" : "habits.ui.completedSummary", { completed: formatNumber(completed), total: formatNumber(data.length) })}
+                  </p>
+                  <progress className="sr-only" value={completed} max={data.length} aria-label={t("habits.ui.completedLabel")} />
+                </div>
                 <div className="records-chart-tabs" role="group" aria-label={language === "ar" ? "عرض العادات" : "Filter habits"}>
                   {(["all", "ongoing", "completed"] as const).map(item => <Button key={item} variant="secondary" aria-pressed={view === item} onClick={() => setView(item)}>{item === "all" ? (language === "ar" ? "الكل" : "All") : t(item === "completed" ? "habits.completed" : "habits.ui.inProgress")}</Button>)}
                 </div>
@@ -168,7 +161,7 @@ export default function HabitsPage() {
               </Button>
               <Button
                 data-i18n="declarative"
-                className="btn-danger"
+                variant="danger"
                 disabled={deletion.isPending}
                 onClick={() =>
                   deletion.mutate(deleting.id, {

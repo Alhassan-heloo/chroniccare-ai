@@ -87,7 +87,7 @@ const adminRequest = (async (path: string, options?: { method?: string; body?: u
   adminCalls.push({ path, method: options?.method, body: options?.body });
   return options?.method === "POST" ? { invitation: { name: adminDoctor.name, email: adminDoctor.email } } : { doctors: [adminDoctor] };
 }) as AuthValue["request"];
-assert.deepEqual(await getAdminDoctors(adminRequest), [adminDoctor]);
+assert.deepEqual(await getAdminDoctors(adminRequest), [{ ...adminDoctor, disabled: false }]);
 assert.deepEqual(await createAdminDoctor(adminRequest, { name: adminDoctor.name, email: adminDoctor.email }), { name: adminDoctor.name, email: adminDoctor.email });
 assert.deepEqual(adminCalls[1]?.body, { name: adminDoctor.name, email: adminDoctor.email });
 assert.deepEqual(adminCalls.map(call => [call.path, call.method]), [["/admin/doctors", undefined], ["/admin/doctors", "POST"]]);
@@ -152,7 +152,7 @@ import { Sidebar } from "../src/components/layout/Sidebar";
 import { Preferences } from "../src/components/layout/Preferences";
 import { PublicHeader } from "../src/components/public/PublicHeader";
 import { roleNavigation } from "../src/components/layout/navigation";
-import HomePage from "../src/pages/public/HomePage";
+import HybridHomePage from "../src/pages/public/HybridHomePage";
 import AuthPage from "../src/pages/auth/AuthPage";
 import { Feedback } from "../src/components/ui/Feedback";
 import { SectionHeading } from "../src/components/ui/SectionHeading";
@@ -180,27 +180,28 @@ for (const language of ["ar", "en"] as const) {
     ...localeSettings(language), ...createFormatters(language),
   };
   const guest = testAuth;
-  for (const [path, element] of [["/", <HomePage />], ["/login", <AuthPage mode="login" />], ["/register", <AuthPage mode="register" />]] as const) {
+  for (const [path, element] of [["/", <HybridHomePage />], ["/login", <AuthPage mode="login" />], ["/register", <AuthPage mode="register" />]] as const) {
     const html = renderToString(<I18nContext value={context}><AuthContext value={guest}><RouterProvider router={createMemoryRouter([{ path, element }], { initialEntries: [path] })} /></AuthContext></I18nContext>);
-    assert.equal((html.match(/class="public-header\b/g) ?? []).length, 1, "One shared public masthead; nested chart headings are semantic headers");
-    assert.equal((html.match(/class="site-footer"/g) ?? []).length, 1, "One shared site footer; product sections can have semantic footers");
-    assert(html.includes('href="/#features"') && html.includes('href="/login"'));
-    assert(html.includes(translateCatalogMessage(language, "public.navigation")));
-    assert(html.includes('id="public-content"'));
     assert(html.includes('data-i18n="declarative"'));
-    assert(!html.includes("public.heroTitle"));
-    if (path === "/") assert(html.includes('id="home-title"') && html.includes(language === "ar" ? "رعايتك اليومية" : "Your daily care, brought into focus."), "Localized Living Evolution headline");
-    else assert(html.includes(translateCatalogMessage(language, path === "/login" ? "auth.signIn" : "auth.register")));
-    if (path !== "/") {
+    if (path === "/") {
+      assert.equal((html.match(/class="hero-header"/g) ?? []).length, 1);
+      assert.equal((html.match(/class="hy-footer"/g) ?? []).length, 1);
+      assert(html.includes('href="/login"') && html.includes('href="/register"'));
+      assert(html.includes('id="hero-title"') && html.includes(language === "ar" ? "تابع صحتك" : "Track your health"));
+      for (const section of ["readings", "showcase", "journey"]) assert(html.includes(`id="${section}"`));
+      assert(html.includes('class="hero-heartbeat"') && html.includes('class="plot-playback"'));
+      assert(html.includes('aria-haspopup="dialog"'));
+      assert(html.includes(language === "ar" ? "بيانات افتراضية" : "Fictional data"));
+    } else {
+      assert.equal((html.match(/class="public-header\b/g) ?? []).length, 1);
+      assert.equal((html.match(/class="site-footer"/g) ?? []).length, 1);
+      assert(html.includes('href="/#features"') && html.includes('href="/login"'));
+      assert(html.includes(translateCatalogMessage(language, "public.navigation")));
+      assert(html.includes('id="public-content"'));
+      assert(html.includes(translateCatalogMessage(language, path === "/login" ? "auth.signIn" : "auth.register")));
       assert(html.includes('aria-controls="auth-password"'));
       assert(html.includes('aria-describedby="password-hint"'));
       assert(/\bautocomplete="username"/i.test(html), "Email keeps its username autocomplete hint");
-    } else {
-      for (const section of ["home-opening", "product-preview", "weekly-scene", "workflow", "assistant-scene", "home-privacy"]) assert(html.includes(section), `Living Evolution homepage renders ${section}`);
-      for (const obsolete of ['class="launch-hero"', 'class="public-hero"', 'class="bento-grid"', 'class="product-window"']) assert(!html.includes(obsolete), "Previous visual compositions are not mounted");
-      assert(html.includes('aria-pressed="true"') && html.includes('aria-pressed="false"'), "Product preview retains accessible series selection");
-      assert(html.includes(language === "ar" ? "بيانات توضيحية فقط" : "Example data only"), "Preview identifies demonstration data");
-      assert(html.includes('aria-controls="public-navigation"'));
     }
   }
   for (const role of ["patient", "doctor", "admin"] as const) {
@@ -349,7 +350,7 @@ for (const language of ["ar", "en", "ar", "en"] as const) {
   assert(html.includes("\u2068") && html.includes("\u2069"), "Welcome name must be isolated from surrounding direction");
   client.setQueryData([...queryKeys.measurements, "account", "fixture"], await getMeasurements());
   const measurementHtml = renderToString(<I18nContext value={context}><QueryClientProvider client={client}><RouterProvider router={createMemoryRouter(routes, { initialEntries: ["/patient/measurements"] })} /></QueryClientProvider></I18nContext>);
-  assert(measurementHtml.includes(translateCatalogMessage(language, "measurements.ui.history")));
+  assert(measurementHtml.includes(translateCatalogMessage(language, "measurements.dayLog.history")));
   assert(measurementHtml.includes(translateCatalogMessage(language, "measurements.ui.example")));
   assert(!measurementHtml.includes("measurements.ui."));
   const invalidReading = measurementSchema.safeParse({ kind: "bloodPressure", systolic: 80, diastolic: 90 });
@@ -395,6 +396,15 @@ for (const path of paths) {
     client.setQueryData([...queryKeys.reports, 7, "account", "fixture"], await loadReport(7));
   }
   const router = createMemoryRouter(routes, { initialEntries: [path] });
+  if (!router.state.initialized) {
+    await new Promise<void>(resolve => {
+      const unsubscribe = router.subscribe(state => {
+        if (!state.initialized) return;
+        unsubscribe();
+        resolve();
+      });
+    });
+  }
   const html = renderToString(
     <QueryClientProvider client={client}>
       <RouterProvider router={router} />
@@ -424,22 +434,29 @@ for (const path of paths) {
     assert(/class="[^"]*\bliving-measurements\b/.test(html), "Measurements reuse the approved Living shell");
     assert(html.includes('data-kind="bloodPressure"') && html.includes('data-kind="glucose"'), "Reading types retain distinct visual cues");
     assert(html.includes('class="measurement-filter-heading dashboard-panel-heading"'), "Filters reuse the approved patient panel heading");
-    assert(html.includes('measurement-history-heading'), "History has a readable heading and record count");
-    assert(html.includes('measurement-canvas'), "Latest readings and trends precede the history workspace");
+    const history = html.indexOf('class="measurement-day-list');
+    const trend = html.match(/<details\b[^>]*class="measurements-trend-disclosure"[^>]*>/);
+    assert(html.includes('measurement-history-heading') && history !== -1, "The daily log and its readings render on entry");
+    assert(trend?.index !== undefined, "The trend disclosure renders after the daily log");
+    assert(history < trend.index, "The daily log precedes the trend disclosure");
+    assert(!/\sopen(?:\s|=|>)/.test(trend[0]), "The trend disclosure is closed on entry");
+    assert(!html.includes('class="measurement-canvas"'), "The chart is mounted only after opening the disclosure");
   }
   if (path === "/patient/medications") {
     assert(/class="[^"]*\bliving-medications\b/.test(html), "Medications reuse the approved patient shell");
     assert(html.includes('medication-workspace'), "Medication summary and schedule are separate regions");
     assert(html.includes('class="card medication-summary glass"'), "Daily dose summary uses the approved Living surface");
     assert(html.includes('class="card medication-schedule glass"'), "Schedules use the approved Living surface");
-    assert(html.includes('class="dashboard-feature-icon"'), "Medication icons reuse the approved feature treatment");
+    assert(html.includes('patient-page-header'), "Medications reuse the shared patient page header");
+    assert(html.indexOf('class="card medication-schedule glass"') < html.indexOf('class="card medication-summary glass"'), "Medication schedules precede the daily dose summary");
     assert(html.includes('aria-pressed="true"') && html.includes('aria-pressed="false"'), "Recorded and pending dose actions remain available");
     assert(!html.includes('class="feature-workbench"'), "Medication management has its own summary-and-schedules composition");
   }
   if (path === "/patient/habits") {
     assert(/class="[^"]*\bliving-habits\b/.test(html), "Habits reuse the approved patient shell");
     assert(html.includes('records-template-disclosure'), "Habit templates use accessible progressive disclosure");
-    assert(html.includes('records-habit-count') && html.includes('<progress'), "Today's progress overview remains available");
+    assert(html.includes('patient-page-header') && html.includes('habits-today-heading') && html.includes('<progress'), "Today's progress uses the shared header and a readable summary");
+    assert(html.includes('habit-recorded-status'), "Each habit exposes its daily status as text");
     assert(html.includes('evolution-habit-row') && html.includes('habit-segments'), "Habit rows visualize actual goal progress");
     assert(html.includes('habit-manage'), "Secondary habit controls use progressive disclosure");
     assert(html.includes('class="habits-grid"') && !html.includes('class="feature-workbench"'), "Daily completion lives alongside the introduction, ahead of the habit cards");

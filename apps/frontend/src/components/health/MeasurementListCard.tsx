@@ -13,7 +13,7 @@ export function MeasurementListCard({
   onEdit: (item: Measurement) => void;
   onDelete: (item: Measurement) => void;
 }) {
-  const { t, formatDate, formatNumber, formatUnit } = useI18n();
+  const { t, formatDate, formatTime, formatNumber, formatUnit } = useI18n();
   const pressure = item.kind === "bloodPressure";
   const Icon = pressure ? HeartPulse : Droplet;
   const label = t(pressure ? "measurements.bloodPressure" : "measurements.bloodGlucose");
@@ -28,14 +28,14 @@ export function MeasurementListCard({
           <Icon size={20} aria-hidden="true" />
         </span>
         <div>
-          <h3>{label}</h3>
-          <time dateTime={item.recordedAt}>{timestamp}</time>
+          <h4>{label}</h4>
+          <time className="patient-reading-time" dateTime={item.recordedAt}><bdi>{formatTime(item.recordedAt)}</bdi></time>
           {item.isExample && <Badge tone="info">{t("measurements.ui.example")}</Badge>}
         </div>
       </div>
       <div className="measurement-entry-value">
         <strong dir="ltr">{item.kind === "bloodPressure" ? `${formatNumber(item.systolic)}/${formatNumber(item.diastolic)}` : formatNumber(item.value)}</strong>
-        <span dir="ltr">{formatUnit(pressure ? "mmHg" : "mg/dL")}</span>
+        <span className="patient-reading-unit"><bdi>{pressure ? t("measurements.dayLog.pressureUnit") : formatUnit("mg/dL")}</bdi></span>
       </div>
       <div className="measurement-entry-actions">
         <Button

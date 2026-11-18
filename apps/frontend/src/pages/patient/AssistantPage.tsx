@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { Feedback } from "@/components/ui/Feedback";
 import { sendAssistantMessage, type AssistantReply } from "@/lib/api/assistant";
 import type { TranslationKey } from "@/i18n/catalog";
-import { LivingPulse, SignatureArtwork } from "@/components/public/living/ui";
 type Turn = { id: number; text: string; language: "ar" | "en"; status: "pending" | "sent" | "failed"; answer?: AssistantReply };
 const errors: Record<string, TranslationKey> = {
   NETWORK: "assistantChat.network", ASSISTANT_TIMEOUT: "assistantChat.timeout",
@@ -93,7 +92,7 @@ function AssistantConversation() {
   }
   const prompts = language === "ar" ? ["كيف أستعد لزيارة طبيبي؟", "كيف أنظم سجل قراءات ضغط الدم؟", "ما الأسئلة التي أطرحها عن دوائي؟"] : ["How can I prepare for a doctor visit?", "How can I organize my blood pressure log?", "What should I ask about my medication?"];
   return <div ref={page} className="assistant-page evolution-assistant" data-i18n="declarative">
-    <header className="assistant-heading"><div><span className="assistant-identity"><Bot size={18} aria-hidden="true" />ChronicCare AI</span><h1>{t("assistantChat.title")}</h1><p>{t("assistantChat.intro")}</p></div>
+    <header className="assistant-heading"><div><h1>{t("assistantChat.title")}</h1><p>{t("assistantChat.intro")}</p></div>
       <Button variant="secondary" title={t("assistantChat.new")} disabled={pending || (!turns.length && !draft)} onClick={clear}><Plus size={18} aria-hidden="true" /><span>{t("assistantChat.new")}</span></Button>
     </header>
     <div className="assistant-layout">
@@ -109,12 +108,11 @@ function AssistantConversation() {
     </details>
     </aside>
     <section className="assistant-workspace" aria-label={t("assistantChat.conversation")}>
-      <LivingPulse cue={pending ? "thinking" : `answered-${turns.filter(turn => turn.answer).length}`} />
       <div className="assistant-conversation-heading"><MessageCircle size={18} aria-hidden="true" /><span>{t("assistantChat.conversation")}</span><small>{t("assistantChat.education")}</small></div>
       <span className="sr-only" role="status">{pending ? t("assistantChat.loading") : ""}</span>
       <div ref={log} className="assistant-log" role="log" aria-label={t("assistantChat.conversation")} aria-live="polite" aria-relevant="additions text" aria-busy={pending} tabIndex={0}
         onScroll={() => { const element = log.current; if (element) { nearBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 80; setShowLatest(!nearBottom.current); } }}>
-        {!turns.length && <div className="assistant-empty"><div className="assistant-empty-copy"><SignatureArtwork /><span className="assistant-empty-mark"><Bot size={30} aria-hidden="true" /></span><h2>{t("assistantChat.empty")}</h2><p>{t("assistantChat.emptyBody")}</p></div><div className="assistant-prompts">{prompts.map(prompt => <button type="button" key={prompt} onClick={() => { setDraft(prompt); composer.current?.focus(); }}>{prompt}<Plus size={17} aria-hidden="true" /></button>)}</div></div>}
+        {!turns.length && <div className="assistant-empty"><div className="assistant-empty-copy"><span className="assistant-empty-mark"><Bot size={30} aria-hidden="true" /></span><h2>{t("assistantChat.empty")}</h2><p>{t("assistantChat.emptyBody")}</p></div><div className="assistant-prompts">{prompts.map(prompt => <button type="button" key={prompt} onClick={() => { setDraft(prompt); composer.current?.focus(); }}>{prompt}<Plus size={17} aria-hidden="true" /></button>)}</div></div>}
         {turns.map(turn => <div key={turn.id} className="assistant-turn">
           <article className="assistant-message patient-message"><h2><UserRound size={14} aria-hidden="true" />{t("assistantChat.you")}</h2><p lang={turn.language} dir="auto">{turn.text}</p>
             {turn.status === "failed" && <small>{t("assistantChat.notAnswered")}</small>}

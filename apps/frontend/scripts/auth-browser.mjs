@@ -57,7 +57,7 @@ try {
     await new Promise(resolve => probe.close(resolve));
   }
   start(["dist/server.js"], backend, { ...config, DATABASE_URL: databaseUrl, PORT: "3302", HOST: "127.0.0.1", CORS_ORIGINS: "http://127.0.0.1:5176" });
-  start(["node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5176", "--strictPort"], root, { VITE_API_URL: "http://127.0.0.1:3302/api" });
+  start(["node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5176", "--strictPort"], root, { VITE_API_URL: "http://127.0.0.1:3302/api", CHRONICCARE_VITE_CACHE_DIR: "node_modules/.vite-auth-browser" });
   stage = "backend-readiness";
   await wait("http://127.0.0.1:3302/api/health/ready");
   stage = "frontend-startup";
@@ -132,7 +132,9 @@ try {
     await page.goto(`http://127.0.0.1:5176/${route}`);
     for (const [mode, os] of [["light", "light"], ["dark", "dark"], ["system", "light"], ["system", "dark"]]) {
       if (process.argv.includes("--flow-only")) continue;
+      await page.locator(".header-preferences-button").click();
       await page.locator(".theme-select").selectOption(mode);
+      await page.keyboard.press("Escape");
       await page.emulateMedia({ colorScheme: os });
       for (const width of [320, 360, 375, 390, 430, 768, 1024, 1440]) {
         await page.setViewportSize({ width, height: 900 });
@@ -158,10 +160,14 @@ try {
     await page.locator('.password-toggle').click();
     assert.equal(await fields.nth(2).getAttribute('type'),'password');
     await fields.nth(0).fill("Browser مستخدم"); await fields.nth(1).fill(email);
+    await page.locator('.header-preferences-button').click();
     await page.locator('.language-toggle').click();
+    await page.keyboard.press('Escape');
     assert.equal(await fields.nth(0).inputValue(), "Browser مستخدم");
     assert.equal(await fields.nth(1).inputValue(), email);
+    await page.locator('.header-preferences-button').click();
     await page.locator('.language-toggle').click();
+    await page.keyboard.press('Escape');
     await fields.nth(2).fill(password); await fields.nth(3).fill("mismatch");
     await page.locator('button[type="submit"]').click();
     await page.locator('[aria-invalid="true"]').first().waitFor();
@@ -174,11 +180,11 @@ try {
     await page.locator('input[autocomplete="current-password"]').waitFor();
     // Duplicate registration is reported without losing control of the form.
     stage = `${language}: duplicate-account`;
-    await page.locator(".auth-card a").first().click();
+    await page.locator('.auth-card a[href^="/register"]').click();
     await page.locator('input[autocomplete="name"]').waitFor();
     for (const [i, value] of ["Browser مستخدم", email, password, password].entries()) await page.locator(".auth-card input").nth(i).fill(value);
     await page.locator('button[type="submit"]').click(); await page.getByRole("alert").waitFor();
-    await page.locator(".auth-card a").first().click();
+    await page.locator('.auth-card a[href^="/login"]').click();
     await page.locator('input[autocomplete="current-password"]').waitFor();
     await page.locator('input[type="email"]').fill(email);
     stage = `${language}: incorrect-login-fill`;
@@ -191,13 +197,16 @@ try {
     stage = `${language}: login-me`;
     const logged = page.waitForResponse(r => r.url().endsWith("/auth/login") && r.status() === 200);
     await page.locator('button[type="submit"]').click();
-    const token = (await (await logged).json()).token;
+    const session = await (await logged).json();
+    assert.equal(session.token, undefined, "The existing API uses cookie sessions, not returned bearer tokens");
+    const sessionCookie = (await context.cookies("http://127.0.0.1:3302")).find(cookie => cookie.name === "cc_session" || cookie.name === "__Host-cc_session");
+    assert(sessionCookie?.httpOnly, "The real session cookie is HTTP-only");
     await page.waitForURL("**/patient/dashboard");
-    assert(await page.evaluate(token => ![...Object.values(localStorage), ...Object.values(sessionStorage)].includes(token), token), "Token persisted in browser storage");
+    assert(await page.evaluate(value => ![...Object.values(localStorage), ...Object.values(sessionStorage)].includes(value), sessionCookie.value), "Session credential persisted in browser storage");
     await page.evaluate(async () => { const { queryClient } = await import('/src/lib/query/queryClient.ts'); queryClient.setQueryData(['auth-cache-probe'], 'private'); });
     await page.locator('.session-bar button').click(); await page.waitForURL("**/login?returnTo=*");
     assert.equal(await page.evaluate(async () => { const {queryClient} = await import('/src/lib/query/queryClient.ts'); return queryClient.getQueryData(['auth-cache-probe']); }), undefined);
-    assert.equal((await fetch("http://127.0.0.1:3302/api/auth/me", { headers: {Authorization:`Bearer ${token}`} })).status, 401);
+    assert.equal((await fetch("http://127.0.0.1:3302/api/auth/me", { headers: { Cookie: sessionCookie.name + "=" + sessionCookie.value } })).status, 401);
     // Safe return URL preserves route, query and hash after login.
     stage = `${language}: protected-return-url`;
     await page.goto("http://127.0.0.1:5176/patient/measurements?range=7#history");
@@ -215,8 +224,12 @@ try {
     assert.equal(expiredKeys.some(key => key[0] === 'patient' || key[0] === 'auth-cache-probe'), false, 'Expired sessions must remove protected cache keys');
     await page.locator('input[type="email"]').fill(email); await page.locator('input[autocomplete="current-password"]').fill(password);
     await page.locator('button[type="submit"]').click(); await page.waitForURL("**/patient/measurements?range=7#history");
-    await page.reload(); await page.waitForURL("**/login?returnTo=*");
-    report.checks.push(`${language}: ${process.argv.includes("--flow-only") ? "flow-only (layout matrix skipped)" : "responsive login/register at 8 widths × light/dark/system-light/system-dark"}; language switching preserves inputs; validation, register, duplicate, invalid login, login/me, token memory, logout/revocation, cache clearing, return URL, expired session, re-login and reload`);
+    stage = language + ": cookie-session-reload";
+    await page.reload(); await page.waitForURL("**/patient/measurements?range=7#history");
+    await page.locator(".measurements-heading").waitFor();
+    assert.equal(await page.evaluate(() => fetch("http://127.0.0.1:3302/api/auth/me", { credentials: "include" }).then(response => response.status)), 200,
+      "The existing HTTP-only cookie session survives reload without storing a bearer token");
+    report.checks.push(`${language}: ${process.argv.includes("--flow-only") ? "flow-only (layout matrix skipped)" : "responsive login/register at 8 widths × light/dark/system-light/system-dark"}; language switching preserves inputs; validation, register, duplicate, invalid login, login/me, HTTP-only cookie and no browser-storage credentials, logout/revocation, cache clearing, return URL, expired session, re-login and cookie-session reload`);
     await context.close();
   }
   for (const role of ["doctor", "admin"]) {
@@ -231,11 +244,20 @@ try {
     await page.evaluate(async () => { const { router } = await import('/src/app/router.tsx'); await router.navigate('/patient/dashboard'); });
     await page.waitForURL(`**/${role}/dashboard`);
     await page.evaluate(async () => { const { router } = await import('/src/app/router.tsx'); await router.navigate('/'); });
-    await page.locator('.topbar').waitFor();
-    assert.equal(await page.locator('.topbar a[href="/login"]').count(), 0);
-    assert.equal(await page.locator(`.route-links a[href="/${role}/dashboard"]`).count(), 1);
-    await page.locator('.public-account-nav button').click();
-    await page.locator('.topbar a[href="/login"]').waitFor();
+    await page.locator('.nav-actions a.fh-cta').waitFor();
+    await page.waitForFunction(() => document.querySelector('.nav-actions a.fh-cta')?.getAttribute('href') !== '/register');
+    assert.equal(await page.locator('.hero-header a[href="/login"]').count(), 0);
+    stage = role + ": homepage-workspace";
+    const workspace = page.locator(`.nav-actions a[href="/${role}/dashboard"]`);
+    await workspace.click();
+    await page.waitForURL(`**/${role}/dashboard`);
+    stage = role + ": workspace-logout";
+    await page.locator('.session-bar button').click();
+    await page.waitForURL("**/login?returnTo=*");
+    await page.evaluate(async () => { const { router } = await import('/src/app/router.tsx'); await router.navigate('/'); });
+    stage = role + ": guest-homepage-after-logout";
+    await page.locator("#hy-menu-button").click();
+    await page.locator('#hy-menu a[href="/login"]').waitFor();
     report.checks.push(`${role}: real login, role destination/guard, authenticated public navigation and real public logout`);await context.close();
   }
   }

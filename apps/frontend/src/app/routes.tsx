@@ -4,7 +4,6 @@ import MedicationsPage from "@/pages/patient/MedicationsPage";
 import { Outlet, type RouteObject } from "react-router";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import UnavailablePage from "@/pages/public/UnavailablePage";
-import HomePage from "@/pages/public/HomePage";
 import AuthPage from "@/pages/auth/AuthPage";
 import AccountEmailPage from "@/pages/auth/AccountEmailPage";
 import DashboardPage from "@/pages/patient/DashboardPage";
@@ -22,7 +21,11 @@ export const routes: RouteObject[] = [
     element: <Outlet />,
     errorElement: <UnavailablePage error />,
     children: [
-      { path: "/", element: <HomePage /> },
+      {
+        path: "/",
+        lazy: async () => ({ Component: (await import("@/pages/public/HybridHomePage")).default }),
+        HydrateFallback: () => null,
+      },
       { path: "/login", element: <AuthPage key="login" mode="login" /> },
       { path: "/register", element: <AuthPage key="register" mode="register" /> },
       { path: "/setup", element: <AuthPage key="setup" mode="setup" /> },

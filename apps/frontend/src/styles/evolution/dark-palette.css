@@ -1,0 +1,18 @@
+/* Shared palette for the application theme and the isolated homepage preview. */
+:root[data-theme="dark"],
+.hybrid[data-theme="dark"] {
+  --dark-page: #151619;
+  --dark-shell: var(--dark-page);
+  --dark-card: #202226;
+  --dark-raised: #2A2D32;
+  --dark-text: #F2F3F5;
+  --dark-muted: #C4C8D0;
+  --dark-divider: #41444B;
+  --dark-control-border: #7D8290;
+  --dark-accent: #B59AFF;
+  --dark-on-accent: #1B132D;
+  --dark-chart-glow: #B08BFF;
+
+  --dark-tint: color-mix(in srgb, var(--dark-raised) 82%, var(--dark-divider));
+  --dark-overlay: color-mix(in srgb, var(--dark-page) 80%, transparent);
+}

@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, Ref } from "react";
 import { LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 export function Button({
@@ -10,8 +10,9 @@ export function Button({
   children,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "danger";
   loading?: boolean;
+  ref?: Ref<HTMLButtonElement>;
 }) {
   return (
     <button
