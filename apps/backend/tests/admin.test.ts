@@ -80,6 +80,8 @@ test("real PostgreSQL Doctor invitations: delivery, activation, expiry, single u
     assert.equal((await request("/api/admin/doctors")).status, 401);
     assert.equal((await request("/api/admin/doctors", "GET", patientSession.token)).status, 403);
     assert.equal((await request("/api/admin/doctors", "GET", doctorSession.token)).status, 403);
+    assert.equal((await request("/api/admin/invitations")).status,401);
+    for(const session of [patientSession,doctorSession])assert.equal((await request("/api/admin/invitations","GET",session.token)).status,403);
     const initial = await request("/api/admin/doctors", "GET", adminSession.token);
     assert.equal(initial.status, 200);
     assert((await initial.json() as { doctors: { id: string }[] }).doctors.some(doctor => doctor.id === existingDoctor.id));
@@ -98,6 +100,10 @@ test("real PostgreSQL Doctor invitations: delivery, activation, expiry, single u
     assert(tokenRow.token_hash === tokenHash(activation) && tokenRow.token_hash !== activation);
     assert.equal(tokenRow.delivered, true); assert.equal(tokenRow.consumed_at, null); assert.equal(tokenRow.user_id, null);
     assert.equal(tokenRow.invited_name, input.name); assert(tokenRow.expires_at > new Date());
+    const ledger=await (await request("/api/admin/invitations","GET",adminSession.token)).json() as {invitations:{email:string;issuedAt:string;status:string;accountStatus:string;token_hash?:string}[]};
+    const invited=ledger.invitations.find(item=>item.email===input.email)!;
+    assert.equal(invited.status,"pending");assert.equal(invited.accountStatus,"not-created");assert.equal(invited.token_hash,undefined);
+    assert(Number.isFinite(Date.parse(invited.issuedAt)));assert(!JSON.stringify(ledger).includes(activation));
     assert.equal((await request("/api/admin/doctors", "POST", adminSession.token, input)).status, 409);
     assert.equal(messages.length, 1);
     for (const invalid of [
@@ -122,6 +128,8 @@ test("real PostgreSQL Doctor invitations: delivery, activation, expiry, single u
     assert.equal((await auth.findAccount(patient.email))!.password_hash, passwordHash, "Other account credentials unchanged");
     const newDoctorSession = await login(input.email);
     assert.equal(newDoctorSession.user.role, "doctor");
+    const activated=(await admin.listInvitations!()).find(item=>item.email===input.email)!;
+    assert.equal(activated.status,"closed");assert.equal(activated.accountStatus,"active");assert(activated.consumedAt);
     assert.equal((await request("/api/admin/doctors", "GET", newDoctorSession.token)).status, 403);
     const patientList = await request("/api/doctor/patients", "GET", newDoctorSession.token);
     assert.equal(patientList.status, 200);
@@ -137,6 +145,7 @@ test("real PostgreSQL Doctor invitations: delivery, activation, expiry, single u
     const expiredInput = { name: "Expiry Fixture", email: emails[4]! };
     await service.inviteDoctor(expiredInput); const expired = tokenFrom(1);
     await pool.query("UPDATE chroniccare.account_tokens SET expires_at=clock_timestamp()-interval '1 second' WHERE token_hash=$1", [tokenHash(expired)]);
+    assert.equal((await admin.listInvitations!()).find(item=>item.email===expiredInput.email)!.status,"expired");
     await assert.rejects(service.redeem("doctor_activation", { token: expired, password }));
     assert.equal(await auth.findAccount(expiredInput.email), undefined);
     await service.inviteDoctor(expiredInput); const replacement = tokenFrom(2);

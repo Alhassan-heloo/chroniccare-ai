@@ -282,8 +282,9 @@ body:has(.hybrid) { margin: 0; -webkit-font-smoothing: auto; }
 .hybrid .showcase-intro { display: grid; gap: 12px; max-width: 720px; margin-block-end: 28px; }
 .hybrid .showcase-intro h2 { font: 400 40px/1.2 var(--serif); }
 .hybrid .showcase-intro p { color: var(--muted); font-size: 18px; line-height: 1.55; }
-.hybrid .show-track { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
-.hybrid .show-track::-webkit-scrollbar { display: none; }
+.hybrid .show-track { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin; scrollbar-color: var(--accent) var(--paper); }
+.hybrid .show-track::-webkit-scrollbar { height: 6px; }
+.hybrid .show-track::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 6px; }
 .hybrid .show-card {
   position: relative;
   isolation: isolate;
@@ -552,8 +553,8 @@ html:has(.hybrid .show-dialog[open]) { overflow: hidden; }
   .hybrid .show-caption i { width: 28px; height: 28px; }
   .hybrid .show-dialog {
     inline-size: calc(100% - max(8px,env(safe-area-inset-left)) - max(8px,env(safe-area-inset-right)));
-    block-size: min(92dvh,calc(100dvh - max(8px,env(safe-area-inset-top)) - max(8px,env(safe-area-inset-bottom))));
-    max-block-size: none;
+    block-size: auto;
+    max-block-size: min(92dvh,calc(100dvh - max(8px,env(safe-area-inset-top)) - max(8px,env(safe-area-inset-bottom))));
     inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     border-radius: 14px;
   }

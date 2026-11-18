@@ -4,6 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "test:final-experience": "node scripts/final-experience-browser.mjs --matrix",
+    "test:final-integration": "node scripts/final-postgres.mjs scripts/final-experience-integration.mjs",
+    "test:final-homepage": "node scripts/final-homepage-browser.mjs",
+    "test:final-zoom": "node scripts/final-zoom-browser.mjs",
+    "demo:final": "node scripts/final-postgres.mjs scripts/final-demo-preview.mjs",
     "test:design-browser": "node scripts/design-browser.mjs",
     "test:homepage-navigation": "node scripts/homepage-navigation-browser.mjs",
     "test:auth-browser": "node scripts/auth-browser.mjs",
@@ -24,7 +29,9 @@
     "test:responsive": "node scripts/responsive.mjs",
     "check:translations": "node scripts/check-translations.mjs",
     "test": "npm run test:smoke",
-    "check": "npm run check:translations"
+    "check": "npm run check:translations",
+    "test:graduation-layout": "node scripts/graduation-verify.mjs",
+    "capture:graduation": "node scripts/graduation-capture.mjs"
   },
   "dependencies": {
     "react": "^19.2.0",

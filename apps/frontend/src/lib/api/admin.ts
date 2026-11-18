@@ -1,6 +1,14 @@
 import { AuthError, type AuthorizedRequest } from "@/auth/api";
 import type { AdminDoctor, CreateDoctorInput, DoctorInvitation } from "@/lib/types/admin";
 
+export interface AdminInvitation {name:string;email:string;issuedAt:string;expiresAt:string;consumedAt:string|null;delivered:boolean;status:"pending"|"expired"|"closed"|"undelivered";accountStatus:"active"|"disabled"|"password-change"|"not-created"}
+export async function getAdminInvitations(request:AuthorizedRequest,signal?:AbortSignal):Promise<AdminInvitation[]> {
+ const response=await request<{invitations:unknown[]}>("/admin/invitations",{signal});
+ if(!response || !Array.isArray(response.invitations))throw new AuthError("INVALID_RESPONSE");
+ return response.invitations.map(value=>{if(!value || typeof value!=="object")throw new AuthError("INVALID_RESPONSE");const item=value as AdminInvitation;
+ if(typeof item.name!=="string" || typeof item.email!=="string" || typeof item.issuedAt!=="string" || !Number.isFinite(Date.parse(item.issuedAt)) || typeof item.expiresAt!=="string" || !Number.isFinite(Date.parse(item.expiresAt)) || !(item.consumedAt===null || (typeof item.consumedAt==="string" && Number.isFinite(Date.parse(item.consumedAt)))) || typeof item.delivered!=="boolean" || !["pending","expired","closed","undelivered"].includes(item.status) || !["active","disabled","password-change","not-created"].includes(item.accountStatus))throw new AuthError("INVALID_RESPONSE");return item;});
+}
+
 function doctor(value: unknown): AdminDoctor {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new AuthError("INVALID_RESPONSE");
   const fields = value as Record<string, unknown>;

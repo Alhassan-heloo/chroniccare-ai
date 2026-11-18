@@ -8,9 +8,13 @@ dist/
 *.tsbuildinfo
 .DS_Store
 apps/frontend/artifacts/
+/artifacts/private/
 
 # Keep old design prototypes locally
 /design-prototypes/chroniccare-calm/
 /design-prototypes/chroniccare-next/
 /design-prototypes/chroniccare-living-2.0-reference-20261023/
 /design-prototypes/chroniccare-living-approved-reference-20261023/
+
+# Local design critique evidence
+/.impeccable/

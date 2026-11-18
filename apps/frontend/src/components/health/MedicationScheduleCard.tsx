@@ -56,10 +56,10 @@ export function MedicationScheduleCard({
                 {done ? (
                   <>
                     <Check size={17} aria-hidden="true" />
-                    {t("إلغاء التسجيل")}
+                    {t("finalExperience.intakeSaved")}
                   </>
                 ) : (
-                  t("تم التناول")
+                  t("finalExperience.recordIntake")
                 )}
               </Button>
             </li>

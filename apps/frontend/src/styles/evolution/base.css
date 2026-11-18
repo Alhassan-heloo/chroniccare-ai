@@ -1,5 +1,6 @@
 @layer base {
   * { box-sizing: border-box; }
+  * { scrollbar-width: thin; scrollbar-color: var(--control-border) var(--surface); }
   html { background: var(--bg); scroll-padding-block: var(--space-6) calc(var(--layout-mobile-nav) + var(--space-6)); }
   body { margin: 0; background: var(--bg); color: var(--text); font: 400 var(--text-base)/var(--care-body-leading) var(--font-body); -webkit-font-smoothing: antialiased; }
   button, input, select, textarea { font: inherit; }

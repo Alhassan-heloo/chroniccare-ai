@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { Feedback } from "@/components/ui/Feedback";
+import { PublicLayout } from "@/components/public/PublicLayout";
 
 export function ProtectedRoute({ role }: { role: User["role"] }) {
   const { user, loading } = useAuth();
@@ -46,11 +47,11 @@ export function SessionBar() {
 function ChangeTemporaryPassword() {
  const {t}=useI18n(), {logout}=useAuth();
  const [current,setCurrent]=useState(""),[password,setPassword]=useState(""),[confirm,setConfirm]=useState(""),[busy,setBusy]=useState(false),[failed,setFailed]=useState(false);
- return <Card><h1>{t("admin.changeRequired")}</h1><form onSubmit={async event=>{event.preventDefault();if(busy)return;setFailed(false);if(password!==confirm || current===password){setFailed(true);return;}setBusy(true);try{await authRequest("change-password",{body:{currentPassword:current,password}});await logout().catch(()=>undefined);}catch{setFailed(true);}finally{setBusy(false);}}}>
+ return <PublicLayout><main id="public-content" className="temporary-password-page route-content" data-i18n="declarative"><Card className="stack"><h1>{t("admin.changeRequired")}</h1><form className="stack" noValidate aria-busy={busy} onSubmit={async event=>{event.preventDefault();if(busy)return;setFailed(false);if(password!==confirm || current===password || password.length<12 || password.length>128 || !current){setFailed(true);return;}setBusy(true);try{await authRequest("change-password",{body:{currentPassword:current,password}});await logout().catch(()=>undefined);}catch{setFailed(true);}finally{setBusy(false);}}}>
  <Input label={t("admin.currentPassword")} type="password" autoComplete="current-password" value={current} onChange={e=>setCurrent(e.target.value)} required />
  <Input label={t("admin.newPassword")} type="password" autoComplete="new-password" minLength={12} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)} required />
  <Input label={t("admin.confirmPassword")} type="password" autoComplete="new-password" value={confirm} onChange={e=>setConfirm(e.target.value)} required />
  {failed && <Feedback kind="error">{t("admin.passwordFailed")}</Feedback>}
  <Button type="submit" loading={busy}>{t("admin.changePassword")}</Button>
- </form></Card>;
+ </form></Card></main></PublicLayout>;
 }

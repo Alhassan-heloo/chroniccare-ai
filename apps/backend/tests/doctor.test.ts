@@ -125,6 +125,18 @@ test("real PostgreSQL doctor workflow: assigned-patient read access, roles and i
     assert.equal(overview.habits[0]?.id, habit.id);
     assert.equal(overview.habits[0]?.progress, 10);
     assert.equal(overview.habits[0]?.recordedOn, day);
+    const activityPath=`/api/doctor/patients/${patientA.id}/activity?date=${day}`;
+    for(const token of [patientToken,adminToken]) assert.equal((await request(activityPath,"GET",token)).status,403);
+    assert.equal((await request(activityPath,"GET",doctorBToken)).status,404);
+    const activity=await (await request(activityPath,"GET",doctorAToken)).json() as {patientId:string;events:{kind:string;title:string;recordedAt:string;day:string;value:number|null}[]};
+    assert.equal(activity.patientId,patientA.id);assert.equal(activity.events.length,2);
+    assert(activity.events.every(event=>event.day===day && Number.isFinite(Date.parse(event.recordedAt))));
+    assert.equal(activity.events.find(event=>event.kind==="habit")?.value,10);
+    const storedTime=await pool.query<{created_at:Date}>("SELECT created_at FROM chroniccare.medication_dose_logs WHERE medication_id=$1",[medication.id]);
+    assert.equal(activity.events.find(event=>event.kind==="dose")?.recordedAt,storedTime.rows[0]!.created_at.toISOString());
+    await medications.setDose(patientA.id,medication.id,"08:00",{date:day,taken:false});
+    const undone=await (await request(activityPath,"GET",doctorAToken)).json() as {events:{kind:string}[]};
+    assert.equal(undone.events.filter(event=>event.kind==="dose").length,0);
 
     assert.equal((await request(`/api/doctor/patients/${patientB.id}?date=${day}`, "GET", doctorAToken)).status, 404);
     assert.equal((await request(`/api/doctor/patients/${patientA.id}?date=${day}`, "GET", doctorBToken)).status, 404);
@@ -142,6 +154,8 @@ test("real PostgreSQL doctor workflow: assigned-patient read access, roles and i
     await stop(); await start(); doctorAToken = await login(emails[0]!);
     assert.equal((await request(`/api/doctor/patients/${patientA.id}?date=${day}`, "GET", doctorAToken)).status, 200,
       "The authorized relationship and patient record persist after an Express restart.");
+    await pool.query("DELETE FROM chroniccare.doctor_patient_relationships WHERE doctor_id=$1 AND patient_id=$2",[doctorA.id,patientA.id]);
+    assert.equal((await request(activityPath,"GET",doctorAToken)).status,404,"Revocation also blocks activity history.");
   } finally {
     await stop();
     try {

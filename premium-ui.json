@@ -1,0 +1,19 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["apps/frontend/src", "apps/frontend/homepage-hybrid"],
+  "locale": "ar",
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": ["Form", "Select/Listbox", "Date", "Scrollbar", "Toast", "CRUD"],
+  "ownership": { "Select/Listbox": "native", "Date": "native" },
+  "requiredCommands": ["typecheck", "build", "smoke", "browser"],
+  "commands": {
+    "typecheck": "npm.cmd --prefix apps/frontend run typecheck",
+    "build": "npm.cmd --prefix apps/frontend run build",
+    "smoke": "npm.cmd --prefix apps/frontend run test:smoke",
+    "browser": "node apps/frontend/scripts/final-experience-browser.mjs --matrix"
+  },
+  "evidence": {
+    "crudFullFlow": "apps/frontend/scripts/final-experience-integration.mjs",
+    "failurePaths": "apps/backend/tests/targeted-invitations.test.ts"
+  }
+}

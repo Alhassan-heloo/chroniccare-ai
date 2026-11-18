@@ -1,11 +1,14 @@
 import { useRef, useState, type FormEvent } from "react";
-import { RefreshCw, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { Mail,RefreshCw, ShieldCheck, UserPlus, Users } from "lucide-react";
+import {useQueryClient} from "@tanstack/react-query";
+import {DoctorInvitations} from "./DoctorInvitations";
 import { AuthError } from "@/auth/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Feedback } from "@/components/ui/Feedback";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
+import { CopyButton } from "@/components/ui/CopyButton";
 import { useAdminDoctors, useCreateDoctor } from "@/hooks/queries/useAdminDoctors";
 import { useI18n } from "@/i18n/context";
 import type { TranslationKey } from "@/i18n/catalog";
@@ -22,6 +25,7 @@ const errorKeys: Record<string, TranslationKey> = {
 export default function AdminDashboard() {
   const { t, formatNumber } = useI18n();
   const {request}=useAuth();
+  const queryClient=useQueryClient();
   const doctors = useAdminDoctors();
   const create = useCreateDoctor();
   const [target,setTarget]=useState<AdminDoctor | null>(null);
@@ -45,6 +49,7 @@ export default function AdminDashboard() {
   const [created, setCreated] = useState<DoctorInvitation | null>(null);
   const [direct, setDirect] = useState(true);
   const [temporary, setTemporary] = useState<string | null>(null);
+  const [showTemporary, setShowTemporary] = useState(false);
   const [creationOpen, setCreationOpen] = useState(false);
   const [fields, setFields] = useState<Partial<Record<Field, TranslationKey>>>({});
   const [error, setError] = useState<TranslationKey | null>(null);
@@ -64,7 +69,7 @@ export default function AdminDashboard() {
     const invalid: typeof fields = {};
     if (!name.trim() || name.trim().length > 100) invalid.name = "admin.nameInvalid";
     if (email.trim().length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) invalid.email = "admin.emailInvalid";
-    setFields(invalid); setError(null); setCreated(null); setTemporary(null);
+    setFields(invalid); setError(null); setCreated(null); setTemporary(null); setShowTemporary(false);
     if (Object.keys(invalid).length) {
       const form = event.currentTarget;
       requestAnimationFrame(() => form.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus());
@@ -78,6 +83,7 @@ export default function AdminDashboard() {
       setTemporary(result?.temporaryPassword ?? null);
       if(result) void doctors.refetch();
       setCreated(invitation); setName(""); setEmail("");
+      void queryClient.invalidateQueries({queryKey:["admin-invitations"]});
     } catch (cause) {
       setError(cause instanceof AuthError ? errorKeys[cause.code] ?? "admin.failed" : "admin.failed");
     } finally { submitting.current = false; setDirectBusy(false); }
@@ -89,6 +95,7 @@ export default function AdminDashboard() {
       <nav className="admin-jump-nav" aria-label={t("admin.dashboard")}>
         <Button className="admin-open-create" onClick={() => setCreationOpen(true)}><UserPlus size={18} aria-hidden="true" />{t("admin.createTitle")}</Button>
         <a href="#admin-doctors-title"><Users size={18} aria-hidden="true" />{t("admin.listTitle")}</a>
+        <a href="#admin-invitations-title"><Mail size={18} aria-hidden="true" />{t("graduation.invitations")}</a>
       </nav>
     </header>
     <div className="admin-overview">
@@ -106,6 +113,7 @@ export default function AdminDashboard() {
               : <Feedback kind="empty">{t("admin.empty")}</Feedback>}
       </section>
     </div>
+    <DoctorInvitations onCreate={()=>{setDirect(false);setCreationOpen(true);}} />
     <Modal open={!!target} dismissible={!actionBusy} onClose={()=>{if(!actionLock.current)setTarget(null);}} title={t("admin.deleteDoctor")} declarativeTitle>
       <p>{t("admin.deleteConfirm",{name:target?.name ?? ""})}</p>
       {blocked && <Feedback kind="error">{t("admin.deleteBlocked")}</Feedback>}
@@ -114,22 +122,22 @@ export default function AdminDashboard() {
       {blocked ? <Button variant="danger" loading={actionBusy} disabled={target?.disabled} onClick={()=>void manageDoctor(true)}>{t("admin.disableDoctor")}</Button> : <Button variant="danger" loading={actionBusy} onClick={()=>void manageDoctor()}>{t("admin.deleteDoctor")}</Button>}
     </Modal>
     <Modal open={creationOpen} dismissible={!create.isPending && !directBusy} onClose={() => { if (!submitting.current) { setCreationOpen(false); setTemporary(null); setCreated(null); create.reset(); } }} title={t("admin.createTitle")} declarativeTitle>
-      <Card className="admin-create-card" padding="comfortable">
-        <Button variant="secondary" disabled={create.isPending || directBusy} onClick={() => { setDirect(!direct); setTemporary(null); setCreated(null); }}>{t(direct ? "admin.inviteAlternative" : "admin.createTitle")}</Button>
-        <p id="admin-create-title" className="admin-create-description">{t("admin.createDescription")}</p>
-        {temporary && <Feedback kind="success"><p>{t("admin.temporaryNotice")}</p><code dir="ltr">{temporary}</code></Feedback>}
-        {created && <Feedback kind="success">{t("admin.createdSuccess", { name: `\u2068${created.name}\u2069` })}</Feedback>}
+      <div className="admin-create-card stack">
+        <div className="admin-creation-modes" role="group" aria-label={t("admin.createTitle")}>{[true,false].map(mode=><Button key={String(mode)} variant={direct===mode ? "primary" : "secondary"} aria-pressed={direct===mode} disabled={create.isPending || directBusy} onClick={()=>{setDirect(mode);setTemporary(null);setCreated(null);setError(null);}}>{t(mode ? "finalExperience.directMode" : "finalExperience.emailMode")}</Button>)}</div>
+        <p id="admin-create-title" className="admin-create-description">{t(direct ? "finalExperience.directHint" : "finalExperience.emailHint")}</p>
+        {created && <Feedback kind="success"><p>{t(direct ? "finalExperience.directCreated" : "finalExperience.emailCreated", {name:`⁨${created.name}⁩`,email:`⁨${created.email}⁩`})}</p><bdi>{created.email}</bdi></Feedback>}
+        {temporary && <div className="stack temporary-credential"><p>{t("admin.temporaryNotice")}</p><Input label={t("finalExperience.temporaryPassword")} type={showTemporary ? "text" : "password"} dir="ltr" value={temporary} readOnly autoComplete="off" onFocus={event=>event.target.select()} /><Button variant="secondary" aria-pressed={showTemporary} onClick={()=>setShowTemporary(value=>!value)}>{t(showTemporary ? "finalExperience.hidePassword" : "finalExperience.showPassword")}</Button><CopyButton key={temporary} value={temporary} label={t("finalExperience.copyPassword")} /></div>}
         {error && <Feedback kind="error">{t(error)}</Feedback>}
-        <form onSubmit={submit} noValidate aria-busy={create.isPending}>
+        <form onSubmit={submit} noValidate aria-busy={create.isPending || directBusy} aria-describedby="admin-create-title">
           <fieldset disabled={create.isPending || directBusy}>
             <div className="admin-identity-fields">
             <Input label={t("admin.name")} value={name} onChange={event => { setName(event.target.value); clearField("name"); }} autoComplete="name" maxLength={100} required error={fields.name && t(fields.name)} />
             <Input label={t("admin.email")} type="email" dir="ltr" value={email} onChange={event => { setEmail(event.target.value); clearField("email"); }} autoComplete="username" maxLength={254} required error={fields.email && t(fields.email)} />
             </div>
-            <Button type="submit" loading={create.isPending}><UserPlus size={18} aria-hidden="true" />{t(create.isPending ? "admin.creating" : "admin.create")}</Button>
+            <Button type="submit" loading={create.isPending || directBusy}><UserPlus size={18} aria-hidden="true" />{t(create.isPending || directBusy ? "admin.creating" : direct ? "admin.create" : "finalExperience.emailMode")}</Button>
           </fieldset>
         </form>
-      </Card>
+      </div>
     </Modal>
   </div>;
 }

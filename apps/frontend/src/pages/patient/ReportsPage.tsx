@@ -5,6 +5,8 @@ import type { ReportPeriod } from "@/lib/types/report";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ReportSummary } from "@/components/health/ReportSummary";
+import {VisitSummary} from "@/components/health/VisitSummary";
+import {useSearchParams} from "react-router";
 import { useI18n } from "@/i18n/context";
 import "@/styles/evolution/records.css";
 import {
@@ -20,6 +22,8 @@ const periods: { value: ReportPeriod; label: string }[] = [
 export default function ReportsPage() {
   const { locale, t, formatNumber } = useI18n();
   const [period, setPeriod] = useState<ReportPeriod>(7);
+  const [params,setParams]=useSearchParams();
+  const showVisit=params.get("visit")==="1";
   const { data, isPending, isError, refetch } = usePatientReport(period);
   return (
     <div className="reports-page records-page grid gap-6" data-i18n="declarative">
@@ -42,8 +46,10 @@ export default function ReportsPage() {
         </div>
       </div>
       <div className="reports-toolbar dashboard-canvas-actions">
+        <Button variant="secondary" disabled={!data || isError || isPending} aria-expanded={showVisit} onClick={()=>setParams(showVisit?{}:{visit:"1"},{preventScrollReset:true})}>{t(showVisit?"graduation.closeVisit":"graduation.visit")}</Button>
         <p className="report-range" role="status"><CalendarDays size={17} aria-hidden="true" /><span>{data && t("reports.range", { from: `\u2068${data.from}\u2069`, to: `\u2068${data.to}\u2069`, count: formatNumber(data.measurements.length) })}</span></p>
       </div>
+      {showVisit && data && !isError && !isPending && <VisitSummary data={data} />}
       {isPending ? (
         <Card className="empty-state glass" role="status">
           {t("جارٍ تحميل التقرير…")}

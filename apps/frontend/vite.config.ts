@@ -6,6 +6,13 @@ export default defineConfig({
   // Browser suites isolate dependency caches from the running local preview.
   cacheDir: process.env.CHRONICCARE_VITE_CACHE_DIR,
   plugins: [react(), tailwindcss()],
+  // Generated database/browser artifacts contain Windows-locked files and are not source.
+  server: {
+    watch: { ignored: ["**/artifacts/**"] },
+    fs: { deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**",
+      "**/artifacts/private/**", "**/artifacts/final-experience/postgres/**",
+      "**/artifacts/final-experience/*profile/**", "**/artifacts/final-experience/DEMO-ACCESS.md"] },
+  },
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   build: {
     rollupOptions: {

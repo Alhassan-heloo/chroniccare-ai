@@ -10,6 +10,7 @@ import type { DoctorIdentity } from "@/lib/api/connections";
 import type { TranslationKey } from "@/i18n/catalog";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { Modal } from "@/components/ui/Modal";
+import { CopyButton } from "@/components/ui/CopyButton";
 import { Footprints, HeartPulse, KeyRound, Pill, ShieldCheck, UserRoundCheck } from "lucide-react";
 import "@/styles/evolution/clinical.css";
 
@@ -22,11 +23,27 @@ function message(error: unknown): TranslationKey {
 }
 
 export function ConnectPatientPage() {
-  const { generate } = useConnections();
+  const { generate, invite } = useConnections();
   const { t, formatDateTime, language } = useI18n();
   const lock = useRef(false);
+  const [email, setEmail] = useState("");
+  const [invalidEmail, setInvalidEmail] = useState(false);
+  const emailInput = useRef<HTMLInputElement>(null);
+  const link = invite.data ? `${window.location.origin}/patient/invitation#token=${invite.data.token}` : "";
   return <div className="doctor-page stack connection-page evolution-clinical" data-i18n="declarative">
-    <PageHeading title={t("connections.connect")} description={t("connections.doctorIntro")} />
+    <PageHeading title={t("finalExperience.invite")} description={t("finalExperience.invitationHint")} />
+    <Card className="stack targeted-invitation-card">
+      <form className="stack" noValidate aria-busy={invite.isPending} onSubmit={async event=>{
+        event.preventDefault();if(lock.current)return;
+        if(email.trim().length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())){setInvalidEmail(true);emailInput.current?.focus();return;}
+        lock.current=true;invite.reset();
+        try{await invite.mutateAsync(email.trim());}catch{/* Inline mutation feedback. */}finally{lock.current=false;}
+      }}><Input ref={emailInput} label={t("finalExperience.invitationEmail")} type="email" dir="ltr" autoComplete="off" maxLength={254} required value={email} disabled={invite.isPending} error={invalidEmail ? t("admin.emailInvalid") : undefined} onChange={event=>{setEmail(event.target.value);setInvalidEmail(false);invite.reset();}} />
+      <Button type="submit" loading={invite.isPending}>{t("finalExperience.issue")}</Button></form>
+      {invite.isError && <Feedback kind="error">{t(message(invite.error))}</Feedback>}
+      {invite.data && <><Feedback>{t("finalExperience.issued")}</Feedback><div className="field"><label htmlFor="patient-invitation-link">{t("finalExperience.invitationTitle")}</label><textarea className="resize-none" id="patient-invitation-link" dir="ltr" rows={3} readOnly value={link} autoComplete="off" spellCheck={false} onFocus={event=>event.target.select()} /></div><CopyButton key={link} value={link} label={t("finalExperience.copy")} /><time dateTime={invite.data.expiresAt}>{t("connections.expires",{date:formatDateTime(invite.data.expiresAt)})}</time></>}
+    </Card>
+    <details className="manual-connection"><summary>{t("finalExperience.manual")}</summary>
     <div className="connection-generation-workspace"><Card className="stack connection-code-card">
       <div className="connection-key-heading"><span className="clinical-panel-symbol"><KeyRound size={28} aria-hidden="true" /></span><div><h2>{t("connections.code")}</h2><p>{language === "ar" ? "رمز واحد. مريض واحد." : "One code. One patient."}</p></div></div>
       <Button loading={generate.isPending} onClick={async () => {
@@ -37,11 +54,13 @@ export function ConnectPatientPage() {
       }}>{t("connections.generate")}</Button>
       {generate.isError && <Feedback kind="error">{t(message(generate.error))}</Feedback>}
       {generate.data && <>
-        <div className="field connection-generated-code"><label htmlFor="generated-connection-code">{t("connections.code")}</label><textarea id="generated-connection-code" value={generate.data.code} readOnly dir="ltr" rows={3} spellCheck={false} autoComplete="off" onFocus={event => event.target.select()} /></div>
+        <div className="field connection-generated-code"><label htmlFor="generated-connection-code">{t("connections.code")}</label><textarea className="resize-none" id="generated-connection-code" value={generate.data.code} readOnly dir="ltr" rows={3} spellCheck={false} autoComplete="off" onFocus={event => event.target.select()} /></div>
+        <CopyButton key={generate.data.code} value={generate.data.code} label={t("finalExperience.copy")} />
         <p className="connection-expiration"><time dateTime={generate.data.expiresAt}>{t("connections.expires", { date: formatDateTime(generate.data.expiresAt) })}</time></p>
         <Feedback>{t("connections.share")}</Feedback>
       </>}
     </Card><aside className="connection-process"><h2>{language === "ar" ? "كيف يتم الاتصال؟" : "How connection works"}</h2><ol><li><strong>{language === "ar" ? "أنشئ رمزًا خاصًا" : "Generate a private code"}</strong><p>{language === "ar" ? "الرمز صالح لمدة عشر دقائق ولموافقة واحدة." : "The code is valid for ten minutes and one approval."}</p></li><li><strong>{language === "ar" ? "شاركه مع المريض" : "Share it with your patient"}</strong><p>{language === "ar" ? "يراجع المريض هوية حسابك قبل الموافقة." : "Your patient reviews your account identity before approving."}</p></li><li><strong>{language === "ar" ? "اقرأ السجل المصرّح به" : "View the authorized record"}</strong><p>{t("doctor.readOnlyNotice")}</p></li></ol></aside></div>
+    </details>
   </div>;
 }
 

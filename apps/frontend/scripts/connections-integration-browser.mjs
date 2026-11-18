@@ -30,6 +30,7 @@ async function openPage(email, role, path) {
   await page.goto(base + path); await page.waitForURL("**/login?returnTo=*"); await login(page, email, role); return page;
 }
 async function generate(page) {
+  if (!await page.locator(".manual-connection").evaluate(element=>element.open)) await page.locator(".manual-connection > summary").click();
   await page.getByRole("button", { name: "Generate connection code", exact: true }).click();
   const input = codeField(page);
   await input.waitFor();

@@ -2,6 +2,8 @@ import type { LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useI18n } from "@/i18n/context";
+import { ReadingValue } from "./ReadingValue";
+import {Check} from "lucide-react";
 export function HealthMetricCard({
   label,
   value,
@@ -11,6 +13,7 @@ export function HealthMetricCard({
   status,
   recordedAt,
   progress,
+  saved=false,
 }: {
   label: string;
   value: string;
@@ -20,26 +23,19 @@ export function HealthMetricCard({
   status?: string;
   recordedAt?: string;
   progress?: number;
+  saved?: boolean;
 }) {
-  const { t, formatNumber, formatDate, formatTime } = useI18n();
+  const { t, formatNumber } = useI18n();
   return (
-    <Card className="metric-card">
+    <Card className={"metric-card"+(saved?" reading-just-saved":"")}>
       <div className="metric-heading">
         <span className={`icon-tile tone-${tone}`} aria-hidden="true">
           <Icon size={24} />
         </span>
         <h3>{label}</h3>
       </div>
-      <div className="metric-reading">
-        <bdi className="metric-number" dir="ltr">{value}</bdi>
-        {unit && <span className="metric-unit patient-reading-unit"><bdi>{unit}</bdi></span>}
-      </div>
-      {recordedAt && (
-        <time className="metric-time patient-reading-time" dateTime={recordedAt}>
-          <bdi>{formatDate(recordedAt, { day: "numeric", month: "long", year: "numeric" })}</bdi>
-          <bdi>{formatTime(recordedAt)}</bdi>
-        </time>
-      )}
+      <ReadingValue value={value} unit={unit} recordedAt={recordedAt} />
+      {saved && <p className="reading-saved-label" role="status"><Check size={17} aria-hidden="true" />{t("graduation.readingSaved")}</p>}
       {status ? (
         <Badge tone="info">{status}</Badge>
       ) : progress !== undefined && (

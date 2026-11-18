@@ -145,7 +145,7 @@ export async function doctorBrowserFixtures({ frontendPort, backendPort, emails,
       }
     } finally { await pool.end(); }
   }
-  return { api, base, pool, start, startBackend, stopBackend, request, login, inviteDoctor, close };
+  return { api, base, pool, start, startBackend, stopBackend, request, login, inviteDoctor, capturedEmail: email => mail.get(email), close };
 }
 
 export async function changePreferences(page, { language, theme }) {

@@ -16,6 +16,7 @@ export async function getPatientDashboard(readings: Measurement[] = measurements
   const glucose = ordered.find((item) => item.kind === "glucose");
   return {
     ...structuredClone(patientDashboardPlaceholder),
+    readings: ordered,
     bloodPressure:
       pressure?.kind === "bloodPressure"
         ? {

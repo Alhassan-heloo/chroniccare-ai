@@ -5,17 +5,19 @@ import { useDashboardActions } from "@/context/DashboardContext";
 import { Modal } from "@/components/ui/Modal";
 import { patientNavigation, recordPressurePath } from "./navigation";
 import { useI18n } from "@/i18n/context";
+import { useMobileNavigationLayout } from "@/hooks/useMobileNavigationLayout";
 export function BottomNav() {
   const { t } = useI18n();
   const { openMeasurement } = useDashboardActions();
   const [open, setOpen] = useState(false);
+  const { ref: nav, expandedText } = useMobileNavigationLayout();
   const { pathname } = useLocation();
   const page = pathname.replace(/\/$/, "");
   const hasInlinePressureForm = page === "/patient/dashboard" || page === "/patient/measurements";
   const secondary = patientNavigation.filter(item => !["/patient/dashboard", "/patient/measurements", "/patient/habits"].includes(item.to));
   return (
     <>
-      <nav className="bottom-nav" aria-label={t("common.layout.mobileNav")} data-i18n="declarative">
+      <nav ref={nav} className="bottom-nav" data-text-expanded={expandedText} aria-label={t("common.layout.mobileNav")} data-i18n="declarative">
         <NavLink to="/patient/dashboard">
           <House />
           <span>{t("common.workspace.patient")}</span>

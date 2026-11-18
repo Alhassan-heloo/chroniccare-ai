@@ -125,9 +125,9 @@ function AssistantConversation() {
       </div>
       {showLatest && <Button className="assistant-latest" variant="secondary" onClick={() => { if (log.current) log.current.scrollTop = log.current.scrollHeight; nearBottom.current = true; setShowLatest(false); }}><ArrowDown size={16} aria-hidden="true" />{t("assistantChat.latest")}</Button>}
       {failure && <div className="assistant-error"><Feedback kind="error">{t(failure.key)}</Feedback><p>{t("assistantChat.retryHint")}</p><Button variant="secondary" disabled={pending} onClick={() => void send(failure.turn)}>{t("assistantChat.retry")}</Button></div>}
-      <form className="assistant-composer" onSubmit={submit} aria-busy={pending}>
+      <form className="assistant-composer" onSubmit={submit} aria-busy={pending} noValidate>
         <label htmlFor="assistant-message">{t("assistantChat.message")}</label>
-        <textarea ref={composer} id="assistant-message" value={draft} onChange={event => { setDraft(event.target.value); setInputError(false); }} onKeyDown={enter}
+        <textarea className="resize-none" ref={composer} id="assistant-message" value={draft} onChange={event => { setDraft(event.target.value); setInputError(false); }} onKeyDown={enter}
           maxLength={2000} rows={2} readOnly={pending} aria-invalid={inputError} aria-describedby={`assistant-composer-hint assistant-character-count${inputError ? " assistant-input-error" : ""}`} placeholder={t("assistantChat.placeholder")} />
         {inputError && <p className="field-error" role="alert" id="assistant-input-error">{t("assistantChat.invalidInput")}</p>}
         <div className="assistant-composer-footer"><small id="assistant-composer-hint">{t("assistantChat.keyboard")}</small><span id="assistant-character-count" dir="ltr">{formatNumber(draft.length)} / {formatNumber(2000)}</span>

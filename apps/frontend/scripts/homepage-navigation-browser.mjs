@@ -95,7 +95,7 @@ try {
       for (const role of ["guest", "patient", "doctor", "admin"]) {
         const { context, page } = await fixture(browser, role, language, theme);
         try {
-          await page.goto(base + "/");
+          await page.goto(base + "/", {waitUntil:"domcontentloaded",timeout:60_000});
           for (const width of [1440, 1280, 1024, 768, 390, 320]) await checkHeader(page, role, language, theme, width);
           await page.setViewportSize({ width: 1440, height: 1000 });
           await ready(page);

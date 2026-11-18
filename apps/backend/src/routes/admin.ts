@@ -12,6 +12,11 @@ export function adminRoutes(auth: AuthStore, admin: AdminStore, accounts?: Accou
   router.get("/doctors", async (_request, response) => {
     response.json({ doctors: await admin.listDoctors() });
   });
+  router.get("/invitations", async (_request, response) => {
+    if (!admin.listInvitations) throw new HttpError(503, "INVITATIONS_UNAVAILABLE", "Stored invitations are unavailable.");
+    response.setHeader("Cache-Control", "no-store");
+    response.json({invitations: await admin.listInvitations()});
+  });
   router.post("/doctors", async (request, response) => {
     if (!accounts) throw new HttpError(503, "EMAIL_UNAVAILABLE", "Email delivery is not configured.");
     response.status(201).json({ invitation: await accounts.inviteDoctor(request.body) });

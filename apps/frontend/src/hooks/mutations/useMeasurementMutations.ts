@@ -5,16 +5,18 @@ import { AuthError } from "@/auth/api";
 import { queryKeys } from "@/lib/query/queryKeys";
 import { useI18n } from "@/i18n/context";
 import type { TranslationKey } from "@/i18n/catalog";
+import {announceSavedReading} from "@/hooks/useSavedReading";
 function useMeasurementFeedback(successMessage: TranslationKey) {
   const { t } = useI18n();
   const client = useQueryClient();
   return {
-    onSuccess: async () => {
+    onSuccess: async (result: unknown) => {
       await Promise.all([
         client.invalidateQueries({ queryKey: queryKeys.reports }),
         client.invalidateQueries({ queryKey: queryKeys.dashboard }),
         client.invalidateQueries({ queryKey: queryKeys.measurements }),
       ]);
+      if (successMessage==="measurements.persistence.saved" && result && typeof result==="object" && "id" in result && typeof result.id==="string") announceSavedReading(result.id);
       toast.success(t(successMessage));
     },
     onError: (error: Error) => {

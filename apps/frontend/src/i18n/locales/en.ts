@@ -2,6 +2,30 @@ import type { LocaleShape } from "../catalogTypes";
 import type { arCatalog } from "./ar";
 
 export const enCatalog = {
+  graduation: {
+    week:"My week",weekHint:"The last seven days on your device. Choose a day to open its readings.",readingCount:"{{count}} readings",noReadings:"No readings",shortcuts:"My shortcuts",visit:"Visit summary",firstReading:"Record my first reading",print:"Print summary",closeVisit:"Hide summary",visitHint:"A descriptive summary of your records to share at a visit. It contains no diagnosis.",patient:"Patient",generated:"Prepared at",range:"Period",count:"Reading count",pressureMean:"Average blood pressure",glucoseMean:"Average blood glucose",missing:"No recorded data",todayOnly:"Medication and habit totals below are for today only, not the selected period.",doseSaved:"Dose recorded",undoDose:"Undo recording",readingSaved:"Reading saved",activity:"Patient activity",all:"All",readings:"Measurements",doses:"Doses",habits:"Habits",activityHint:"Last 14 days. Dose time means recording time. Habits show the last saved daily update; earlier revisions are not retained.",doseEvent:"Dose intake recorded",habitEvent:"Habit progress updated",scheduled:"Scheduled time",activityDay:"Recorded day",lastRecorded:"Latest reading",compare:"Compare two periods for this patient",compareHint:"Last 7 days against the previous 7. Averages use recorded readings only.",invitations:"Doctor invitations",invitationsHint:"Email activation invitations. Accounts created with a temporary password appear in Doctor accounts.",noInvitations:"No email activation invitations have been issued yet.",issued:"Issued",expires:"Expires",closedAt:"Closed",pending:"Awaiting activation",expired:"Expired",closed:"Closed",undelivered:"Not delivered",active:"Account active",disabled:"Account disabled",passwordChange:"Password change required",notCreated:"Account not created",delivery:"Delivery status",delivered:"Delivered to email service",accountStatus:"Current account status",closedHint:"Closed means the link was used or invalidated when replaced. Current account status is shown separately below.",adminSource:"This is the actual invitation ledger. No audit source exists for other administrative actions.",loadFailed:"The records could not be loaded. Try again.",details:"Details",noActivity:"No recorded events in this period.",measurementDetails:"The value and recording time as saved in the patient record.",example:"Example data"
+  },
+  finalExperience: {
+    temporaryPassword: "Temporary password",
+    invitationTitle: "Invitation to share your record", invitationEmail: "Patient account email", invitationHint: "Enter the email associated with the patient’s account, then share the link through your usual contact channel.",
+    issue: "Create invitation link", issued: "The link is ready. The intended account can review it if eligible. Valid for ten minutes and one approval.",
+    copy: "Copy link", copied: "Copied", copyFailed: "Could not copy. Select the text and copy it manually.", manual: "Use a connection code instead",
+    invitationIntro: "Review the doctor’s identity and access before sharing.", signInReview: "Sign in with the intended patient account to continue. Opening this link does not grant access.",
+    consent: "This doctor will be able to read your recorded measurements, medications and habits. They cannot edit them. You can revoke access in My Doctors at any time.",
+    allow: "Allow access to my records", approved: "The doctor can now read your records. Manage access in My Doctors.",
+    wrongAccount: "This account cannot accept the invitation. Sign out and sign in with the patient account the invitation was intended for.",
+    invalidInvitation: "This link is invalid or expired. Ask the doctor for a new link and open it with your intended account.",
+    usedInvitation: "This link has been used. Check My Doctors to verify access. If you revoked it, ask for a new invitation.",
+    cancelled: "Review cancelled. No access was granted. You can return to My care.", switchAccount: "Sign out to use the intended account",
+    directMode: "Create with a temporary password", emailMode: "Email activation invitation", directHint: "The account is created immediately. The doctor changes the temporary password at first sign-in.",
+    emailHint: "The doctor receives an activation link to choose a password and appears in the list after activation.", directCreated: "Created the account for {{name}}. Give the doctor the email and temporary password to sign in and change it.",
+    emailCreated: "Activation invitation sent to {{email}}. Waiting for the doctor to activate the account.", copyPassword: "Copy temporary password", showPassword: "Show password", hidePassword: "Hide password",
+    today: "Today’s care", todayReading: "Today", earlierReading: "Recorded on an earlier day",
+    overview: "Your latest readings and today’s tasks", recordIntake: "Record intake", intakeSaved: "Taken",
+    noDoses: "No doses scheduled today", allDoses: "All today’s doses recorded",
+    pendingDose: "Intake not recorded yet", habits: "Today’s habit progress", noHabits: "No habits yet. Start a daily habit.",
+    invite: "Invite a patient", choosePatient: "Select a patient to view their record", selected: "Selected record",
+  },
   evolution: {
     expandNav: "Expand navigation", collapseNav: "Collapse navigation",
     chartValues: "View recorded daily averages", chartAxis: "The value axis adapts to the recorded range. Gaps mean no recorded value; lines do not bridge missing days.",

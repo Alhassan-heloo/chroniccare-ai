@@ -106,6 +106,8 @@ assert.equal(safeReturnTo("https://example.com", "patient"), "/patient/dashboard
 assert.equal(safeReturnTo("//example.com", "patient"), "/patient/dashboard");
 assert.equal(safeReturnTo("/admin/dashboard", "patient"), "/patient/dashboard");
 assert.equal(safeReturnTo("/patient/measurements?a=1#history", "patient"), "/patient/measurements?a=1#history");
+assert.equal(safeReturnTo("/patient/invitation#token=" + "a".repeat(32), "doctor"), "/patient/invitation#token=" + "a".repeat(32), "Wrong-role sign-in returns to the public recovery screen");
+assert.equal(safeReturnTo("/patient/invitation#token=bad", "doctor"), "/doctor/dashboard");
 const habitCalls: { path: string; method?: string; body?: unknown }[] = [];
 const persistentHabit = {
   id: "habit-fixture", title: "Morning walk", unit: "minutes" as const, target: 30,
@@ -341,10 +343,10 @@ for (const language of ["ar", "en", "ar", "en"] as const) {
   client.setQueryData([...queryKeys.dashboard, "account", "fixture"], await getPatientDashboard());
   const context: I18nValue = { language, setLanguage: () => undefined, t: (key: string, values?: Readonly<Record<string, string | number>>) => isTranslationKey(key) ? translateCatalogMessage(language, key, values) : key, ...localeSettings(language), ...createFormatters(language) };
   const html = renderToString(<I18nContext value={context}><QueryClientProvider client={client}><RouterProvider router={createMemoryRouter(routes, { initialEntries: ["/patient/dashboard?demo=1#main"] })} /></QueryClientProvider></I18nContext>);
-  assert(html.includes(translateCatalogMessage(language, "evolution.overview")));
+  assert(html.includes(translateCatalogMessage(language, "finalExperience.overview")));
   assert(html.includes(translateCatalogMessage(language, "patient.living.seriesNote")));
   assert(html.includes(translateCatalogMessage(language, "measurements.persistence.dashboardNotice")));
-  assert(html.includes(translateCatalogMessage(language, "patient.overview.tasks")));
+  assert(html.includes(translateCatalogMessage(language, "finalExperience.today")));
   assert(!html.includes("patient.overview."));
   assert(html.includes("<bdi>"), "Profile name must use bidi isolation");
   assert(html.includes("\u2068") && html.includes("\u2069"), "Welcome name must be isolated from surrounding direction");
@@ -415,10 +417,10 @@ for (const path of paths) {
   assert.equal(livingShell, /^\/(patient|doctor|admin)\//.test(path), `All protected roles share Living foundations: ${path}`);
   assert(!html.includes("تعذر عرض الصفحة"), `Error boundary at ${path}`);
   if (path === "/patient/dashboard")
-    for (const value of ["120/80", "98", "2/3", "4,500", "مرحبًا", "ماذا علي"])
+    for (const value of ["120/80", "98", "2/3", "4,500", "مرحبًا", "متابعة اليوم"])
       assert(html.replace(/<!--[\s\S]*?-->/g, "").includes(value), `Missing dashboard value: ${value}`);
   if (path === "/patient/dashboard") {
-    assert(html.includes('command-canvas') && html.includes('daily-workspace'), "Health canvas and daily care form distinct regions");
+    assert(html.includes('command-canvas') && html.includes('today-summary'), "Health canvas and daily care form distinct regions");
     assert(html.indexOf('canvas-latest') < html.indexOf('canvas-trend'), "Latest measurements lead the chart reading order");
     assert(livingShell, "Dashboard opts into the approved Living tokens");
     assert(html.includes('class="dashboard-assistant glass"'), "Assistant preview remains accessible through native disclosure");

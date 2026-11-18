@@ -11,8 +11,9 @@ export function useConnections() {
     queryFn: ({ signal }) => connectionApi.list(request, signal), refetchOnWindowFocus: true, staleTime: 0 });
   const changed = () => Promise.all([client.invalidateQueries({ queryKey: key }), client.invalidateQueries({ queryKey: queryKeys.notifications })]);
   const generate = useMutation({ mutationFn: () => connectionApi.generate(request), retry: 0 });
+  const invite = useMutation({ mutationFn: (email: string) => connectionApi.invite(request, email), retry: 0 });
   const preview = useMutation({ mutationFn: (code: string) => connectionApi.preview(request, code), retry: 0 });
   const approve = useMutation({ mutationFn: (code: string) => connectionApi.approve(request, code), onSuccess: changed, retry: 0 });
   const revoke = useMutation({ mutationFn: (id: string) => connectionApi.revoke(request, id), onSuccess: changed, retry: 0 });
-  return { list, generate, preview, approve, revoke };
+  return { list, generate, invite, preview, approve, revoke };
 }

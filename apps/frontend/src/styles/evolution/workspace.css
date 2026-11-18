@@ -1,4 +1,24 @@
 @layer components {
+  .patient-at-a-glance { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+  .patient-at-a-glance .canvas-readings { grid-template-columns: minmax(0, 1fr); background: var(--summary-surface); border: 1px solid var(--hairline); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5); }
+  .patient-at-a-glance .canvas-readings .metric-card + .metric-card { border-inline-start: 0; border-block-start: 1px solid var(--hairline); padding-inline-start: var(--space-3); padding-block-start: var(--space-4); margin-block-start: var(--space-3); }
+  .reading-day-label { flex-basis: 100%; color: var(--text); font-weight: 600; }
+  .today-summary { min-width: 0; display: grid; gap: var(--space-4); }
+  .today-summary > h2 { font-size: var(--text-lg); min-height: 44px; display: flex; align-items: center; }
+  .today-medication, .today-habits { min-width: 0; padding-block-end: var(--space-4); border-block-end: 1px solid var(--hairline); }
+  .today-section-heading { display: flex; align-items: center; gap: var(--space-2); color: var(--primary); }
+  .today-section-heading a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; text-decoration: underline; text-underline-offset: .2em; }
+  .today-section-heading > bdi { margin-inline-start: auto; color: var(--muted); }
+  .today-summary .task-row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); padding-block: var(--space-2); }
+  .today-summary .task-row > .icon-tile { display: none; }
+  .today-summary .task-copy { flex: 1 1 11rem; min-width: 0; }
+  .dose-recording-state { display: block; color: var(--muted); }
+  .today-habits ul { list-style: none; margin: 0; padding: 0; }
+  .today-habits li { display: grid; gap: var(--space-1); padding-block: var(--space-2); }
+  .today-habits li > span { color: var(--muted); font-size: var(--text-sm); }
+  .today-habits progress { width: 100%; margin-block-start: var(--space-2); }
+  .today-empty { display: block; padding-block: var(--space-3); text-decoration: underline; }
+  @media (max-width: 63.99rem) { .patient-at-a-glance { grid-template-columns: minmax(0, 1fr); } }
   .command-center { gap: var(--space-6); }
   .command-welcome { border: 0; padding-block-end: 0; }
   .command-reading-grid { display: grid; gap: var(--space-6); min-width: 0; }

@@ -16,6 +16,7 @@ import { DoctorDashboard, DoctorPatientDetails, DoctorPatients } from "@/pages/d
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import { ProtectedRoute } from "@/auth/RouteAccess";
 import { ConnectPatientPage, MyDoctorsPage } from "@/pages/connections/ConnectionPages";
+import PatientInvitationPage from "@/pages/connections/PatientInvitationPage";
 export const routes: RouteObject[] = [
   {
     element: <Outlet />,
@@ -27,6 +28,7 @@ export const routes: RouteObject[] = [
         HydrateFallback: () => null,
       },
       { path: "/login", element: <AuthPage key="login" mode="login" /> },
+      { path: "/patient/invitation", element: <PatientInvitationPage /> },
       { path: "/register", element: <AuthPage key="register" mode="register" /> },
       { path: "/setup", element: <AuthPage key="setup" mode="setup" /> },
       { path: "/activate-admin", element: <AccountEmailPage key="activate" mode="activate-admin" /> },

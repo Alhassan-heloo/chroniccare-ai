@@ -7,6 +7,7 @@ import { useAuth } from "@/auth/context";
 import { SessionBar } from "@/auth/RouteAccess";
 import { roleNavigation } from "./navigation";
 import type { User } from "@/lib/types/user";
+import { useMobileNavigationLayout } from "@/hooks/useMobileNavigationLayout";
 
 function PatientTools() {
   const { user } = useAuth();
@@ -22,6 +23,7 @@ export function Header({ role = "patient", motion }: { role?: User["role"]; moti
   const { t } = useI18n();
   const { pathname } = useLocation();
   const navigation = roleNavigation(role);
+  const { ref: roleNav, expandedText } = useMobileNavigationLayout();
   const current = navigation.find(item => pathname === item.to || pathname.startsWith(`${item.to}/`));
   return <>
     <header className="header app-header">
@@ -29,6 +31,6 @@ export function Header({ role = "patient", motion }: { role?: User["role"]; moti
       <div className="header-breadcrumb" data-i18n="declarative"><span>{t(`experience.roles.${role}`)}</span><strong>{t(current?.label ?? `auth.${role}`)}</strong></div>
       <div className="header-actions"><PreferencesButton motion={motion} /><NotificationCenter />{role === "patient" && <PatientTools />}<SessionBar /></div>
     </header>
-    {role !== "patient" && <nav className="role-mobile-nav" aria-label={t("common.layout.mainNav")} data-i18n="declarative">{navigation.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to}><Icon size={18} aria-hidden="true" />{t(label)}</NavLink>)}</nav>}
+    {role !== "patient" && <nav ref={roleNav} className="role-mobile-nav" data-text-expanded={expandedText} aria-label={t("common.layout.mainNav")} data-i18n="declarative">{navigation.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to}><Icon size={18} aria-hidden="true" />{t(label)}</NavLink>)}</nav>}
   </>;
 }

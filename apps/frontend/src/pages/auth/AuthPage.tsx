@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Link, Navigate, useNavigate, useSearchParams } from "react-router";
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router";
 import { Eye, EyeOff, ShieldCheck, ArrowRight, HeartPulse, Pill, Footprints } from "lucide-react";
 import { PublicLayout } from "@/components/public/PublicLayout";
 import { Input } from "@/components/ui/Input";
@@ -20,6 +20,7 @@ export default function AuthPage({ mode }: { mode: "login" | "register" | "setup
   const { t, language } = useI18n();
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const location = useLocation();
   const setup = mode === "setup";
   const register = mode !== "login";
   const [setupCode, setSetupCode] = useState("");
@@ -42,8 +43,11 @@ export default function AuthPage({ mode }: { mode: "login" | "register" | "setup
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<TranslationKey | null>(null);
   const [fields, setFields] = useState<Partial<Record<"name" | "email" | "password" | "confirmation", TranslationKey>>>({});
-  const returnTo = params.get("returnTo");
-  const suffix = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
+  const returnDestination = params.get("returnTo");
+  // Carry invitation secrets only in the fragment, including through sign-in.
+  const invitationHash = returnDestination === "/patient/invitation" && /^#token=[A-Za-z0-9_-]{32}$/.test(location.hash) ? location.hash : "";
+  const returnTo = returnDestination ? returnDestination + invitationHash : null;
+  const suffix = returnDestination ? `?returnTo=${encodeURIComponent(returnDestination)}${invitationHash}` : "";
   if (auth.loading) return <PublicLayout><Feedback kind="loading">{t("auth.working")}</Feedback></PublicLayout>;
   if (auth.user) return <Navigate replace to={safeReturnTo(returnTo, auth.user.role)} />;
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -68,7 +72,7 @@ export default function AuthPage({ mode }: { mode: "login" | "register" | "setup
         else await auth.register(name.trim(), email.trim(), password);
         setSetupCode("");
         setPassword(""); setConfirmation("");
-        navigate(`/login?${setup ? "setup=1" : "registered=1"}${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ""}`, { replace: true });
+        navigate(`/login?${setup ? "setup=1" : "registered=1"}${returnDestination ? `&returnTo=${encodeURIComponent(returnDestination)}` : ""}${invitationHash}`, { replace: true });
       } else {
         const user = await auth.login(email.trim(), password);
         setPassword(""); navigate(safeReturnTo(returnTo, user.role), { replace: true });

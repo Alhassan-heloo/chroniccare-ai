@@ -26,6 +26,12 @@ export default function MeasurementsPage() {
   const { data = [], isPending, isError, refetch } = useMeasurements();
   const [filters, setFilters] = useState<Filters>(allReadings);
   const [searchParams, setSearchParams] = useSearchParams();
+  const selectedDay = searchParams.get("day") ?? "";
+  useEffect(() => {
+    const parsed = new Date(selectedDay + "T12:00:00");
+    const valid = /^\d{4}-\d{2}-\d{2}$/.test(selectedDay) && Number.isFinite(parsed.getTime()) && localDateKey(parsed.toISOString()) === selectedDay;
+    if (valid) setFilters({kind:"all",from:selectedDay,to:selectedDay});
+  }, [selectedDay]);
   const opensFromLink = searchParams.get(pressureRecordQuery.key) === pressureRecordQuery.value;
   const [addingHere, setAddingHere] = useState(false);
   const adding = opensFromLink || addingHere;

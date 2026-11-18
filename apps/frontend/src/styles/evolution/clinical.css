@@ -1,4 +1,31 @@
 @layer components {
+  .doctor-review-grid { display: grid; grid-template-columns: minmax(15rem, .34fr) minmax(0, 1fr); gap: var(--space-5); align-items: start; }
+  .doctor-review-grid > .clinical-roster { position: sticky; top: var(--space-4); }
+  .doctor-review-grid .clinical-roster-heading { padding: var(--space-4); gap: var(--space-2); }
+  .doctor-review-grid .clinical-roster-heading .btn { width: 100%; justify-content: center; }
+  .doctor-selection-list { list-style: none; padding: var(--space-2); margin: 0; max-height: 65dvh; overflow: auto; scrollbar-gutter: stable; }
+  .doctor-selection-list a { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-sm); min-height: 80px; }
+  .doctor-selection-list a:hover, .doctor-selection-list a[aria-current] { background: var(--summary-surface); }
+  .doctor-selection-list a[aria-current] { outline: 1px solid var(--control-border); outline-offset: -1px; }
+  .doctor-selection-list a > span:nth-child(2) { display: grid; gap: var(--space-1); min-width: 0; overflow-wrap: anywhere; }
+  .doctor-selection-list a > svg { margin-inline-start: auto; }
+  .doctor-selection-list small { color: var(--muted); }
+  .doctor-selected-record { min-width: 0; }
+  .embedded-record .clinical-patient-banner { padding: var(--space-4); grid-template-columns: auto minmax(0,1fr); }
+  .doctor-record-title { font: 400 var(--text-heading)/1.4 var(--font-heading); overflow-wrap: anywhere; }
+  .embedded-record .doctor-record-meta { grid-column: 1/-1; }
+  .embedded-record .clinical-record-workspace { grid-template-columns: minmax(0,1fr); }
+  .embedded-record .clinical-record-care { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .embedded-record .clinical-record-trends { display: none; }
+  .embedded-record .doctor-back { display: none; }
+  @media (max-width: 63.99rem) { .doctor-review-grid { grid-template-columns: minmax(0,1fr); } .doctor-review-grid > .clinical-roster { position: static; } }
+  @media (max-width: 47.99rem) {
+    .doctor-review-workspace[data-focused="false"] .doctor-selected-record { display: none; }
+    .doctor-review-workspace[data-focused="true"] > .experience-heading, .doctor-review-workspace[data-focused="true"] .doctor-review-grid > .clinical-roster { display: none; }
+    .embedded-record .doctor-back { display: inline-flex; justify-self: start; }
+    .embedded-record .clinical-record-care { grid-template-columns: minmax(0,1fr); }
+    .doctor-selection-list { max-height: none; }
+  }
   .evolution-clinical { min-width: 0; gap: var(--space-6); }
   .clinical-workspace-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, .39fr); align-items: start; gap: var(--space-6); }
   .clinical-roster { min-width: 0; border: 1px solid var(--hairline); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card); overflow: clip; }

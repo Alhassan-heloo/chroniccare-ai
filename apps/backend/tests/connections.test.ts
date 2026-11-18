@@ -65,9 +65,10 @@ test("PostgreSQL patient connections: consent, legacy data, expiry, races, isola
     assert.equal(legacy.doctors[0]!.approvedAt, null);
     const code = await generate(dt1);
     assert.equal(code.code.length, 32);
-    assert(Date.parse(code.expiresAt) - Date.now() <= 600_000);
     const stored = await pool.query("SELECT * FROM chroniccare.doctor_connection_codes WHERE code_hash=$1", [tokenHash(code.code)]);
     assert.equal(stored.rowCount, 1); assert(!JSON.stringify(stored.rows).includes(code.code));
+    assert.equal(stored.rows[0].expires_at.getTime()-stored.rows[0].created_at.getTime(),600_000,"The database owns the exact ten-minute validity window.");
+    assert.equal(code.expiresAt,stored.rows[0].expires_at.toISOString());
     assert.equal((await request(`/doctor/patients/${p1.id}`, dt1)).status, 404);
     const preview = await request("/connections/preview", pt1, { code: code.code }); assert.equal(preview.status, 200);
     assert.equal((await preview.json() as { doctor: { id: string } }).doctor.id, d1.id);

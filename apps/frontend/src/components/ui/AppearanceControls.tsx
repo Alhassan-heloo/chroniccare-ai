@@ -12,7 +12,7 @@ export function LanguageSwitch({ language, label, onClick, className }: {
   language: "ar" | "en"; label: string; onClick: () => void; className?: string;
 }) {
   const target = language === "ar" ? "en" : "ar";
-  return <button type="button" className={className} lang={target} aria-label={label} onClick={onClick}>
-    {target === "en" ? "English" : "العربية"}
+  return <button type="button" className={className} lang={language} aria-label={label} onClick={onClick}>
+    {target === "en" ? "التبديل إلى الإنجليزية" : "Switch to Arabic"}
   </button>;
 }

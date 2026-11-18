@@ -79,7 +79,7 @@ function FeatureDialog({ detail, t, language, onClose }: {
     {detail !== null && feature && <>
       <header className="feature-header">
         <h3 id="detail-title">{t.cardTitles[detail]}</h3>
-        <form method="dialog" onSubmit={event => { event.preventDefault(); requestClose(); }}>
+        <form method="dialog" noValidate onSubmit={event => { event.preventDefault(); requestClose(); }}>
           <button type="submit" ref={dismiss} aria-label={t.closeDetails}>
             {t.close}<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" /></svg>
           </button>

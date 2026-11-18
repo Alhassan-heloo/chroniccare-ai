@@ -45,5 +45,7 @@ export function authRequest<T>(path: string, options: ApiRequestOptions = {}): P
 export interface LoginResult { user: User; expiresAt?: string }
 export const roleHome = (role: User["role"]) => `/${role}/dashboard`;
 export function safeReturnTo(value: string | null, role: User["role"]) {
+  // This public review route handles wrong-account recovery itself, without exposing a record.
+  if (value && /^\/patient\/invitation(?:#token=[A-Za-z0-9_-]{32})?$/.test(value)) return value;
   return value?.startsWith(`/${role}/`) && !value.includes("\\") ? value : roleHome(role);
 }

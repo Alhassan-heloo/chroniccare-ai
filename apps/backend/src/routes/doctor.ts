@@ -26,6 +26,14 @@ export function doctorRoutes(
   router.get("/patients", async (_request, response) => {
     response.json({ patients: await doctors.listPatients((response.locals as AuthLocals).user.id) });
   });
+  router.get("/patients/:patientId/activity", async (request, response) => {
+    const doctorId = (response.locals as AuthLocals).user.id;
+    const patientId = doctorPatientId(request.params.patientId);
+    if (!await doctors.getPatient(doctorId, patientId)) throw new HttpError(404, "DOCTOR_PATIENT_NOT_FOUND", "Patient relationship not found.");
+    const date = day(request.query.date);
+    if (!doctors.activity) throw new HttpError(503, "ACTIVITY_UNAVAILABLE", "Stored activity is unavailable.");
+    response.json({patientId, events: await doctors.activity(patientId,date)});
+  });
   router.get("/patients/:patientId", async (request, response) => {
     const doctorId = (response.locals as AuthLocals).user.id;
     const patientId = doctorPatientId(request.params.patientId);

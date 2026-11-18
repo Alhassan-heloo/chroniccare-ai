@@ -8,6 +8,7 @@
 @import "./evolution/layout.css";
 @import "./evolution/charts.css";
 @import "./evolution/workspace.css";
+@import "./final-experience.css";
 
 /* Tailwind v4 shares the custom-property foundation. Utilities own simple
    responsive layout; component sheets own branded presentation and states. */

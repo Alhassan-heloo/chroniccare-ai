@@ -481,8 +481,9 @@ async function verifyBrowser() {
   assert.equal(createdResult.headers()["cache-control"], "no-store");
   assert.deepEqual(createdResult.request().postDataJSON(), { name: doctorName, email: doctorEmail });
   assert.equal(createdBody.doctor.role, "doctor");
-  await page.locator(".admin-create-card code").waitFor();
-  assert((await page.locator(".admin-create-card code").textContent()) === temporaryPassword, "Displayed temporary password must match the response");
+  await page.locator(".temporary-credential input").waitFor();
+  assert((await page.locator(".temporary-credential input").inputValue()) === temporaryPassword, "Displayed temporary password must match the response");
+  assert.equal(await page.locator(".temporary-credential input").getAttribute("type"), "password", "Temporary credential is masked by default");
   await page.getByText(doctorName, { exact: true }).waitFor(); await page.locator(".admin-create-card .ui-feedback-success").first().waitFor();
   assert.equal((await page.locator("main").textContent()).includes(password), false);
   assert.equal(await page.locator(".admin-doctor-card").count(), initialDoctors.length + 1);
@@ -497,7 +498,7 @@ async function verifyBrowser() {
   assert.equal((await db.query("SELECT 1 FROM chroniccare.doctor_patient_relationships WHERE doctor_id=$1", [createdAccount.rows[0].id])).rowCount, 0);
   await page.locator("dialog[open] .dialog-heading button").click();
   await page.locator(".admin-open-create").click(); await page.locator(".admin-create-card").waitFor({ state: "visible" });
-  assert.equal(await page.locator(".admin-create-card code").count(), 0);
+  assert.equal(await page.locator(".temporary-credential input").count(), 0);
   assert.equal((await page.locator("body").textContent()).includes(temporaryPassword), false);
   assert.equal(await page.evaluate(value => [...Object.values(localStorage), ...Object.values(sessionStorage)].some(item => item.includes(value)), temporaryPassword), false);
   await page.locator("dialog[open] .dialog-heading button").click();
@@ -532,7 +533,7 @@ async function verifyBrowser() {
   await page.unroute(api + "/admin/doctors/direct");
 
   stage = "invitation-remains-separate";
-  await page.getByRole("button", { name: "Send invitation instead", exact: true }).click();
+  await page.getByRole("button", { name: "Email activation invitation", exact: true }).first().click();
   const invitationResponse = page.waitForResponse(response => response.url() === api + "/admin/doctors" && response.request().method() === "POST");
   await page.locator(".admin-create-card button[type=submit]").click();
   const invitationResult = await invitationResponse;
@@ -543,7 +544,7 @@ async function verifyBrowser() {
   assert.equal(await page.locator(".admin-create-card .ui-feedback-success").count(), 0);
   assert.equal((await db.query("SELECT 1 FROM chroniccare.users WHERE email=$1", [failedEmail])).rowCount, 0);
   diagnostics.verifyFailure(invitationResult, "invitation-remains-separate");
-  await page.locator(".admin-create-card").getByRole("button", { name: "Add Doctor", exact: true }).click();
+  await page.locator(".admin-create-card").getByRole("button", { name: "Create with a temporary password", exact: true }).click();
   await page.locator("dialog[open] .dialog-heading button").click();
 
   stage = "responsive-arabic";
