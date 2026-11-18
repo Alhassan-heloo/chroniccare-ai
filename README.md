@@ -1,5 +1,7 @@
 # ChronicCare AI
 
+Current frontend design: [Living Evolution — implementation and review](docs/living-evolution-redesign.md).
+
 ## تشغيل المشروع كاملًا على Windows بنقرة مزدوجة
 
 بعد تثبيت Node.js 24 LTS وPostgreSQL وإعداد قاعدة `chroniccare`، شغّل مرة واحدة

@@ -1,5 +1,7 @@
 # ChronicCare AI — Living 3.3 experience refinement
 
+> Historical Living 3.3 report and authentic palette reference. [Living Evolution](living-evolution-redesign.md) is the current frontend implementation; it supersedes prior layout restrictions and the rejected ChronicCare 4.0 visual direction. Security, consent, data, API and backend constraints remain in force.
+
 Review date: 2 November 2026.
 
 The existing product now uses one Living 3.3 foundation across Public, Patient,
