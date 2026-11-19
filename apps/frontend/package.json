@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "test:api-base": "node scripts/api-base-smoke.mjs",
+    "test:same-origin": "node scripts/final-postgres.mjs scripts/same-origin-browser.mjs",
     "test:final-experience": "node scripts/final-experience-browser.mjs --matrix",
     "test:final-integration": "node scripts/final-postgres.mjs scripts/final-experience-integration.mjs",
     "test:final-homepage": "node scripts/final-homepage-browser.mjs",

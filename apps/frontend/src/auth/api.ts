@@ -1,9 +1,10 @@
 import type { User } from "@/lib/types/user";
+import { apiBaseUrl } from "@/lib/api/baseUrl";
 
 export class AuthError extends Error {
   constructor(public readonly code: string) { super(code); }
 }
-const base = (import.meta.env?.VITE_API_URL || "http://localhost:3001/api").replace(/\/$/, "");
+const base = apiBaseUrl;
 let csrfToken: string | undefined;
 async function csrf() {
   if (!csrfToken) {

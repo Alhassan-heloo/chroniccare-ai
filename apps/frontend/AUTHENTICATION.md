@@ -4,7 +4,7 @@ The existing backend must have migrations 001 and 002 applied. Start it from
 `apps/backend` with `npm.cmd run dev`. Start this frontend from `apps/frontend`
 with `npm.cmd run dev` (normally http://localhost:5173).
 
-The API defaults to http://localhost:3001/api. Set `VITE_API_URL` in a local Vite
+Production defaults to same-origin `/api`; development defaults to http://localhost:3001/api. Set `VITE_API_URL` in a local Vite
 environment file or the frontend process environment to override it. This is a
 public API address, **not** a place for database credentials or secrets. Backend
 `CORS_ORIGINS` must explicitly allow the frontend's actual origin. Use HTTPS for

@@ -17,12 +17,14 @@ import { postgresNotificationStore } from "./notifications/store.js";
 import { postgresRegistrationStore } from "./notifications/registrations.js";
 import { configuredPush } from "./notifications/firebase.js";
 import { configurePush, startPushWorker } from "./notifications/push.js";
+import { frontendBuildDirectory, requireFrontendBuild } from "./frontend.js";
 
 async function start() {
   const config = readEnvironment();
   const publicOrigin = process.env.APP_PUBLIC_ORIGIN ?? config.corsOrigins[0]!;
   if (config.nodeEnv === "production" && (!publicOrigin.startsWith("https://") || config.corsOrigins.some(origin => !origin.startsWith("https://")))) throw new Error("Production requires HTTPS application origins.");
   const trustedProxy = readTrustedProxy();
+  const frontendDirectory = config.nodeEnv === "production" ? requireFrontendBuild(frontendBuildDirectory) : undefined;
   const email = configuredEmail();
   const assistantProvider = configuredAssistant();
   let pushProvider;
@@ -36,6 +38,7 @@ async function start() {
   const app = createApp({
     corsOrigins: config.corsOrigins,
     checkDatabase: () => checkDatabase(pool),
+    frontendDirectory,
     authStore: postgresAuthStore(pool),
     notificationStore: postgresNotificationStore(pool),
     registrationStore: postgresRegistrationStore(pool),

@@ -1,4 +1,5 @@
 // Public Firebase web configuration only. Never put service-account credentials here.
+import { apiBaseUrl } from "@/lib/api/baseUrl";
 const env = import.meta.env ?? {};
 const config = { apiKey: env.VITE_FIREBASE_API_KEY, projectId: env.VITE_FIREBASE_PROJECT_ID,
   appId: env.VITE_FIREBASE_APP_ID, messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID };
@@ -18,7 +19,7 @@ let busy = false;
 function workerConfiguration() {
   const base = new URL(import.meta.env.BASE_URL, location.origin);
   const scope = new URL("cc-fcm/", base).href, scriptURL = new URL("cc-fcm/sw.js", base);
-  scriptURL.searchParams.set("api", (env.VITE_API_URL || "http://localhost:3001/api").replace(/\/$/, ""));
+  scriptURL.searchParams.set("api", new URL(apiBaseUrl, location.origin).href);
   scriptURL.searchParams.set("lang", document.documentElement.lang.startsWith("en") ? "en" : "ar");
   return {scope,scriptURL};
 }

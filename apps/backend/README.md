@@ -99,6 +99,10 @@ stops startup without logging secrets.
 
 ## Endpoints and failure behavior
 
+Production also serves the built React frontend from `apps/frontend/dist` at `/`.
+Build both apps before starting production; development keeps the separate Vite
+server. See [same-origin Render commands](../../docs/render-same-origin.md).
+
 For the opt-in Render proxy setting and its network trust assumptions, see
 [Render ingress and readiness](../../docs/render-ingress.md).
 

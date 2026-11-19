@@ -28,6 +28,7 @@ import type { NotificationStore } from "./notifications/store.js";
 import { registrationRoutes, type RegistrationStore } from "./notifications/registrations.js";
 import type pg from "pg";
 import { pushReceiptRoutes } from "./notifications/push.js";
+import { frontendRoutes } from "./frontend.js";
 
 export interface AppOptions {
   corsOrigins: readonly string[];
@@ -47,6 +48,7 @@ export interface AppOptions {
   notificationStore?: NotificationStore;
   registrationStore?: RegistrationStore;
   pushPool?: pg.Pool;
+  frontendDirectory?: string;
 }
 
 // No listening socket, environment reads, or database connections on import.
@@ -111,6 +113,9 @@ export function createApp(options: AppOptions) {
     app.use("/api/admin", adminRoutes(options.authStore, options.adminStore, options.accountService));
   }
   app.use("/api", apiRoutes(options.checkDatabase));
+  // Never let unknown API requests fall through to a static file or React HTML.
+  app.use("/api", notFound);
+  if (options.frontendDirectory) app.use(frontendRoutes(options.frontendDirectory));
   app.use(notFound);
   app.use(errorHandler(options.reportError));
   return app;

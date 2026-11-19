@@ -12,17 +12,7 @@
     <title>ChronicCare AI | صحتك كل يوم</title>
   </head>
   <body>
-    <script>
-      (() => {
-        const mode = localStorage.getItem("cc-theme") || "system";
-        const dark = mode === "dark" || (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
-        document.documentElement.dataset.theme = dark ? "dark" : "light";
-        document.documentElement.style.colorScheme = dark ? "dark" : "light";
-        const language = localStorage.getItem("cc-language") === "en" ? "en" : "ar";
-        document.documentElement.lang = language;
-        document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
-      })();
-    </script>
+    <script src="/appearance-init.js"></script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
