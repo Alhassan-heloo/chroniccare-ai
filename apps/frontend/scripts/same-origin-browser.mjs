@@ -10,6 +10,7 @@ import {pathToFileURL} from 'node:url';
 import {spawnSync} from 'node:child_process';
 import {createServer as createHttpsServer} from 'node:https';
 import {request as httpRequest} from 'node:http';
+import {checkPwaFiles,checkPwaStates,readChromiumInstallability} from './pwa-browser-checks.mjs';
 
 const root=resolve(import.meta.dirname,'..'),backend=resolve(root,'../backend'),output=resolve(root,'artifacts/same-origin');
 await mkdir(output,{recursive:true});
@@ -67,6 +68,8 @@ try{
  assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');assert.equal(await page.locator('html').getAttribute('dir'),'rtl');
  const html=await (await context.request.get(origin)).text();assert(!html.includes('/src/main.tsx'));assert.equal(await page.locator('script:not([src])').count(),0,'No inline executable bootstrap under Helmet CSP');
  check('Express serves the actual Vite output, homepage assets and unchanged pre-React locale/theme under CSP');
+ await checkPwaFiles(page,origin,frontendBuildDirectory);
+ check('Express serves real manifest and192/512/180px PNG files with correct MIME types, and Chromium parses the manifest');
  await page.goto(origin+'/patient/dashboard',{waitUntil:'domcontentloaded'});await page.locator('.auth-card').waitFor();
  await page.locator('input[type=email]').fill(email);await page.locator('input[autocomplete=current-password]').fill(password);await page.locator('.auth-card form button[type=submit]').click();
  await page.waitForURL(url=>url.pathname==='/patient/dashboard',{waitUntil:'domcontentloaded'});await page.locator('.metric-number').first().filter({hasText:'128/82'}).waitFor();
@@ -78,6 +81,13 @@ try{
  assert.equal(await page.locator('.metric-time').first().getAttribute('datetime'),recordedAt);await page.locator('.chart-loading').waitFor({state:'hidden'});
  const shot=resolve(output,'patient-dashboard-refreshed.png');await page.screenshot({path:shot,fullPage:true});report.screenshots.push(shot);
  check('Patient dashboard refresh preserves the real session, measurement value and stored timestamp');
+ await page.locator('.header-preferences-button').click();
+ const installSettings=page.locator('dialog[open] .phone-install');
+ assert.equal(await installSettings.locator('summary').innerText(),'ثبّت التطبيق على هاتفك');
+ await installSettings.locator('summary').click();
+ await installSettings.getByText('يحتاج التطبيق إلى اتصال بالإنترنت.').waitFor();
+ await page.keyboard.press('Escape');
+ check('The patient settings expose the Arabic install action and online requirement');
  await page.goto(origin+'/patient/measurements',{waitUntil:'domcontentloaded'});await page.locator('.measurement-entry').waitFor();await page.reload({waitUntil:'domcontentloaded'});await page.locator('.measurement-entry').waitFor();
  check('Direct deep links and refreshes load the built React shell and authorized data');
  for(const path of ['/api/unknown','/api/index.html','/assets/missing.js','/src/main.tsx','/.env','/artifacts/private']){const response=await context.request.get(origin+path,{headers:{Accept:'text/html'}});assert.equal(response.status(),404,path);assert.equal((await response.json()).error.code,'NOT_FOUND');}
@@ -91,6 +101,10 @@ try{
  await page.goto(origin+'/doctor/dashboard',{waitUntil:'domcontentloaded'});await page.waitForURL(url=>url.pathname==='/patient/dashboard',{waitUntil:'domcontentloaded'});
  check('Missing CSRF, untrusted origins and wrong-role API/UI access remain rejected');
  assert(apiRequests.length>0&&apiRequests.every(url=>new URL(url).origin===origin),'Every browser API request uses its own HTTPS origin');
+ await checkPwaStates(browser,origin,check,report);
+ report.chromiumInstallability=await readChromiumInstallability(chromium,join(privateDirectory,'profile'),origin);
+ assert.deepEqual(report.chromiumInstallability.errors,[],'Chromium normal-profile installability');
+ check('Chromium normal profile reports no installability errors');
  assert.deepEqual(report.cspViolations,[]);assert.deepEqual(report.errors,[]);
  check('No cross-origin API calls or CSP/runtime violations observed');
  report.status='PASS';console.log(JSON.stringify({status:'PASS',checks:report.checks.length,cookieFlags:report.cookieFlags}));

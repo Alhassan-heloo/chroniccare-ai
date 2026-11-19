@@ -2,6 +2,16 @@ import type { LocaleShape } from "../catalogTypes";
 import type { arCatalog } from "./ar";
 
 export const enCatalog = {
+  phoneInstall: {
+    title: "Install on your phone",
+    install: "Install app",
+    android: "Android · Chrome",
+    androidSteps: "Open the ⋮ menu, then choose Add to Home screen or Install app. Follow the prompts.",
+    iphone: "iPhone · Safari",
+    iphoneSteps: "Tap Share, then Add to Home Screen. Turn on Open as Web App if shown, then tap Add.",
+    online: "The app needs an internet connection.",
+    dismissed: "Installation cancelled. You can still use your browser’s menu.",
+  },
   graduation: {
     week:"My week",weekHint:"The last seven days on your device. Choose a day to open its readings.",readingCount:"{{count}} readings",noReadings:"No readings",shortcuts:"My shortcuts",visit:"Visit summary",firstReading:"Record my first reading",print:"Print summary",closeVisit:"Hide summary",visitHint:"A descriptive summary of your records to share at a visit. It contains no diagnosis.",patient:"Patient",generated:"Prepared at",range:"Period",count:"Reading count",pressureMean:"Average blood pressure",glucoseMean:"Average blood glucose",missing:"No recorded data",todayOnly:"Medication and habit totals below are for today only, not the selected period.",doseSaved:"Dose recorded",undoDose:"Undo recording",readingSaved:"Reading saved",activity:"Patient activity",all:"All",readings:"Measurements",doses:"Doses",habits:"Habits",activityHint:"Last 14 days. Dose time means recording time. Habits show the last saved daily update; earlier revisions are not retained.",doseEvent:"Dose intake recorded",habitEvent:"Habit progress updated",scheduled:"Scheduled time",activityDay:"Recorded day",lastRecorded:"Latest reading",compare:"Compare two periods for this patient",compareHint:"Last 7 days against the previous 7. Averages use recorded readings only.",invitations:"Doctor invitations",invitationsHint:"Email activation invitations. Accounts created with a temporary password appear in Doctor accounts.",noInvitations:"No email activation invitations have been issued yet.",issued:"Issued",expires:"Expires",closedAt:"Closed",pending:"Awaiting activation",expired:"Expired",closed:"Closed",undelivered:"Not delivered",active:"Account active",disabled:"Account disabled",passwordChange:"Password change required",notCreated:"Account not created",delivery:"Delivery status",delivered:"Delivered to email service",accountStatus:"Current account status",closedHint:"Closed means the link was used or invalidated when replaced. Current account status is shown separately below.",adminSource:"This is the actual invitation ledger. No audit source exists for other administrative actions.",loadFailed:"The records could not be loaded. Try again.",details:"Details",noActivity:"No recorded events in this period.",measurementDetails:"The value and recording time as saved in the patient record.",example:"Example data"
   },

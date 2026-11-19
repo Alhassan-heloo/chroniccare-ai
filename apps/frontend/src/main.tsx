@@ -1,4 +1,5 @@
 import "./lib/validation/csp";
+import "./lib/phoneInstall";
 import "./styles/globals.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";

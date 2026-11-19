@@ -4,6 +4,7 @@ import { useI18n } from "@/i18n/context";
 import { useTheme } from "@/theme/context";
 import { useAuth } from "@/auth/context";
 import { roleHome } from "@/auth/api";
+import { PhoneInstall } from "@/components/layout/PhoneInstall";
 import Homepage from "../../../homepage-hybrid/Homepage";
 import "../../../homepage-hybrid/hybrid.css";
 
@@ -36,6 +37,7 @@ export default function HybridHomePage() {
     language={language}
     session={loading ? "loading" : user?.role ?? "guest"}
     workspaceHref={user ? roleHome(user.role) : "/login"}
+    installAction={<PhoneInstall />}
     dark={resolved === "dark"}
     onLanguage={setLanguage}
     onTheme={() => setMode(resolved === "dark" ? "light" : "dark")}

@@ -125,6 +125,17 @@
   .language-toggle .active { color: var(--primary); font-weight: 800; }
   .theme-toggle { padding: var(--space-2); min-width: 44px; }
   .workspace-preferences { display: grid; gap: var(--space-6); }
+  .phone-install { min-inline-size: 0; border-block-start: 1px solid var(--hairline); }
+  .phone-install summary { display: flex; align-items: center; gap: var(--space-2); min-block-size: 44px; cursor: pointer; list-style: none; font-weight: 600; }
+  .phone-install summary::-webkit-details-marker { display: none; }
+  .phone-install summary > span { flex: 1; }
+  .phone-install summary > svg { flex: none; }
+  .phone-install[open] summary > svg:last-child { transform: rotate(180deg); }
+  .phone-install-body { display: grid; gap: var(--space-3); padding-block-end: var(--space-3); font-size: var(--text-sm); }
+  .phone-install-body dl { display: grid; gap: var(--space-2); }
+  .phone-install-body dt { font-weight: 600; }
+  .phone-install-body [role="status"]:empty { display: none; }
+  .phone-install-body .btn { justify-self: start; }
   .notification-bell { position: relative; }
   .notification-badge { position: absolute; inset-inline-end: 0; top: 0; min-width: 18px; height: 18px; padding-inline: var(--space-1); border-radius: 10px; display: grid; place-items: center; font-size: var(--text-micro); line-height: 1; background: var(--primary); color: var(--on-primary); border: 2px solid var(--surface); }
   .notification-center { display: grid; gap: var(--space-5); }

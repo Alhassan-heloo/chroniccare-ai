@@ -163,6 +163,7 @@ body:has(.hybrid) { margin: 0; -webkit-font-smoothing: auto; }
 .hybrid .menu-panel :is(a,.hy-language) { display: flex; align-items: center; min-height: 45px; border-block-end: 1px solid var(--rule); font-size: 15px; }
 .hybrid .menu-panel :is(a,.hy-language):last-child { border: 0; }
 .hybrid .menu-panel :is(a,.hy-language):hover { text-decoration: underline; }
+.hybrid .menu-panel:has(.phone-install) { max-inline-size: min(22rem, calc(100% - 30px)); max-block-size: calc(100dvh - 9rem); overflow: auto; }
 .hybrid .hero-bottom {
   width: min(1248px, 100% - 128px);
   min-height: inherit;

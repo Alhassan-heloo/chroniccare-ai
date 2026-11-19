@@ -35,13 +35,14 @@ type Session = 'loading' | 'guest' | 'patient' | 'doctor' | 'admin';
 type HomepageProps = {
   session?: Session;
   workspaceHref?: string;
+  installAction?: ReactNode;
   language: Language;
   dark: boolean;
   onTheme: () => void;
   onLanguage: (language: Language) => void;
 };
 
-function Opening({ t, language, dark, onTheme, onLanguage, session, workspaceHref, primary }: HomepageProps & { t: Text; primary: ReactNode }) {
+function Opening({ t, language, dark, onTheme, onLanguage, session, workspaceHref, installAction, primary }: HomepageProps & { t: Text; primary: ReactNode }) {
   const [menu, setMenu] = useState(false);
   const [compact, setCompact] = useState(false);
   const navigation = useRef<HTMLDivElement>(null);
@@ -125,6 +126,7 @@ function Opening({ t, language, dark, onTheme, onLanguage, session, workspaceHre
             setMenu(false);
           }}>{t.assistant.title}</a>
           {session && session !== 'loading' && <a href={workspaceHref} className="menu-workspace" onClick={() => setMenu(false)}>{t.workspace[session]}</a>}
+          {installAction}
           {session === 'guest' && <a href="/register" onClick={() => setMenu(false)}>{t.join}</a>}
           <LanguageSwitch className="hy-language" language={language} label={t.language} onClick={() => {
             onLanguage(alternative);
@@ -147,7 +149,7 @@ function Opening({ t, language, dark, onTheme, onLanguage, session, workspaceHre
   </>;
 }
 
-export default function Homepage({ language, dark, onTheme, onLanguage, session = 'guest', workspaceHref = '/login' }: HomepageProps) {
+export default function Homepage({ language, dark, onTheme, onLanguage, session = 'guest', workspaceHref = '/login', installAction }: HomepageProps) {
   const t = copy[language];
   const alternative = language === 'ar' ? 'en' : 'ar';
   const main = useRef<HTMLElement>(null);
@@ -176,7 +178,7 @@ export default function Homepage({ language, dark, onTheme, onLanguage, session 
   return <div id="top" className="hybrid" data-i18n="declarative" data-theme={dark ? 'dark' : 'light'}>
     <a className="hy-skip" href="#main">{t.skip}</a>
     <main id="main" tabIndex={-1} ref={main}>
-      <Opening t={t} language={language} dark={dark} onTheme={onTheme} onLanguage={onLanguage} session={session} workspaceHref={workspaceHref} primary={primary} />
+      <Opening t={t} language={language} dark={dark} onTheme={onTheme} onLanguage={onLanguage} session={session} workspaceHref={workspaceHref} installAction={installAction} primary={primary} />
       <Readings t={t} language={language} />
       <Showcase t={t} language={language} />
       <CareJourney t={t} language={language} />
