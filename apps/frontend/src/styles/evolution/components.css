@@ -60,7 +60,7 @@
   .dialog-heading { position: sticky; z-index: 2; top: calc(-1 * var(--space-6)); display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding-block: var(--space-2) var(--space-4); margin-bottom: var(--space-5); border-bottom: 1px solid var(--hairline); background: var(--surface-raised); }
   :root[data-theme="dark"] :is(dialog, .dialog-heading) { background: var(--surface-raised); }
 
-  .dialog-heading h2 { font: var(--care-heading-weight) 2rem/1.2 var(--font-heading); }
+  .dialog-heading h2 { font: var(--care-heading-weight) var(--text-4xl)/1.2 var(--font-heading); }
   .dialog-heading .btn { min-width: 44px; min-height: 44px; padding: var(--space-2); }
   .badge { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); font-size: var(--text-xs); color: var(--info); background: var(--info-soft); line-height: 1.5; }
   .badge-success { background: var(--success-soft); color: var(--success); }
@@ -119,8 +119,10 @@
   .preference-field > :is(label, span) { font-size: var(--text-base); font-weight: 500; }
   .preference-theme { display: flex; gap: var(--space-2); }
   .preference-theme select { width: 100%; min-width: 0; }
+  .preference-text-size { grid-column: 1 / -1; }
+  .preference-text-size select { width: 100%; min-width: 0; }
   @media (max-width: 380px) { .preferences { grid-template-columns: 1fr; } }
-  .theme-select, .language-toggle { min-height: 44px; padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-raised); color: var(--text); font: inherit; font-size: var(--text-base); }
+  .theme-select, .language-toggle, .preference-text-size select { min-height: 44px; padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-raised); color: var(--text); font: inherit; font-size: var(--text-base); }
   .language-toggle { display: inline-flex; align-items: center; gap: var(--space-1); }
   .language-toggle .active { color: var(--primary); font-weight: 800; }
   .theme-toggle { padding: var(--space-2); min-width: 44px; }

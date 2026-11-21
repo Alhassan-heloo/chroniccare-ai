@@ -9,9 +9,23 @@ import { MeasurementForm } from "@/components/health/MeasurementForm";
 import { useI18n } from "@/i18n/context";
 import type { User } from "@/lib/types/user";
 import { useReducedMotion } from "@/components/public/living/useLivingMotion";
+import type { PatientTextSize } from "./Preferences";
+
+const patientTextSizeKey = "cc-patient-text-size";
+
 export function DashboardLayout({ role = "patient" }: { role?: User["role"] }) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem("cc-sidebar-collapsed") === "true"; } catch { return false; } });
+  const [textSize, setTextSize] = useState<PatientTextSize>(() => {
+    try {
+      const saved = role === "patient" ? localStorage.getItem(patientTextSizeKey) : null;
+      return saved === "large" || saved === "extra-large" ? saved : "normal";
+    } catch { return "normal"; }
+  });
+  const patientText = role === "patient" ? { size: textSize, setSize: (size: PatientTextSize) => {
+    setTextSize(size);
+    try { localStorage.setItem(patientTextSizeKey, size); } catch { /* Storage is optional. */ }
+  } } : undefined;
   const { t } = useI18n();
   const { pathname, hash } = useLocation();
   useEffect(() => {
@@ -33,20 +47,20 @@ export function DashboardLayout({ role = "patient" }: { role?: User["role"] }) {
   useEffect(() => { try { localStorage.setItem("cc-public-motion", paused ? "paused" : "running"); } catch { /* Optional visual preference. */ } }, [paused]);
   return (
     <DashboardContext value={{ openMeasurement: () => setOpen(true) }}>
-      <div className={`living-evolution living-public living-dashboard experience-shell experience-${role}${hasReadingHeader ? " patient-reading-shell" : ""}${assistant ? " living-assistant" : ""}${admin ? " living-admin" : ""}${measurements ? " living-measurements" : ""}${medications ? " living-medications" : ""}${habits ? " living-habits" : ""}${reports ? " living-reports" : ""}`} data-motion={paused || reduced ? "paused" : "running"}>
+      <div className={`living-evolution living-public living-dashboard experience-shell experience-${role}${hasReadingHeader ? " patient-reading-shell" : ""}${assistant ? " living-assistant" : ""}${admin ? " living-admin" : ""}${measurements ? " living-measurements" : ""}${medications ? " living-medications" : ""}${habits ? " living-habits" : ""}${reports ? " living-reports" : ""}`} data-motion={paused || reduced ? "paused" : "running"} data-text-size={patientText?.size}>
       <a className="skip-link" href="#main" data-i18n="declarative">{t("common.layout.skip")}</a>
       <div className={`app-frame role-${role} clinical-app`} data-nav={collapsed ? "collapsed" : "expanded"}>
         <div className="clinical-app-body">
           <Sidebar role={role} collapsed={collapsed} onToggle={() => setCollapsed(value => !value)} />
           <div className="app-stage">
-            <Header role={role} motion={{ paused, reduced, toggle: () => setPaused(value => !value) }} />
+            <Header role={role} motion={{ paused, reduced, toggle: () => setPaused(value => !value) }} patientText={patientText} />
             <div className="dashboard-shell"><div className="workspace">
               <main id="main" tabIndex={-1}><Outlet /></main>
               <footer className="page-footer" data-i18n="declarative">ChronicCare AI <span>{t("common.layout.footer")}</span></footer>
             </div></div>
           </div>
         </div>
-        {role === "patient" && <BottomNav />}
+        {patientText && <BottomNav enlargedText={textSize !== "normal"} />}
       </div>
       <Modal open={open} onClose={() => setOpen(false)} title={t("measurements.add")} declarativeTitle>
         {open && <MeasurementForm onSaved={() => setOpen(false)} />}

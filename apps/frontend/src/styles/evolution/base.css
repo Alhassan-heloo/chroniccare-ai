@@ -16,7 +16,9 @@
   :root[dir=rtl] h1 { letter-spacing: 0; }
   small { font-size: var(--text-xs); }
   .living-evolution svg.lucide { stroke-width: 1.8; }
-  @media (max-width: 47.99rem) { :root { --text-title: 2.25rem; } }
+  @media (max-width: 47.99rem) {
+    :root, .experience-patient[data-text-size] { --text-title: calc(2.25rem * var(--patient-text-scale, 1)); }
+  }
   svg { flex-shrink: 0; }
   bdi, time, progress { font-variant-numeric: tabular-nums; }
   :focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }

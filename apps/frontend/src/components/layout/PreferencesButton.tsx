@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Pause, Play, SlidersHorizontal } from "lucide-react";
 import { useI18n } from "@/i18n/context";
 import { Modal } from "@/components/ui/Modal";
-import { Preferences } from "./Preferences";
+import { Preferences, type PatientTextPreference } from "./Preferences";
 import { PhoneInstall } from "./PhoneInstall";
 export type MotionPreference = { paused: boolean; reduced: boolean; toggle: () => void };
-export function PreferencesButton({ motion }: { motion?: MotionPreference }) {
+export function PreferencesButton({ motion, patientText }: { motion?: MotionPreference; patientText?: PatientTextPreference }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const title = t("common.preferences.title");
@@ -16,7 +16,7 @@ export function PreferencesButton({ motion }: { motion?: MotionPreference }) {
     </button>
     <Modal open={open} onClose={() => setOpen(false)} title={title} declarativeTitle>
       <div className="workspace-preferences">
-        <Preferences />
+        <Preferences patientText={patientText} />
         <PhoneInstall />
         {motion && <button type="button" className="btn btn-secondary motion-toggle" disabled={motion.reduced} aria-label={motionLabel} aria-pressed={motion.paused || motion.reduced} onClick={motion.toggle}>
           {motion.paused || motion.reduced ? <Play size={18} aria-hidden="true" /> : <Pause size={18} aria-hidden="true" />}{motionLabel}

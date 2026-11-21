@@ -96,6 +96,7 @@
   }
   @media print {
     @page { size: A4; margin: 15mm; }
+    .experience-patient[data-text-size] { --patient-text-scale: 1; }
     body:has(.visit-summary) { background: white; color: black; }
     body:has(.visit-summary) :is(.living-dashboard,.app-frame,.clinical-app-body,.app-stage,.dashboard-shell,.workspace,main) { background: white !important; }
     body:has(.visit-summary) :is(.app-header,.app-sidebar,.sidebar,.bottom-nav,.role-mobile-nav,.page-footer,.skip-link,[data-sonner-toaster],.print-summary) { display: none !important; }
@@ -144,8 +145,6 @@
     .living-dashboard .header-actions { flex-wrap: wrap; max-inline-size: 100%; }
     .role-mobile-nav[data-text-expanded="true"] { position: static; display: grid; grid-template-columns: minmax(0,1fr); box-shadow: none; }
     .app-frame:has(.role-mobile-nav[data-text-expanded="true"]) .clinical-patient-banner { grid-template-columns: minmax(0,1fr); }
-    .bottom-nav[data-text-expanded="true"] { position: static; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); width: 100%; box-shadow: none; }
-    .bottom-nav[data-text-expanded="true"] .add-nav { width: auto; height: auto; margin: var(--space-1); }
     .doctor-selected-record .clinical-latest-readings { grid-template-columns: minmax(0,1fr); }
     .doctor-selected-record .clinical-latest-readings > div + div { border-inline-start: 0; border-block-start: 1px solid var(--hairline); padding-block-start: var(--space-3); margin-block-start: var(--space-3); }
     .invitation-review-card { padding: var(--space-4); }
@@ -153,4 +152,12 @@
     .targeted-invitation-card { padding: var(--space-4); }
   }
   @media (max-width: 22rem) { .living-medications.living-public .dose-list li { grid-template-columns: minmax(0,1fr); } }
+  .experience-patient .btn-primary { min-inline-size: 44px; }
+  .experience-patient .segmented .btn { min-height: 44px; min-width: 44px; }
+  @media (max-width: 47.99rem) {
+    .experience-patient .bottom-nav > :is(a, button) { font-size: var(--text-micro); }
+    .bottom-nav[data-text-expanded="true"] { position: static; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); width: 100%; box-shadow: none; }
+    .bottom-nav[data-text-expanded="true"] .add-nav { width: auto; height: auto; margin: var(--space-1); }
+    .bottom-nav[data-text-expanded="true"] > :is(a, button) > span { max-inline-size: 100%; overflow-wrap: anywhere; text-align: center; }
+  }
 }

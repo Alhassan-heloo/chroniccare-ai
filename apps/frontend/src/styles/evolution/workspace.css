@@ -154,7 +154,7 @@
   .assistant-error .ui-feedback { padding: var(--space-3); }
   .assistant-error > p { font-size: var(--text-xs); color: var(--muted); }
   .assistant-error > .btn { justify-self: start; }
-  .assistant-latest { align-self: center; min-height: 36px; padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: var(--text-xs); }
+  .assistant-latest { align-self: center; flex: none; min-height: 44px; padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: var(--text-xs); }
   .assistant-composer { flex: none; align-self: center; display: grid; gap: var(--space-2); width: calc(100% - var(--space-10)); max-width: 860px; margin: 0 var(--space-5) var(--space-5); padding: var(--space-4); border: 1px solid var(--hairline); background: var(--surface-sunken); border-radius: var(--radius-md); }
   .assistant-composer label { font-size: var(--text-xs); font-weight: 650; }
   .assistant-composer textarea { width: 100%; min-height: 70px; max-height: 150px; resize: vertical; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-3); background: var(--surface); color: var(--text); font: inherit; font-size: var(--text-sm); line-height: 1.7; }
@@ -236,7 +236,7 @@
   .living-assistant .workspace main { flex: 1; min-height: 0; padding-block: 12px; display: flex; }
   .living-assistant .page-footer { display: none; }
   .living-assistant .evolution-assistant { width: 100%; height: 100%; min-height: 0; gap: 8px; }
-  .assistant-heading h1 { font-size: clamp(1.25rem,1.8vw,1.625rem); margin: 0; line-height: 1.5; }
+  .assistant-heading h1 { font-size: calc(clamp(1.25rem,1.8vw,1.625rem) * var(--patient-text-scale, 1)); margin: 0; line-height: 1.5; }
   .assistant-heading p { display: none; }
   .assistant-safety summary { font-size: var(--text-xs); padding-block: 4px; }
   .assistant-workspace { border: 0; border-radius: 0; background: transparent; }
@@ -245,11 +245,11 @@
   .assistant-turn { max-width: 800px; gap: 24px; }
   .assistant-message { max-width: 92%; padding: 16px 20px; }
   .model-message { padding-inline-start: 0; }
-  .assistant-message p { font-size: 17px; line-height: 1.95; max-width: 70ch; }
-  .assistant-message h2 { font-size: 14px; font-weight: 700; }
-  .assistant-message .assistant-disclaimer { font-size: 14px; line-height: 1.8; }
+  .assistant-message p { font-size: calc(var(--text-base) * 1.0625); line-height: 1.95; max-width: 70ch; }
+  .assistant-message h2 { font-size: var(--text-xs); font-weight: 700; }
+  .assistant-message .assistant-disclaimer { font-size: var(--text-xs); line-height: 1.8; }
   .assistant-composer { width: 100%; max-width: 840px; margin: 0 auto; padding: 12px 16px; gap: 4px; background: var(--surface); border-color: var(--border); box-shadow: var(--shadow-card); }
-  .assistant-composer textarea { min-height: 58px; max-height: 110px; font-size: 16px; line-height: 1.7; background: transparent; border: 0; padding: 6px 0; resize: none; }
+  .assistant-composer textarea { min-height: 58px; max-height: 110px; font-size: var(--text-base); line-height: 1.7; background: transparent; border: 0; padding: 6px 0; resize: none; }
   .assistant-composer-footer .btn { min-height: 44px; }
   .assistant-memory { display: none; }
   .assistant-empty { max-width: 800px; }
@@ -258,12 +258,18 @@
     .living-assistant .workspace main { padding: 8px 12px; }
     .living-assistant .evolution-assistant { height: calc(var(--assistant-viewport-height,100dvh) - var(--layout-mobile-header) - var(--layout-mobile-nav) - 16px - env(safe-area-inset-bottom)); min-height: 0; }
     .assistant-heading { min-height: 44px; }
-    .assistant-heading h1 { font-size: 19px; }
+    .assistant-heading h1 { font-size: calc(var(--text-base) * 1.1875); }
     .assistant-log { padding: 16px 4px; }
     .assistant-message { max-width: 100%; padding: 12px; }
     .model-message { padding-inline-start: 0; }
-    .assistant-message p { font-size: 16px; line-height: 1.9; }
+    .assistant-message p { font-size: var(--text-base); line-height: 1.9; }
     .assistant-composer { padding: 8px 12px; }
-    .assistant-composer label { font-size: 13px; }
+    .assistant-composer label { font-size: var(--text-micro); }
+    .living-assistant:has(.bottom-nav[data-text-expanded="true"]) {
+      :is(.clinical-app-body, .app-stage, .evolution-assistant) { height: auto; }
+      .dashboard-shell { padding-block-end: 0; }
+      .assistant-log { flex: none; max-block-size: max(14rem, 50dvh); }
+      .assistant-prompts { grid-template-columns: minmax(0, 1fr); }
+    }
   }
 }

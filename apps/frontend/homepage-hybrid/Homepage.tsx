@@ -36,13 +36,14 @@ type HomepageProps = {
   session?: Session;
   workspaceHref?: string;
   installAction?: ReactNode;
+  sessionAction?: ReactNode;
   language: Language;
   dark: boolean;
   onTheme: () => void;
   onLanguage: (language: Language) => void;
 };
 
-function Opening({ t, language, dark, onTheme, onLanguage, session, workspaceHref, installAction, primary }: HomepageProps & { t: Text; primary: ReactNode }) {
+function Opening({ t, language, dark, onTheme, onLanguage, session, workspaceHref, installAction, sessionAction, primary }: HomepageProps & { t: Text; primary: ReactNode }) {
   const [menu, setMenu] = useState(false);
   const [compact, setCompact] = useState(false);
   const navigation = useRef<HTMLDivElement>(null);
@@ -113,6 +114,7 @@ function Opening({ t, language, dark, onTheme, onLanguage, session, workspaceHre
             {session === 'guest' && <a href="/login" className="hy-login" inert={compact}>{t.workspace.guest}</a>}
             {primary}
             <ThemeToggle className="nav-icon" dark={dark} label={dark ? t.lightMode : t.changeTheme} onClick={onTheme} />
+            {sessionAction}
             <button type="button" className="nav-icon" id="hy-menu-button" aria-label={menu ? t.close : t.menu} aria-expanded={menu} aria-controls="hy-menu" onClick={() => setMenu(!menu)}><Symbol icon={menu ? 'close' : 'menu'} size={17} /></button>
           </div>
         </div>
@@ -149,7 +151,7 @@ function Opening({ t, language, dark, onTheme, onLanguage, session, workspaceHre
   </>;
 }
 
-export default function Homepage({ language, dark, onTheme, onLanguage, session = 'guest', workspaceHref = '/login', installAction }: HomepageProps) {
+export default function Homepage({ language, dark, onTheme, onLanguage, session = 'guest', workspaceHref = '/login', installAction, sessionAction }: HomepageProps) {
   const t = copy[language];
   const alternative = language === 'ar' ? 'en' : 'ar';
   const main = useRef<HTMLElement>(null);
@@ -178,7 +180,7 @@ export default function Homepage({ language, dark, onTheme, onLanguage, session 
   return <div id="top" className="hybrid" data-i18n="declarative" data-theme={dark ? 'dark' : 'light'}>
     <a className="hy-skip" href="#main">{t.skip}</a>
     <main id="main" tabIndex={-1} ref={main}>
-      <Opening t={t} language={language} dark={dark} onTheme={onTheme} onLanguage={onLanguage} session={session} workspaceHref={workspaceHref} installAction={installAction} primary={primary} />
+      <Opening t={t} language={language} dark={dark} onTheme={onTheme} onLanguage={onLanguage} session={session} workspaceHref={workspaceHref} installAction={installAction} sessionAction={sessionAction} primary={primary} />
       <Readings t={t} language={language} />
       <Showcase t={t} language={language} />
       <CareJourney t={t} language={language} />

@@ -154,6 +154,9 @@ body:has(.hybrid) { margin: 0; -webkit-font-smoothing: auto; }
 .hybrid .nav-icon:hover, .hybrid .nav-icon[aria-expanded='true'] { background: #ffffff21; }
 .hybrid .nav-icon:active { border-color: currentColor; }
 .hybrid .nav-actions { gap: 9px; }
+.hybrid .nav-actions .session-bar > .btn { color: inherit; font-size: .875rem; }
+.hybrid .nav-actions .session-bar > .btn:hover:not(:disabled) { background: #ffffff21; }
+.hybrid .nav-actions .session-bar > .btn:focus-visible { outline-color: currentColor; }
 .hybrid .hy-login { margin-inline-end: 8px; }
 /* The full navigation is measured using its actual labels and controls. */
 .hybrid .nav-links { flex: none; inline-size: max-content; }
@@ -573,6 +576,12 @@ html:has(.hybrid .show-dialog[open]) { overflow: hidden; }
   .hybrid .journey-example { min-block-size: 0; padding: 12px; margin-block: -3px 4px; }
   .hybrid .hy-close p { font-size: 17px; }
   .hybrid .hy-footer nav :is(a,.hy-language) { font-size: 15px; }
+}
+@media (max-width: 520px) {
+  .hybrid .hy-nav:has(.session-bar) { flex-wrap: wrap; padding-block: 8px; }
+  .hybrid .nav-actions:has(.session-bar) { flex: 1 1 100%; min-inline-size: 0; }
+  .hybrid .nav-actions:has(.session-bar) .fh-cta { flex: 1; min-inline-size: 0; white-space: normal; text-align: center; }
+  .hybrid .nav-actions:has(.session-bar) .nav-icon { flex-shrink: 0; }
 }
 @container hybrid-hero (max-width: 360px) {
   .hybrid .hy-nav { width: calc(100% - 18px); padding-inline: 6px; }

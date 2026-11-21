@@ -37,8 +37,7 @@
   .profile-name { display: grid; font-size: var(--text-xs); max-width: 150px; overflow-wrap: anywhere; }
   .profile-name small { color: var(--muted); font-size: var(--text-micro); }
   .session-bar { display: flex; gap: var(--space-3); align-items: center; }
-  .session-bar > .btn { min-width: 44px; padding: var(--space-2); }
-  .session-logout-text { display: none; }
+  .session-bar > .btn { min-width: 44px; min-height: 44px; padding: var(--space-2); }
   .session-identity { max-width: 160px; font-size: var(--text-xs); overflow-wrap: anywhere; }
   .workspace main { width: 100%; max-width: var(--layout-content); margin-inline: auto; padding: var(--space-7) var(--page-gutter) var(--space-4); }
   .page-footer { display: flex; justify-content: space-between; gap: var(--space-4); border-top: 1px solid var(--hairline); margin: var(--space-6) var(--page-gutter) 0; padding-block: var(--space-5); color: var(--subtle); font-size: var(--text-micro); }
@@ -98,7 +97,8 @@
     .app-header .brand small { display: none; }
     .app-header .brand-mark { width: 28px; height: 28px; }
     .header-breadcrumb, .profile-link, .session-identity { display: none; }
-    .header-actions { gap: 0; margin-inline-start: auto; }
+    .header-actions { flex-wrap: wrap; max-inline-size: 100%; gap: 0; margin-inline-start: auto; }
+    .app-header:has(.session-bar) { flex-wrap: wrap; }
     .workspace main { padding: var(--space-5) var(--space-4) var(--space-4); }
     .page-footer { padding-block: var(--space-4) calc(var(--layout-mobile-nav) + var(--space-6) + env(safe-area-inset-bottom)); margin-inline: var(--space-4); }
     .bottom-nav, .role-mobile-nav { position: fixed; z-index: 30; bottom: 0; inset-inline: 0; display: flex; flex-wrap: nowrap; align-items: stretch; width: 100%; min-height: var(--layout-mobile-nav); padding: var(--space-1) var(--space-2) calc(var(--space-1) + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--hairline); box-shadow: var(--shadow-navigation); }

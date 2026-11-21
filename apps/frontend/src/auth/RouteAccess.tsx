@@ -23,23 +23,23 @@ export function ProtectedRoute({ role }: { role: User["role"] }) {
   if (user.mustChangePassword) return <ChangeTemporaryPassword />;
   return <Outlet />;
 }
-export function SessionBar() {
+export function SessionBar({ showIdentity = true, onSignedOut }: { showIdentity?: boolean; onSignedOut?: () => void }) {
   const { user, logout } = useAuth();
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   if (!user && !failed) return null;
   return <aside className="session-bar" data-i18n="declarative" aria-label={t("auth.session")}>
-    {user && user.role !== "patient" && <bdi className="session-identity">{user.name}</bdi>}
+    {showIdentity && user && user.role !== "patient" && <bdi className="session-identity">{user.name}</bdi>}
     {user && <Button variant="ghost" disabled={busy} aria-busy={busy} aria-label={t(busy ? "auth.working" : "auth.logout")} title={t("auth.logout")} onClick={async () => {
       setBusy(true); setFailed(false);
-      try { await logout(); } catch {
+      try { await logout(); onSignedOut?.(); } catch {
         setFailed(true);
         // Local logout can unmount this protected header before the rejection.
         // The application-wide toaster survives the redirect to the login page.
         toast.warning(t("auth.logoutFailed"), { duration: 10000 });
       } finally { setBusy(false); }
-    }}><LogOut size={20} aria-hidden="true" /><span className="session-logout-text">{t(busy ? "auth.working" : "auth.logout")}</span></Button>}
+    }}><LogOut size={20} aria-hidden="true" /><span>{t(busy ? "auth.working" : "auth.logout")}</span></Button>}
     {failed && <p role="alert">{t("auth.logoutFailed")}</p>}
   </aside>;
 }

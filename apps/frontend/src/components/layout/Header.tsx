@@ -2,6 +2,7 @@ import { Link, NavLink, useLocation } from "react-router";
 import { Brand } from "./Brand";
 import { NotificationCenter } from "./NotificationCenter";
 import { PreferencesButton, type MotionPreference } from "./PreferencesButton";
+import type { PatientTextPreference } from "./Preferences";
 import { useI18n } from "@/i18n/context";
 import { useAuth } from "@/auth/context";
 import { SessionBar } from "@/auth/RouteAccess";
@@ -19,7 +20,7 @@ function PatientTools() {
     </Link>
   </>;
 }
-export function Header({ role = "patient", motion }: { role?: User["role"]; motion?: MotionPreference }) {
+export function Header({ role = "patient", motion, patientText }: { role?: User["role"]; motion?: MotionPreference; patientText?: PatientTextPreference }) {
   const { t } = useI18n();
   const { pathname } = useLocation();
   const navigation = roleNavigation(role);
@@ -29,7 +30,7 @@ export function Header({ role = "patient", motion }: { role?: User["role"]; moti
     <header className="header app-header">
       <Brand />
       <div className="header-breadcrumb" data-i18n="declarative"><span>{t(`experience.roles.${role}`)}</span><strong>{t(current?.label ?? `auth.${role}`)}</strong></div>
-      <div className="header-actions"><PreferencesButton motion={motion} /><NotificationCenter />{role === "patient" && <PatientTools />}<SessionBar /></div>
+      <div className="header-actions"><PreferencesButton motion={motion} patientText={patientText} /><NotificationCenter />{role === "patient" && <PatientTools />}<SessionBar /></div>
     </header>
     {role !== "patient" && <nav ref={roleNav} className="role-mobile-nav" data-text-expanded={expandedText} aria-label={t("common.layout.mainNav")} data-i18n="declarative">{navigation.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to}><Icon size={18} aria-hidden="true" />{t(label)}</NavLink>)}</nav>}
   </>;

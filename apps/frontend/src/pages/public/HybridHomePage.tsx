@@ -1,8 +1,9 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useI18n } from "@/i18n/context";
 import { useTheme } from "@/theme/context";
 import { useAuth } from "@/auth/context";
+import { SessionBar } from "@/auth/RouteAccess";
 import { roleHome } from "@/auth/api";
 import { PhoneInstall } from "@/components/layout/PhoneInstall";
 import Homepage from "../../../homepage-hybrid/Homepage";
@@ -19,6 +20,7 @@ export default function HybridHomePage() {
   const { language, setLanguage } = useI18n();
   const { resolved, setMode } = useTheme();
   const { hash } = useLocation();
+  const navigate = useNavigate();
   const { user, loading } = useAuth();
 
   useEffect(() => {
@@ -37,6 +39,7 @@ export default function HybridHomePage() {
     language={language}
     session={loading ? "loading" : user?.role ?? "guest"}
     workspaceHref={user ? roleHome(user.role) : "/login"}
+    sessionAction={user && <SessionBar showIdentity={false} onSignedOut={() => void navigate("/login", { replace: true })} />}
     installAction={<PhoneInstall />}
     dark={resolved === "dark"}
     onLanguage={setLanguage}

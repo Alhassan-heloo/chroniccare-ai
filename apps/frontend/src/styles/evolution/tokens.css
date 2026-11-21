@@ -52,16 +52,6 @@
     --space-4: calc(var(--space-unit) * 4); --space-5: calc(var(--space-unit) * 5); --space-6: calc(var(--space-unit) * 6);
     --space-7: calc(var(--space-unit) * 7); --space-8: calc(var(--space-unit) * 8); --space-10: calc(var(--space-unit) * 10);
     --space-12: calc(var(--space-unit) * 12); --space-16: calc(var(--space-unit) * 16); --space-20: calc(var(--space-unit) * 20); --space-24: calc(var(--space-unit) * 24);
-    --text-micro: .8125rem; --text-xxs: .8125rem;
-    --text-xs: .875rem; --text-sm: .9375rem; --text-base: 1rem;
-    --text-lg: 1.125rem; --text-xl: 1.375rem;
-    --text-2xl: 1.5rem; --text-3xl: 1.75rem; --text-4xl: 2rem; --text-stat: 2.625rem;
-    --text-title: 2.75rem;
-    --text-display: clamp(2.125rem, 4.8vw, 4.25rem);
-    --text-heading: clamp(1.5rem,2.3vw,2.125rem);
-    --text-value: clamp(1.8rem,3vw,2.6rem);
-    --text-section: clamp(1.5rem,3vw,2.5rem);
-    --text-hero: clamp(2.25rem,4.25vw,4rem);
     --radius-sm: .625rem; --radius-md: 1rem; --radius-lg: var(--care-panel-radius);
     --radius-xl: 2rem; --radius: var(--radius-lg); --radius-small: var(--radius-sm);
     --radius-control: var(--radius-sm);
@@ -82,6 +72,23 @@
     --blue-wash: color-mix(in srgb, var(--primary) 9%, transparent);
     --aqua-wash: var(--blue-wash);
   }
+  /* Evaluate the same typography scale on the patient shell without resizing layout units. */
+  :root, .experience-patient[data-text-size] {
+    --text-micro: calc(.8125rem * var(--patient-text-scale, 1)); --text-xxs: var(--text-micro);
+    --text-xs: calc(.875rem * var(--patient-text-scale, 1)); --text-sm: calc(.9375rem * var(--patient-text-scale, 1));
+    --text-base: calc(1rem * var(--patient-text-scale, 1));
+    --text-lg: calc(1.125rem * var(--patient-text-scale, 1)); --text-xl: calc(1.375rem * var(--patient-text-scale, 1));
+    --text-2xl: calc(1.5rem * var(--patient-text-scale, 1)); --text-3xl: calc(1.75rem * var(--patient-text-scale, 1));
+    --text-4xl: calc(2rem * var(--patient-text-scale, 1)); --text-stat: calc(2.625rem * var(--patient-text-scale, 1));
+    --text-title: calc(2.75rem * var(--patient-text-scale, 1));
+    --text-display: calc(clamp(2.125rem, 4.8vw, 4.25rem) * var(--patient-text-scale, 1));
+    --text-heading: calc(clamp(1.5rem,2.3vw,2.125rem) * var(--patient-text-scale, 1));
+    --text-value: calc(clamp(1.8rem,3vw,2.6rem) * var(--patient-text-scale, 1));
+    --text-section: calc(clamp(1.5rem,3vw,2.5rem) * var(--patient-text-scale, 1));
+    --text-hero: calc(clamp(2.25rem,4.25vw,4rem) * var(--patient-text-scale, 1));
+  }
+  .experience-patient[data-text-size="large"] { --patient-text-scale: 1.25; }
+  .experience-patient[data-text-size="extra-large"] { --patient-text-scale: 1.5; }
   :root[data-theme="dark"] {
     color-scheme: dark;
     --bg: var(--dark-page);

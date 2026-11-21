@@ -233,6 +233,7 @@
     .report-summary .report-stat:nth-child(3) { padding-inline-start: 0; }
   }
   @media (max-width: 700px) {
+    :is(.medications-page, .reports-page, .records-medication-workspace, .medication-grid) { grid-template-columns: minmax(0, 1fr); }
     .records-heading { flex-direction: column; align-items: stretch; gap: var(--space-4); }
     .records-heading h1 { font-size: var(--text-3xl); }
     .records-heading p { font-size: var(--text-xs); }
@@ -281,8 +282,8 @@
     .habit-templates { padding: var(--space-4); }
     .habit-template-grid { grid-template-columns: minmax(0, 1fr); }
     .habit-templates-heading > .dashboard-feature-icon { display: none; }
-    .report-periods { width: 100%; }
-    .report-periods .btn { flex: 1; min-width: 0; }
+    .report-periods { width: 100%; flex-wrap: wrap; }
+    .report-periods .btn { flex: 1 1 auto; }
     .report-summary .report-stat { padding-inline: var(--space-3); gap: var(--space-2); }
     .report-stat-heading { display: grid; gap: var(--space-2); }
     .report-stat-heading h2 { font-size: var(--text-xs); }
@@ -293,9 +294,9 @@
     .report-chart-panel .dashboard-panel-heading { gap: var(--space-2); }
     .report-chart-panel .dashboard-feature-icon { width: 28px; height: 28px; }
     .report-chart-panel h2 { font-size: var(--text-base); }
-    .report-readings.card { padding: var(--space-4); }
+    .report-readings.card { padding: var(--space-4); container: report-readings / inline-size; }
     .report-readings li { grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); }
-    .report-readings time { grid-column: 1 / -1; font-size: var(--text-xxs); }
+    .report-readings time { grid-column: 1 / -1; min-width: 0; overflow-wrap: anywhere; font-size: var(--text-xxs); }
     .report-readings strong { font-size: var(--text-xl); }
   }
   @media (max-width: 360px) {
@@ -323,6 +324,10 @@
     .measurement-day-list .measurement-entry.card { grid-template-columns: minmax(0, 1fr); }
     .measurement-day-list .measurement-entry-value { flex-wrap: wrap; }
     .measurement-day-list .measurement-entry-actions .btn { min-inline-size: 0; }
+  }
+  @container report-readings (max-width: 14rem) {
+    .report-readings li { grid-template-columns: minmax(0, 1fr); }
+    .report-readings strong { flex-wrap: wrap; }
   }
 
 }
