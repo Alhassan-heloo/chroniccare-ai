@@ -35,7 +35,7 @@ export function postgresConnectionStore(pool: pg.Pool) {
     },
     async previewInvitation(patientId: string, token: string) {
       const result = await pool.query<{ patientId: string | null; consumed: Date | null; id: string; name: string }>(`SELECT c.patient_id AS "patientId",c.consumed_at AS consumed,d.id,d.name
-        FROM chroniccare.patient_invitations c JOIN chroniccare.users d ON d.id=c.doctor_id AND d.role='doctor' AND NOT d.disabled
+        FROM chroniccare.patient_invitations c JOIN chroniccare.users d ON d.id=c.doctor_id AND d.role='doctor' AND NOT d.disabled AND NOT d.must_change_password
         WHERE c.token_hash=$1 AND c.expires_at>clock_timestamp()`, [tokenHash(token)]);
       const invitation = result.rows[0];
       if (!invitation) throw invalidInvitation();
@@ -49,7 +49,7 @@ export function postgresConnectionStore(pool: pg.Pool) {
         await client.query("BEGIN");
         await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", ["connections:" + patientId]);
         const result = await client.query<{ doctor_id: string; patient_id: string | null; consumed_at: Date | null }>(`SELECT c.doctor_id,c.patient_id,c.consumed_at
-          FROM chroniccare.patient_invitations c JOIN chroniccare.users d ON d.id=c.doctor_id AND d.role='doctor' AND NOT d.disabled
+          FROM chroniccare.patient_invitations c JOIN chroniccare.users d ON d.id=c.doctor_id AND d.role='doctor' AND NOT d.disabled AND NOT d.must_change_password
           WHERE c.token_hash=$1 AND c.expires_at>clock_timestamp() FOR UPDATE OF c FOR SHARE OF d`, [tokenHash(token)]);
         const invitation = result.rows[0];
         if (!invitation) throw invalidInvitation();
@@ -75,7 +75,7 @@ export function postgresConnectionStore(pool: pg.Pool) {
     },
     async preview(code: string) {
       const row = await pool.query<{ id: string; name: string; email: string }>(`SELECT u.id,u.name,u.email
-        FROM chroniccare.doctor_connection_codes c JOIN chroniccare.users u ON u.id=c.doctor_id AND u.role='doctor'
+        FROM chroniccare.doctor_connection_codes c JOIN chroniccare.users u ON u.id=c.doctor_id AND u.role='doctor' AND NOT u.disabled AND NOT u.must_change_password
         WHERE c.code_hash=$1 AND c.consumed_at IS NULL AND c.expires_at>clock_timestamp()`, [tokenHash(code)]);
       if (!row.rows[0]) throw invalid();
       return row.rows[0];
@@ -85,9 +85,12 @@ export function postgresConnectionStore(pool: pg.Pool) {
       try {
         await client.query("BEGIN");
         await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", ["connections:" + patientId]);
-        const row = await client.query<{ doctor_id: string }>(`SELECT doctor_id FROM chroniccare.doctor_connection_codes
-          WHERE code_hash=$1 AND consumed_at IS NULL AND expires_at>clock_timestamp() FOR UPDATE`, [tokenHash(code)]);
+      const row = await client.query<{ doctor_id: string }>(`SELECT c.doctor_id FROM chroniccare.doctor_connection_codes c
+        JOIN chroniccare.users d ON d.id=c.doctor_id AND d.role='doctor' AND NOT d.disabled AND NOT d.must_change_password
+        WHERE c.code_hash=$1 AND c.consumed_at IS NULL AND c.expires_at>clock_timestamp() FOR UPDATE OF c FOR SHARE OF d`, [tokenHash(code)]);
         if (!row.rows[0]) throw invalid();
+      const patient = await client.query("SELECT id FROM chroniccare.users WHERE id=$1 AND role='patient' AND NOT disabled FOR SHARE", [patientId]);
+      if (!patient.rowCount) throw invalid();
         // Check expiry again after any lock wait; the same code can succeed only once.
         const consumed = await client.query(`UPDATE chroniccare.doctor_connection_codes SET consumed_at=clock_timestamp()
           WHERE code_hash=$1 AND consumed_at IS NULL AND expires_at>clock_timestamp()`, [tokenHash(code)]);

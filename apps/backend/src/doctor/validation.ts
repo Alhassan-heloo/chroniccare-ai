@@ -1,3 +1,4 @@
+import { habitDate } from "../habits/validation.js";
 import { HttpError } from "../middleware/errors.js";
 
 export function doctorPatientId(value: string): string {
@@ -5,4 +6,9 @@ export function doctorPatientId(value: string): string {
     throw new HttpError(400, "INVALID_PATIENT_ID", "Patient ID is invalid.");
   }
   return value;
+}
+
+export function doctorRecordDate(value: unknown): string {
+  if (Array.isArray(value)) throw new HttpError(400, "INVALID_HABIT_DATE", "Date is invalid.");
+  return habitDate(value);
 }

@@ -2,6 +2,10 @@ import { readFileSync } from "node:fs";
 import pg from "pg";
 import type { Environment } from "../config/env.js";
 
+export interface QueryExecutor {
+  query<Row extends pg.QueryResultRow>(text: string, values?: unknown[]): Promise<pg.QueryResult<Row>>;
+}
+
 export function createDatabasePool(config: Environment): pg.Pool {
   const pool = new pg.Pool({
     connectionString: config.databaseUrl,

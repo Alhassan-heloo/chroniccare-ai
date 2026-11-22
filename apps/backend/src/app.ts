@@ -102,11 +102,8 @@ export function createApp(options: AppOptions) {
     app.use("/api/habits", habitRoutes(options.authStore, options.habitStore));
   }
   if (options.doctorStore) {
-    if (!options.authStore || !options.measurementStore || !options.medicationStore || !options.habitStore) {
-      throw new Error("Doctor routes require authentication and all patient data stores.");
-    }
-    app.use("/api/doctor", doctorRoutes(options.authStore, options.doctorStore,
-      options.measurementStore, options.medicationStore, options.habitStore));
+    if (!options.authStore) throw new Error("Doctor routes require authentication.");
+    app.use("/api/doctor", doctorRoutes(options.authStore, options.doctorStore));
   }
   if (options.adminStore) {
     if (!options.authStore) throw new Error("Admin routes require authentication.");

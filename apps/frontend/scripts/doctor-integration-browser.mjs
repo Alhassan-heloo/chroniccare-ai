@@ -37,7 +37,7 @@ async function loginPage(page, email) {
 }
 
 async function navigate(page, path) {
-  await page.goto(base + path);
+  await page.goto(base + path, { waitUntil: "domcontentloaded", timeout: 60_000 });
   await page.waitForURL(base + path);
   await page.getByRole("main").getByRole("heading", { level: 1 }).waitFor();
 }
@@ -115,12 +115,14 @@ try {
       const text = message.text();
       const guestProbe = message.location().url === api + "/auth/me" && /Failed to load resource.*401/.test(text) &&
         ["protected-route", "logout-login-persistence", "second-doctor-empty"].includes(stage);
-      if (guestProbe || (expectedFailure && /Failed to load resource.*503/.test(text))) report.expectedFailures.push({ stage, message: text });
+      const denialProbe = ["activity-denial-cache", "record-denial-direct"].includes(stage) &&
+        message.location().url.startsWith(api + "/doctor/patients/" + id("patientA")) && /Failed to load resource.*404/.test(text);
+      if (guestProbe || denialProbe || (expectedFailure && /Failed to load resource.*503/.test(text))) report.expectedFailures.push({ stage, message: text });
       else report.errors.push(text);
     }
   });
 
-  stage = "protected-route"; await page.goto(base + "/doctor/patients"); await page.waitForURL("**/login?returnTo=*");
+  stage = "protected-route"; await page.goto(base + "/doctor/patients", { waitUntil: "domcontentloaded", timeout: 60_000 }); await page.waitForURL("**/login?returnTo=*");
   stage = "doctor-login"; await loginPage(page, emails.doctorA);
   stage = "doctor-dashboard-data";
   await navigate(page, "/doctor/dashboard");
@@ -136,8 +138,8 @@ try {
   await page.waitForURL(url=>url.pathname==="/doctor/patients" && url.searchParams.get("patient")===id("patientA"));
   const pressure = main.getByRole("region", { name: "Recorded measurements" }).getByText(/128\/82\s*mmHg/).first();
   await pressure.waitFor();
-  await page.getByText("Visible medicine", { exact: true }).waitFor();
-  await page.getByText("Visible walking", { exact: true }).waitFor();
+  await main.locator('section[aria-labelledby="doctor-medications"]').getByText("Visible medicine", { exact: true }).waitFor();
+  await main.locator('section[aria-labelledby="doctor-habits"]').getByText("Visible walking", { exact: true }).waitFor();
   assert((await page.locator("main").textContent()).includes("1 of 1 doses taken today"));
   assert((await page.locator("main").textContent()).includes("0 of 1 habits completed today"));
   assert.equal(await page.locator("main form, main input, main select, main textarea").count(), 0);
@@ -171,6 +173,111 @@ try {
   await page.emulateMedia({ reducedMotion: "reduce" });
   assert.equal(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches), true);
 
+  stage = "activity-denial-cache";
+  async function approveFor(patientSession) {
+    const grant = await apiRequest("/connections/codes", { token: doctorAToken, method: "POST" });
+    assert.equal(grant.status, 201);
+    const { code } = await grant.json();
+    assert.equal((await apiRequest("/connections/approve", { token: patientSession, body: { code } })).status, 204);
+  }
+  await approveFor(patientBToken);
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await navigate(page, "/doctor/patients");
+  const pairScope = patientKey => ["doctor", "patient", id("doctorA"), id(patientKey)];
+  const cached = scope => page.evaluate(async queryKey => {
+    const { queryClient } = await import("/src/lib/query/queryClient.ts");
+    return queryClient.getQueriesData({ queryKey }).filter(([, data]) => data !== undefined).map(([key]) => key[4]);
+  }, scope);
+  const refresh = (scope, method = "invalidateQueries") => page.evaluate(async ({ queryKey, method }) => {
+    const { queryClient } = await import("/src/lib/query/queryClient.ts");
+    if (method === "refetchQueries") return queryClient.refetchQueries({ queryKey });
+    void queryClient[method]({ queryKey });
+  }, { queryKey: scope, method });
+  const scopeA = pairScope("patientA");
+  const scopeB = pairScope("patientB");
+  const selectPatient = name => page.locator(".doctor-selection-list a").filter({ hasText: name }).click();
+  await selectPatient("Patient Hidden");
+  await page.locator(".doctor-record-title").filter({ hasText: "Patient Hidden" }).waitFor();
+  await selectPatient("Patient Visible");
+  await pressure.waitFor();
+  await page.locator(".patient-activity [role=status]").waitFor({ state: "hidden" });
+  assert.deepEqual((await cached(scopeA)).sort(), ["activity", "record"]);
+  assert((await cached(scopeB)).includes("record"));
+
+  const recordUrl = url => url.origin === new URL(api).origin && url.pathname === new URL(api + recordPath).pathname;
+  const activityUrl = url => url.origin === new URL(api).origin && url.pathname === new URL(api + recordPath).pathname + "/activity";
+  const captured = Promise.withResolvers();
+  const release = Promise.withResolvers();
+  const replayed = Promise.withResolvers();
+  let recordRequests = 0, activityRequests = 0;
+  await page.route(recordUrl, async route => {
+    recordRequests++;
+    try {
+      const priorResponse = await route.fetch();
+      captured.resolve(priorResponse.status());
+      await release.promise;
+      await route.fulfill({ response: priorResponse }).catch(() => {}); // The browser may already have aborted the request.
+    } catch (error) {
+      captured.reject(error);
+    } finally {
+      replayed.resolve();
+    }
+  });
+  await page.route(activityUrl, async route => {
+    activityRequests++;
+    assert.equal(await captured.promise, 200);
+    await route.fulfill({ status: 404, headers: {
+      "access-control-allow-origin": base, "access-control-allow-credentials": "true", "x-account-id": id("doctorA"),
+    }, json: { error: { code: "DOCTOR_PATIENT_NOT_FOUND" } } });
+  });
+  const denied = main.getByRole("alert").getByText("This record is unavailable or no authorized relationship exists.");
+  try {
+    await refresh(scopeA);
+    await denied.waitFor();
+    assert.equal(await page.locator(".doctor-record, .patient-activity, .clinical-record-history").count(), 0);
+    assert.deepEqual(await cached(scopeA), []);
+    assert((await cached(scopeB)).includes("record"), "Denial must not evict another patient's record.");
+    release.resolve();
+    await replayed.promise;
+    await refresh(scopeA, "refetchQueries");
+    assert.equal(recordRequests, 1);
+    assert.equal(activityRequests, 1);
+    await denied.waitFor();
+    assert.deepEqual(await cached(scopeA), []);
+  } finally {
+    release.resolve();
+    await page.unroute(recordUrl);
+    await page.unroute(activityUrl);
+  }
+  await main.getByRole("button", { name: "Try again" }).click();
+  await pressure.waitFor();
+
+  stage = "record-denial-direct";
+  await navigate(page, `/doctor/patients/${id("patientA")}`);
+  await pressure.waitFor();
+  await page.setViewportSize({ width: 320, height: 844 });
+  assert.equal((await apiRequest(`/connections/doctors/${id("doctorA")}`, { token: patientAToken, method: "DELETE" })).status, 204);
+  await refresh([...scopeA, "record"]);
+  await denied.waitFor();
+  assert.equal(await page.locator(".doctor-record, .patient-activity, .clinical-record-history").count(), 0);
+  assert.deepEqual(await cached(scopeA), []);
+  await changePreferences(page, { language: "ar" });
+  await main.getByRole("alert").getByText("السجل غير متاح أو لا توجد علاقة معتمدة بهذا المريض.").waitFor();
+  await shot(page, "doctor-record-denied-320-ar");
+  await page.locator("html").evaluate(root => { root.style.fontSize = "200%"; });
+  try {
+    const retryButton = main.getByRole("alert").getByRole("button");
+    await retryButton.focus();
+    assert(await retryButton.evaluate(button => button === document.activeElement));
+    await shot(page, "doctor-record-denied-320-ar-text-200");
+  } finally {
+    await page.locator("html").evaluate(root => root.style.removeProperty("font-size"));
+  }
+  await changePreferences(page, { language: "en" });
+  await approveFor(patientAToken);
+  await main.getByRole("button", { name: "Try again" }).click();
+  await pressure.waitFor();
+
   stage = "second-doctor-empty";
   await page.getByRole("button", { name: "Sign out", exact: true }).click(); await page.waitForURL("**/login?returnTo=*"); await page.goto(base + "/login"); await loginPage(page, emails.doctorB); await navigate(page, "/doctor/patients");
   await page.getByText("No patients are currently assigned to your account.", { exact: true }).waitFor();
@@ -184,6 +291,8 @@ try {
     "assigned-patient list and unassigned-doctor empty state", "cross-doctor and cross-patient isolation", "read-only record without mutation controls",
     "real measurements, today's medication doses, and today's habit progress", "no write endpoint for doctor workflow", "API failure replaces stale record and retry recovers",
     "logout/login persistence", "keyboard record navigation", "Arabic/English and RTL/LTR", "light/dark/system themes and reduced motion", "1440/768/390/320 responsive layouts",
+    "activity denial cancels the record and removes only the denied pair from cache", "late success and automatic refetch cannot restore denied data",
+    "direct record denial after real revocation, bilingual mobile feedback with keyboard focus at 200% text, and reapproval with a fresh request",
   ];
   console.log(JSON.stringify({ status: "PASS", checks: report.checks.length, screenshots: report.screenshots.length, output }));
 } catch (error) {

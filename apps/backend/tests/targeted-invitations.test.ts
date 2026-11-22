@@ -48,6 +48,8 @@ test("targeted invitations: neutral issuance, intended account, consent, expiry,
     const invitation=await issue(patient.email.toUpperCase());
     const missing=await issue(randomUUID()+"@missing.example.test");
     const roleMismatch=await issue(doctor.email);
+    const relationship = (await pool.query<{created_at: Date}>(`INSERT INTO chroniccare.doctor_patient_relationships(doctor_id,patient_id)
+      VALUES($1,$2) RETURNING created_at`, [doctor.id,patient.id])).rows[0]!;
     const stored=await pool.query("SELECT * FROM chroniccare.patient_invitations WHERE token_hash=$1",[tokenHash(invitation.token)]);
     assert.equal(stored.rows[0].patient_id,patient.id);assert(!JSON.stringify(stored.rows).includes(invitation.token));
     assert.equal((await record()).status,404);
@@ -61,6 +63,10 @@ test("targeted invitations: neutral issuance, intended account, consent, expiry,
     assert.deepEqual(race.map(response=>response.status).sort(),[204,409]);
     assert.equal((await record()).status,200);
     assert.equal((await pool.query("SELECT 1 FROM chroniccare.doctor_patient_relationships WHERE doctor_id=$1 AND patient_id=$2",[doctor.id,patient.id])).rowCount,1);
+    const approved = (await pool.query<{created_at: Date; patient_approved_at: Date}>(`SELECT created_at,patient_approved_at
+      FROM chroniccare.doctor_patient_relationships WHERE doctor_id=$1 AND patient_id=$2`, [doctor.id,patient.id])).rows[0]!;
+    assert.deepEqual(approved.created_at, relationship.created_at);
+    assert(approved.patient_approved_at instanceof Date);
     assert.equal((await preview(invitation.token)).status,409);assert.equal((await approve(invitation.token)).status,409);
     assert.equal((await request(`/connections/doctors/${doctor.id}`,pt,undefined,"DELETE")).status,204);
     assert.equal((await approve(invitation.token)).status,409);assert.equal((await record()).status,404,"Used invitation never restores revoked access");

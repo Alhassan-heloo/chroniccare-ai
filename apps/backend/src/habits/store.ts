@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import type { PoolClient, Pool } from "pg";
+import type { Pool } from "pg";
+import type { QueryExecutor } from "../db/pool.js";
 import type { Habit, HabitCreateInput, HabitInput, ProgressInput } from "./validation.js";
 
 interface Row { id: string; title: string; unit: Habit["unit"]; target: number; template_key: Habit["templateKey"]; progress: number; recorded_on: string }
@@ -14,7 +15,7 @@ export interface HabitStore {
 function habit(row: Row): Habit {
   return { id: row.id, title: row.title, unit: row.unit, target: row.target, templateKey: row.template_key, progress: row.progress, recordedOn: row.recorded_on };
 }
-async function read(client: Pool | PoolClient, patientId: string, date: string, id?: string): Promise<Habit[]> {
+export async function readPatientHabits(client: QueryExecutor, patientId: string, date: string, id?: string): Promise<Habit[]> {
   const sql = "SELECT h.id,h.title,h.unit,h.target,h.template_key,COALESCE(p.value,0) AS progress,"
     + "to_char($2::date,'YYYY-MM-DD') AS recorded_on FROM chroniccare.habits h "
     + "LEFT JOIN chroniccare.habit_progress p ON p.habit_id=h.id AND p.recorded_on=$2::date "
@@ -24,13 +25,13 @@ async function read(client: Pool | PoolClient, patientId: string, date: string, 
 }
 export function postgresHabitStore(pool: Pool): HabitStore {
   return {
-    async list(patientId, date) { return read(pool, patientId, date); },
-    async get(patientId, id, date) { return (await read(pool, patientId, date, id))[0]; },
+    async list(patientId, date) { return readPatientHabits(pool, patientId, date); },
+    async get(patientId, id, date) { return (await readPatientHabits(pool, patientId, date, id))[0]; },
     async create(patientId, input, date) {
       const id = randomUUID();
       await pool.query("INSERT INTO chroniccare.habits(id,patient_id,title,unit,target,template_key) VALUES($1,$2,$3,$4,$5,$6)",
         [id, patientId, input.title, input.unit, input.target, input.templateKey ?? null]);
-      const result = (await read(pool, patientId, date, id))[0];
+      const result = (await readPatientHabits(pool, patientId, date, id))[0];
       if (!result) throw new Error("Habit insert returned no row.");
       return result;
     },
@@ -54,7 +55,7 @@ export function postgresHabitStore(pool: Pool): HabitStore {
       } finally {
         client.release();
       }
-      return (await read(pool, patientId, date, id))[0];
+      return (await readPatientHabits(pool, patientId, date, id))[0];
     },
     async delete(patientId, id) {
       return (await pool.query("DELETE FROM chroniccare.habits WHERE patient_id=$1 AND id=$2", [patientId, id])).rowCount === 1;

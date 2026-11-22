@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type pg from "pg";
+import type { QueryExecutor } from "../db/pool.js";
 import type { DoseAction, Medication, MedicationInput } from "./validation.js";
 
 interface Row {
@@ -32,23 +33,24 @@ function medications(rows: Row[]): Medication[] {
   return [...grouped.values()];
 }
 
+export async function readPatientMedications(db: QueryExecutor, patientId: string, date: string, id?: string): Promise<Medication[]> {
+  const filter = id ? "AND m.id=$3" : "";
+  const rows = await db.query<Row>(`SELECT m.id,m.name,m.dosage,m.notes,
+    to_char(s.scheduled_time,'HH24:MI') AS scheduled_time,
+    CASE WHEN l.taken_on IS NULL THEN NULL ELSE to_char(l.taken_on,'YYYY-MM-DD') END AS taken_on
+    FROM chroniccare.medications m
+    JOIN chroniccare.medication_schedules s ON s.medication_id=m.id
+    LEFT JOIN chroniccare.medication_dose_logs l ON l.medication_id=s.medication_id
+      AND l.scheduled_time=s.scheduled_time AND l.taken_on=$2::date
+    WHERE m.patient_id=$1 ${filter}
+    ORDER BY m.created_at,m.id,s.scheduled_time`, id ? [patientId, date, id] : [patientId, date]);
+  return medications(rows.rows);
+}
+
 export function postgresMedicationStore(pool: Pick<pg.Pool, "query" | "connect">): MedicationStore {
-  const select = async (patientId: string, date: string, id?: string) => {
-    const filter = id ? "AND m.id=$3" : "";
-    const rows = await pool.query<Row>(`SELECT m.id,m.name,m.dosage,m.notes,
-      to_char(s.scheduled_time,'HH24:MI') AS scheduled_time,
-      CASE WHEN l.taken_on IS NULL THEN NULL ELSE to_char(l.taken_on,'YYYY-MM-DD') END AS taken_on
-      FROM chroniccare.medications m
-      JOIN chroniccare.medication_schedules s ON s.medication_id=m.id
-      LEFT JOIN chroniccare.medication_dose_logs l ON l.medication_id=s.medication_id
-        AND l.scheduled_time=s.scheduled_time AND l.taken_on=$2::date
-      WHERE m.patient_id=$1 ${filter}
-      ORDER BY m.created_at,m.id,s.scheduled_time`, id ? [patientId, date, id] : [patientId, date]);
-    return medications(rows.rows);
-  };
   return {
-    list: select,
-    async get(patientId, id, date) { return (await select(patientId, date, id))[0]; },
+    list: (patientId, date) => readPatientMedications(pool, patientId, date),
+    async get(patientId, id, date) { return (await readPatientMedications(pool, patientId, date, id))[0]; },
     async create(patientId, input, date) {
       const id = randomUUID(), client = await pool.connect();
       try {
@@ -60,7 +62,7 @@ export function postgresMedicationStore(pool: Pick<pg.Pool, "query" | "connect">
         await client.query("COMMIT");
       } catch (error) { await client.query("ROLLBACK"); throw error; }
       finally { client.release(); }
-      const result = (await select(patientId, date, id))[0];
+      const result = (await readPatientMedications(pool, patientId, date, id))[0];
       if (!result) throw new Error("Medication insert returned no row.");
       return result;
     },
@@ -79,7 +81,7 @@ export function postgresMedicationStore(pool: Pick<pg.Pool, "query" | "connect">
         await client.query("COMMIT");
       } catch (error) { await client.query("ROLLBACK"); throw error; }
       finally { client.release(); }
-      return (await select(patientId, date, id))[0];
+      return (await readPatientMedications(pool, patientId, date, id))[0];
     },
     async delete(patientId, id) {
       return (await pool.query("DELETE FROM chroniccare.medications WHERE patient_id=$1 AND id=$2", [patientId, id])).rowCount === 1;

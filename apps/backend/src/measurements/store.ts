@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type pg from "pg";
+import type { QueryExecutor } from "../db/pool.js";
 import type { Measurement, MeasurementInput, ValidatedMeasurement } from "./validation.js";
 
 interface Row { id: string; kind: string; systolic: number | null; diastolic: number | null; value: number | null; recorded_at: Date }
@@ -21,12 +22,15 @@ function values(input: MeasurementInput) {
   return input.kind === "bloodPressure" ? [input.systolic, input.diastolic, null] : [null, null, input.value];
 }
 
+export async function readPatientMeasurements(db: QueryExecutor, patientId: string): Promise<Measurement[]> {
+  const result = await db.query<Row>(`SELECT ${columns} FROM chroniccare.measurements WHERE patient_id=$1 ORDER BY recorded_at DESC, created_at DESC, id`, [patientId]);
+  return result.rows.map(reading);
+}
+
 // Every operation scopes ownership in SQL itself, never through a client-supplied ID.
 export function postgresMeasurementStore(pool: Pick<pg.Pool, "query">): MeasurementStore {
   return {
-    async list(patientId) {
-      return (await pool.query<Row>(`SELECT ${columns} FROM chroniccare.measurements WHERE patient_id=$1 ORDER BY recorded_at DESC, created_at DESC, id`, [patientId])).rows.map(reading);
-    },
+    list: patientId => readPatientMeasurements(pool, patientId),
     async get(patientId, id) {
       const row = (await pool.query<Row>(`SELECT ${columns} FROM chroniccare.measurements WHERE patient_id=$1 AND id=$2`, [patientId, id])).rows[0];
       return row ? reading(row) : undefined;

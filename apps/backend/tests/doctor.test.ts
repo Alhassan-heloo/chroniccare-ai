@@ -76,8 +76,10 @@ test("real PostgreSQL doctor workflow: assigned-patient read access, roles and i
     const patientA = await auth.createUser("Patient A", emails[2]!, passwordHash, "patient"); patientAId = patientA.id;
     const patientB = await auth.createUser("Patient B", emails[3]!, passwordHash, "patient"); patientBId = patientB.id;
     await auth.createUser("Admin", emails[4]!, passwordHash, "admin");
-    await pool.query("INSERT INTO chroniccare.doctor_patient_relationships(doctor_id,patient_id) VALUES($1,$2)",
+    await pool.query("INSERT INTO chroniccare.doctor_patient_relationships(doctor_id,patient_id,patient_approved_at) VALUES($1,$2,clock_timestamp())",
       [doctorA.id, patientA.id]);
+    await pool.query("INSERT INTO chroniccare.doctor_patient_relationships(doctor_id,patient_id) VALUES($1,$2)",
+      [doctorA.id, patientB.id]);
     const day = "2026-10-31";
     const pressure = await measurements.create(patientA.id, {
       input: { kind: "bloodPressure", systolic: 132, diastolic: 84 }, recordedAt: "2026-10-31T08:30:00.000Z",
@@ -139,6 +141,11 @@ test("real PostgreSQL doctor workflow: assigned-patient read access, roles and i
     assert.equal(undone.events.filter(event=>event.kind==="dose").length,0);
 
     assert.equal((await request(`/api/doctor/patients/${patientB.id}?date=${day}`, "GET", doctorAToken)).status, 404);
+    for (const suffix of ["", "/activity"]) {
+      const legacy = await request(`/api/doctor/patients/${patientB.id}${suffix}?date=${day}`, "GET", doctorAToken);
+      assert.equal(legacy.status, 404);
+      assert.equal((await legacy.json() as { error: { code: string } }).error.code, "DOCTOR_PATIENT_NOT_FOUND");
+    }
     assert.equal((await request(`/api/doctor/patients/${patientA.id}?date=${day}`, "GET", doctorBToken)).status, 404);
     assert.equal((await request(`/api/doctor/patients/not-a-uuid?date=${day}`, "GET", doctorAToken)).status, 400);
     assert.equal((await request(`/api/doctor/patients/${patientA.id}?date=2026-02-30`, "GET", doctorAToken)).status, 400);
@@ -150,6 +157,25 @@ test("real PostgreSQL doctor workflow: assigned-patient read access, roles and i
       "INSERT INTO chroniccare.doctor_patient_relationships(doctor_id,patient_id) VALUES($1,$2)", [patientA.id, patientB.id]));
     await assert.rejects(() => pool.query(
       "INSERT INTO chroniccare.doctor_patient_relationships(doctor_id,patient_id) VALUES($1,$2)", [doctorA.id, doctorB.id]));
+
+    for (const [column, status, code] of [
+      ["must_change_password", 403, "PASSWORD_CHANGE_REQUIRED"],
+      ["disabled", 401, "UNAUTHENTICATED"],
+    ] as const) {
+      await pool.query(`UPDATE chroniccare.users SET ${column}=true WHERE id=$1`, [doctorA.id]);
+      for (const path of ["/api/doctor/patients", `/api/doctor/patients/${patientA.id}?date=${day}`, activityPath]) {
+        const denied = await request(path, "GET", doctorAToken);
+        assert.equal(denied.status, status);
+        assert.equal((await denied.json() as { error: { code: string } }).error.code, code);
+      }
+      await pool.query(`UPDATE chroniccare.users SET ${column}=false WHERE id=$1`, [doctorA.id]);
+    }
+    await pool.query("UPDATE chroniccare.users SET disabled=true WHERE id=$1", [patientA.id]);
+    const disabledPatientList = await request("/api/doctor/patients", "GET", doctorAToken);
+    assert.deepEqual(await disabledPatientList.json(), { patients: [] });
+    assert.equal((await request(`/api/doctor/patients/${patientA.id}?date=${day}`, "GET", doctorAToken)).status, 404);
+    assert.equal((await request(activityPath, "GET", doctorAToken)).status, 404);
+    await pool.query("UPDATE chroniccare.users SET disabled=false WHERE id=$1", [patientA.id]);
 
     await stop(); await start(); doctorAToken = await login(emails[0]!);
     assert.equal((await request(`/api/doctor/patients/${patientA.id}?date=${day}`, "GET", doctorAToken)).status, 200,

@@ -97,7 +97,7 @@ export const enCatalog = {
     generate: "Generate connection code", expires: "Expires: {{date}}", share: "Share privately with one patient. Valid for ten minutes and one approval. Keep this page open to copy the code.",
     review: "Review Doctor", consent: "Approve read-only access to your measurements, medications, and habits. This account identity does not establish verified medical licensure.",
     approve: "Approve connection", cancel: "Cancel", approved: "Connection approved.", revoke: "Revoke access", revoked: "Access revoked.",
-    patientApproved: "Approved by you", legacy: "Existing operator-managed access; patient approval was not recorded.",
+    patientApproved: "Approved by you", legacy: "Awaiting your approval. This doctor cannot access your record.",
     empty: "No doctors currently have access to your records.", invalid: "The code is invalid, expired, or already used.", failed: "The request could not be confirmed. Refresh the list before retrying.",
   },
   setup: {

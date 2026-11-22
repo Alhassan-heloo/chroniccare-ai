@@ -1,19 +1,17 @@
 import {useState} from "react";
-import {useQuery} from "@tanstack/react-query";
+import type {UseQueryResult} from "@tanstack/react-query";
 import {HeartPulse,Pill,Footprints,ChevronDown} from "lucide-react";
-import {useAuth} from "@/auth/context";
 import {useI18n} from "@/i18n/context";
-import {getDoctorActivity} from "@/lib/api/doctor";
+import type {CareActivity} from "@/lib/api/doctor";
 import type {DoctorPatientRecord} from "@/lib/types/doctor";
 import {localDateKey,measurementValue} from "@/lib/utils/measurementFilters";
 import {summarizeReport} from "@/lib/utils/reports";
 import {Button} from "@/components/ui/Button";
 import {Feedback} from "@/components/ui/Feedback";
 
-export function PatientActivity({record}:{record:DoctorPatientRecord}) {
- const {request,user}=useAuth();const {t,formatDate,formatDateTime,formatNumber,formatHabitUnit}=useI18n();
+export function PatientActivity({record,activity}:{record:DoctorPatientRecord;activity:UseQueryResult<CareActivity[], unknown>}) {
+ const {t,formatDate,formatDateTime,formatNumber,formatHabitUnit}=useI18n();
  const [filter,setFilter]=useState<"all"|"measurement"|"dose"|"habit">("all");
- const activity=useQuery({queryKey:["doctor-activity",user?.id,record.patient.id,record.date],queryFn:({signal})=>getDoctorActivity(request,record.patient.id,record.date,signal),staleTime:0,refetchInterval:15000});
  const start=new Date(record.date+"T12:00:00");start.setDate(start.getDate()-13);const from=localDateKey(start.toISOString());
  const readings=record.measurements.filter(item=>{const key=localDateKey(item.recordedAt);return key>=from&&key<=record.date;}).map(item=>({id:item.id,kind:"measurement" as const,title:t(item.kind==="bloodPressure"?"measurements.bloodPressure":"measurements.bloodGlucose"),day:localDateKey(item.recordedAt),recordedAt:item.recordedAt,detail:measurementValue(item)+" "+(item.kind==="bloodPressure"?"mmHg":"mg/dL"),scheduledTime:null}));
  const care=(activity.isError?[]:activity.data??[]).map(item=>({...item,detail:item.kind==="dose"?t("graduation.doseEvent"):t("graduation.habitEvent")+": "+formatNumber(item.value!)+" "+formatHabitUnit(item.unit!,item.value!)}));

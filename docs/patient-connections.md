@@ -8,14 +8,15 @@ is inferred. No new dependency or login mechanism is introduced.
 ## Migration and deployment
 
 `008_patient_connections.sql` adds nullable `patient_approved_at` to existing
-relationships and creates `doctor_connection_codes`. Existing relationships keep
-their access and remain labelled operator-managed, with no recorded patient
-approval. Existing health records and account roles are untouched. A patient can
-explicitly approve an existing relationship or revoke it.
+relationships and creates `doctor_connection_codes`. Doctor access requires a
+recorded patient approval. Existing relationships without approval remain visible
+to the patient as awaiting approval and are excluded from the Doctor's accessible
+patients. Explicit approval through a code or invitation updates the existing
+relationship. The authorization change needs no schema or data migration.
 
-Only the separate test database was migrated during implementation. Before using
-the new code with the local application database, review the migration, confirm
-the backend `.env` points to the intended database, and run from `apps/backend`:
+For initial local setup on a database that is missing existing migrations,
+review the migrations, confirm the backend `.env` points to the intended local
+database, and run from `apps/backend`:
 
 ```powershell
 npm.cmd run db:check
@@ -35,8 +36,9 @@ Start the frontend with `npm.cmd run dev` from `apps/frontend`.
    supplied by the server. This operation grants no access.
 6. Patient reads the access explanation and selects **Approve connection**.
 7. Doctor opens Patients and can read only authorized records.
-8. Patient selects **Revoke access** in My Doctors. Subsequent record requests
-   immediately fail their existing server-side relationship check.
+8. Patient selects **Revoke access** in My Doctors. The database orders revocation
+   against any authorized record or activity read in progress. Reads that acquire
+   authorization after revocation commits fail the relationship check.
 
 All three roles use the existing shared Login. Valid sessions now survive refresh
 through HttpOnly Cookies (see production-account-foundation.md). Connected accounts and permissions
@@ -73,9 +75,11 @@ patient possessing a code can approve it first; no patient identity is preassign
 
 ## Limitations
 
-There is no push notification channel. Doctor lists and records refresh on focus
-and every 15 seconds while visible; information already delivered cannot be
-recalled. Revocation blocks every subsequent server request. Expired/generated
+Doctor lists, records and activity refresh on focus and every 15 seconds while
+visible. A confirmed denial from the record or activity endpoint clears that
+patient's protected data from the Doctor's view and query cache. An already
+authorized response can arrive after revocation, and delivered data cannot be
+recalled. Expired/generated
 code hashes remain stored for now; an operator may later define a retention policy.
 No consent document upload, medical license check, or relationship request system
 is added. The original academic proposal remains unavailable in this workspace.

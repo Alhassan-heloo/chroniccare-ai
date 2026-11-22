@@ -98,6 +98,24 @@ test("PostgreSQL patient connections: consent, legacy data, expiry, races, isola
     const race = await Promise.all([request("/connections/approve", pt1, { code: raceCode.code }), request("/connections/approve", pt2, { code: raceCode.code })]);
     assert.deepEqual(race.map(response => response.status).sort(), [204, 404]);
     assert.equal((await pool.query("SELECT 1 FROM chroniccare.doctor_patient_relationships WHERE doctor_id=$1", [d1.id])).rowCount, 1);
+    const legacyRow = async () => (await pool.query<{created_at: Date; patient_approved_at: Date | null}>(`SELECT created_at,patient_approved_at
+      FROM chroniccare.doctor_patient_relationships WHERE doctor_id=$1 AND patient_id=$2`, [d2.id,p2.id])).rows[0]!;
+    const before = await legacyRow();
+    assert.equal(before.patient_approved_at, null);
+    for (let index = 0; index < 2; index++) {
+      const valid = await generate(dt2);
+      assert.equal((await request("/connections/approve", pt2, { code: valid.code })).status, 204);
+      const row = await legacyRow();
+      assert.deepEqual(row.created_at, before.created_at);
+      assert(row.patient_approved_at instanceof Date);
+      if (index === 0) before.patient_approved_at = row.patient_approved_at;
+      else assert.deepEqual(row.patient_approved_at, before.patient_approved_at);
+    }
+    assert.equal((await request(`/doctor/patients/${p2.id}`, dt2)).status, 200);
+    const disabledCode = await generate(dt2);
+    await pool.query("UPDATE chroniccare.users SET disabled=true WHERE id=$1", [d2.id]);
+    assert.equal((await request("/connections/preview", pt2, { code: disabledCode.code })).status, 404);
+    assert.equal((await request("/connections/approve", pt2, { code: disabledCode.code })).status, 404);
     for (let attempt = 0; attempt < 21; attempt++) await request("/connections/preview", pt1, { code: "A".repeat(32) });
     assert.equal((await request("/connections/preview", pt1, { code: "A".repeat(32) })).status, 429);
     assert.equal((await request("/auth/logout", pt1, undefined, "POST")).status, 204);

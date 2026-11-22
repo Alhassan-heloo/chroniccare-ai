@@ -361,7 +361,7 @@ startup.
 After the initial Admin is provisioned locally, normal Doctor account creation is
 performed in the protected Admin browser workspace. Public registration cannot
 request a staff role. A Doctor sees a patient only
-after an explicit row exists in `doctor_patient_relationships`. There is no
+after the patient explicitly approves their relationship. There is no
 self-assignment endpoint and no patient search that could disclose unrelated
 accounts. The record is read-only and contains existing measurements together
 with medication-dose and habit-progress state for the requested local calendar
@@ -376,32 +376,16 @@ npm.cmd run db:check
 npm.cmd run db:migrate
 ```
 
-The Admin account workflow deliberately does not create patient relationships.
-Until the separately scoped consent/relationship workflow exists, an authorized
-database operator must create the relationship. In `psql`, use known account emails and verify the
-affected row before leaving the transaction:
-
-```sql
-BEGIN;
-INSERT INTO chroniccare.doctor_patient_relationships (doctor_id, patient_id)
-SELECT doctor.id, patient.id
-FROM chroniccare.users AS doctor
-CROSS JOIN chroniccare.users AS patient
-WHERE doctor.email = 'doctor@example.test' AND doctor.role = 'doctor'
-  AND patient.email = 'patient@example.test' AND patient.role = 'patient'
-ON CONFLICT DO NOTHING;
-SELECT doctor_id, patient_id, created_at
-FROM chroniccare.doctor_patient_relationships
-WHERE doctor_id = (SELECT id FROM chroniccare.users WHERE email = 'doctor@example.test')
-  AND patient_id = (SELECT id FROM chroniccare.users WHERE email = 'patient@example.test');
-COMMIT;
-```
+The Admin account workflow does not create patient relationships. The Doctor
+shares a connection code or targeted invitation, and the signed-in Patient
+grants access through the application. Existing relationship rows with
+`patient_approved_at IS NULL` stay pending until that explicit approval.
 
 The role-validation trigger makes an invalid pairing fail even for a direct SQL
 insert. The application API uses parameterized queries and always derives the
-Doctor identity from the bearer session. Unauthenticated requests return 401,
-Patient/Admin roles return 403, and an unassigned or unknown patient returns the
-same 404 response.
+Doctor identity from the authenticated session. Unauthenticated requests return
+401, Patient/Admin roles return 403, and an unapproved, unassigned or unknown
+patient returns the same 404 response.
 
 From `apps/frontend`, `npm.cmd run test:doctor-integration` runs Edge, Vite, the
 compiled Express server, and the dedicated PostgreSQL test database. It checks

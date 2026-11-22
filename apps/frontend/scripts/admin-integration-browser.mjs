@@ -427,19 +427,26 @@ async function verifyBrowser() {
   } })).status, 400);
   const initialDoctors = (await (await apiRequest("/admin/doctors", { token: adminToken })).json()).doctors;
 
+  const releaseDoctorList = Promise.withResolvers();
   await page.route(api + "/admin/doctors", async route => {
     if (route.request().method() === "GET") {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await releaseDoctorList.promise;
       return route.fulfill({ status: 200, headers: fixtureHeaders, json: { doctors: [] } });
     }
     return route.continue();
   });
-  stage = "protected-route";
-  assert(!(await context.cookies(api)).some(cookie => cookie.name === "cc_session"), "Protected navigation must start without a session cookie");
-  const verifyAnonymousNavigation = diagnostics.beginAuthDenial("anonymous-protected-navigation");
-  await page.goto(base + "/admin/dashboard"); await page.waitForURL("**/login?returnTo=*");
-  await verifyAnonymousNavigation();
-  stage = "admin-login"; await loginPage(adminEmail, "admin"); await page.locator(".admin-page").waitFor(); await page.locator(".ui-feedback-loading").waitFor();
+  try {
+    stage = "protected-route";
+    assert(!(await context.cookies(api)).some(cookie => cookie.name === "cc_session"), "Protected navigation must start without a session cookie");
+    const verifyAnonymousNavigation = diagnostics.beginAuthDenial("anonymous-protected-navigation");
+    await page.goto(base + "/admin/dashboard"); await page.waitForURL("**/login?returnTo=*");
+    await verifyAnonymousNavigation();
+    stage = "admin-login";
+    await loginPage(adminEmail, "admin");
+    await page.locator(".admin-list-section .ui-feedback-loading").waitFor();
+  } finally {
+    releaseDoctorList.resolve();
+  }
   await page.getByText("No Doctor accounts exist yet.", { exact: true }).waitFor();
   await page.unroute(api + "/admin/doctors");
   await page.evaluate(async () => { const module = await import("/src/lib/query/queryClient.ts"); await module.queryClient.invalidateQueries({ queryKey: ["admin", "doctors"] }); });

@@ -60,15 +60,17 @@ function measurementValue(measurement: Measurement, formatNumber: (value: number
 export function DoctorPatientDetails({ selectedPatientId, onBack, embedded = false }: { selectedPatientId?: string; onBack?: () => void; embedded?: boolean } = {}) {
   const route = useParams();
   const patientId = selectedPatientId ?? route.patientId;
-  const { data, isPending, isError, refetch } = useDoctorPatient(patientId);
+  const { record, activity, denied, checkAgain } = useDoctorPatient(patientId);
+  const { data, isPending, isError, isFetchedAfterMount } = record;
+  const recordName = !denied && isFetchedAfterMount && !isError ? data?.patient.name : undefined;
   const heading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { if (embedded && data?.patient.id === patientId && matchMedia("(max-width: 47.99rem)").matches) heading.current?.focus({preventScroll:true}); }, [embedded, data?.patient.id, patientId]);
+  useEffect(() => { if (embedded && recordName && matchMedia("(max-width: 47.99rem)").matches) heading.current?.focus({preventScroll:true}); }, [embedded, recordName, patientId]);
   const { t, formatNumber, formatDateTime, formatHabitUnit, formatUnit, language } = useI18n();
   const backLink = onBack ? <Button className="doctor-back" variant="secondary" onClick={onBack}>{t("doctor.backToPatients")}</Button> : <Link className="doctor-back" to="/doctor/patients">{t("doctor.backToPatients")}</Link>;
-  if (isPending) return <div className="doctor-page stack" data-i18n="declarative">{backLink}<Feedback kind="loading">{t("doctor.loadingRecord")}</Feedback></div>;
-  if (isError || !data || data.patient.id !== patientId) return <div className="doctor-page stack" data-i18n="declarative">
+  if (!denied && (isPending || (!isError && !isFetchedAfterMount))) return <div className="doctor-page stack" data-i18n="declarative">{backLink}<Feedback kind="loading">{t("doctor.loadingRecord")}</Feedback></div>;
+  if (denied || isError || !data || data.patient.id !== patientId) return <div className="doctor-page stack" data-i18n="declarative">
     {backLink}
-    <Feedback kind="error" action={<Button variant="secondary" onClick={() => void refetch()}>{t("common.actions.retry")}</Button>}>{t("doctor.recordUnavailable")}</Feedback>
+    <Feedback kind="error" action={<Button variant="secondary" onClick={checkAgain}>{t("common.actions.retry")}</Button>}>{t("doctor.recordUnavailable")}</Feedback>
   </div>;
   const taken = data.medications.reduce((sum, medication) => sum + medication.doses.filter(dose => dose.takenOn === data.date).length, 0);
   const doses = data.medications.reduce((sum, medication) => sum + medication.doses.length, 0);
@@ -108,7 +110,7 @@ export function DoctorPatientDetails({ selectedPatientId, onBack, embedded = fal
           : <Feedback kind="empty">{t("doctor.noHabits")}</Feedback>}
       </section>
     </aside></div>
-    <PatientActivity record={data} />
+    <PatientActivity record={data} activity={activity} />
     <PatientPeriodComparison record={data} />
     <p className="clinical-roster-note"><ShieldCheck size={16} aria-hidden="true" />{t("doctor.readOnlyNotice")}</p>
   </div>;
