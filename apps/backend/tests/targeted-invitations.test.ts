@@ -14,11 +14,13 @@ import { readEnvironment } from "../src/config/env.js";
 import { createDatabasePool } from "../src/db/pool.js";
 import { applyMigrations } from "../src/db/migrations.js";
 
-test("targeted invitations: neutral issuance, intended account, consent, expiry, concurrency, reuse and revocation", { skip: !process.env.TEST_DATABASE_URL }, async () => {
+test("PostgreSQL targeted invitations: intended account, consent, rejection, concurrency and revocation", { skip: !process.env.TEST_DATABASE_URL }, async t => {
   const url = process.env.TEST_DATABASE_URL!;
-  assert(new URL(url).pathname.endsWith("_test"));
-  assert.notEqual(new URL(url).pathname, new URL(process.env.DATABASE_URL!).pathname);
-  const pool = createDatabasePool(readEnvironment({...process.env,NODE_ENV:"test",DATABASE_URL:url}));
+  const target = new URL(url);
+  assert(["localhost", "127.0.0.1", "[::1]"].includes(target.hostname) && target.pathname.endsWith("_test") && !target.search,
+    "Use an isolated loopback PostgreSQL database ending in _test, without connection overrides.");
+  if (process.env.DATABASE_URL) assert.notEqual(target.pathname, new URL(process.env.DATABASE_URL).pathname);
+  const pool = createDatabasePool(readEnvironment({ NODE_ENV: "test", DATABASE_URL: url }));
   const auth = postgresAuthStore(pool), store = postgresConnectionStore(pool);
   const emails = Array.from({length:4},()=>randomUUID()+"@targeted-invitation.example.test");
   let server: ReturnType<ReturnType<typeof createApp>["listen"]> | undefined;
@@ -40,7 +42,74 @@ test("targeted invitations: neutral issuance, intended account, consent, expiry,
     };
     const preview=(token:string,account=pt)=>request("/connections/invitations/preview",account,{token});
     const approve=(token:string,account=pt)=>request("/connections/invitations/approve",account,{token});
+    const reject=(token:string,account=pt)=>request("/connections/invitations/reject",account,{token});
+    const assertError = async (response: Response, status: number, code: string) => {
+      assert.equal(response.status, status);
+      const body = await response.json() as { error: { code: string }; doctor?: unknown };
+      assert.equal(body.error.code, code);
+      assert.equal(body.doctor, undefined);
+    };
+    const state = async (token: string) => {
+      const result = await pool.query<{ consumed_at: Date | null; rejected: boolean }>(
+        "SELECT consumed_at,rejected FROM chroniccare.patient_invitations WHERE token_hash=$1", [tokenHash(token)],
+      );
+      assert(result.rows[0]);
+      return result.rows[0];
+    };
+    const relationshipCount = async () => (await pool.query(
+      "SELECT 1 FROM chroniccare.doctor_patient_relationships WHERE doctor_id=$1 AND patient_id=$2", [doctor.id, patient.id],
+    )).rowCount;
     const record=()=>request(`/doctor/patients/${patient.id}?date=2026-11-18`,dt);
+
+    await t.test("only the intended authenticated patient can reject; retries and replay cannot grant consent", async () => {
+      const { token } = await issue(patient.email);
+      const missing = await issue(randomUUID() + "@missing.example.test");
+      assert.equal((await request("/connections/invitations/reject", undefined, { token })).status, 401);
+      assert.equal((await reject(token, dt)).status, 403);
+      assert.equal((await reject(token, at)).status, 403);
+      await assertError(await reject(token, ot), 403, "INVITATION_ACCOUNT_MISMATCH");
+      await assertError(await reject(missing.token), 403, "INVITATION_ACCOUNT_MISMATCH");
+      await assertError(await reject("_".repeat(32)), 404, "INVITATION_INVALID");
+      await assertError(await reject("malformed"), 400, "INVALID_INPUT");
+      await assertError(await request("/connections/invitations/reject", pt, { token, patientId: other.id }), 400, "INVALID_INPUT");
+      assert.deepEqual(await state(token), { consumed_at: null, rejected: false });
+      assert.equal((await preview(token)).status, 200);
+
+      const retries = await Promise.all([reject(token), reject(token)]);
+      assert.deepEqual(retries.map(response => response.status), [204, 204]);
+      const rejected = await state(token);
+      assert(rejected.consumed_at instanceof Date);
+      assert.equal(rejected.rejected, true);
+      assert.equal((await reject(token)).status, 204);
+      assert.deepEqual(await state(token), rejected, "Retries preserve the original consumption time");
+      await assertError(await reject(token, ot), 403, "INVITATION_ACCOUNT_MISMATCH");
+      await assertError(await preview(token), 409, "INVITATION_REJECTED");
+      await assertError(await approve(token), 409, "INVITATION_REJECTED");
+      assert.equal(await relationshipCount(), 0);
+      assert.equal((await record()).status, 404);
+    });
+
+    await t.test("concurrent approval and rejection allow exactly one decision", async () => {
+      const { token } = await issue(patient.email);
+      const [approval, rejection] = await Promise.all([approve(token), reject(token)]);
+      assert.deepEqual([approval.status, rejection.status].sort(), [204, 409]);
+      const winner = await state(token);
+      assert(winner.consumed_at instanceof Date);
+      if (approval.status === 204) {
+        await assertError(rejection, 409, "INVITATION_USED");
+        assert.equal(winner.rejected, false);
+        assert.equal(await relationshipCount(), 1);
+        assert.equal((await record()).status, 200);
+      } else {
+        await assertError(approval, 409, "INVITATION_REJECTED");
+        assert.equal(winner.rejected, true);
+        assert.equal(await relationshipCount(), 0);
+        assert.equal((await record()).status, 404);
+      }
+      assert.equal((await request(`/connections/doctors/${doctor.id}`, pt, undefined, "DELETE")).status, 204);
+      assert.equal((await approve(token)).status, 409, "The settled invitation cannot restore access");
+    });
+
     assert.equal((await request("/connections/invitations",undefined,{email:patient.email})).status,401);
     assert.equal((await request("/connections/invitations",pt,{email:patient.email})).status,403);
     assert.equal((await request("/connections/invitations",at,{email:patient.email})).status,403);
@@ -68,13 +137,25 @@ test("targeted invitations: neutral issuance, intended account, consent, expiry,
     assert.deepEqual(approved.created_at, relationship.created_at);
     assert(approved.patient_approved_at instanceof Date);
     assert.equal((await preview(invitation.token)).status,409);assert.equal((await approve(invitation.token)).status,409);
+    await t.test("rejection cannot revoke earlier consent", async () => {
+      await assertError(await reject(invitation.token), 409, "INVITATION_USED");
+      const fresh = await issue(patient.email);
+      assert.equal((await reject(fresh.token)).status, 204);
+      const current = await pool.query(`SELECT created_at,patient_approved_at FROM chroniccare.doctor_patient_relationships
+        WHERE doctor_id=$1 AND patient_id=$2`, [doctor.id, patient.id]);
+      assert.deepEqual(current.rows, [approved]);
+      assert.equal((await record()).status, 200);
+    });
     assert.equal((await request(`/connections/doctors/${doctor.id}`,pt,undefined,"DELETE")).status,204);
     assert.equal((await approve(invitation.token)).status,409);assert.equal((await record()).status,404,"Used invitation never restores revoked access");
     const expired=await issue(patient.email);
     await pool.query("UPDATE chroniccare.patient_invitations SET created_at=now()-interval '20 minutes',expires_at=now()-interval '10 minutes' WHERE token_hash=$1",[tokenHash(expired.token)]);
     assert.equal((await preview(expired.token)).status,404);assert.equal((await approve(expired.token)).status,404);
+    await assertError(await reject(expired.token), 404, "INVITATION_INVALID");
+    assert.deepEqual(await state(expired.token), { consumed_at: null, rejected: false });
     const disabled=await issue(patient.email);await pool.query("UPDATE chroniccare.users SET disabled=true WHERE id=$1",[doctor.id]);
     assert.equal((await preview(disabled.token)).status,404);assert.equal((await approve(disabled.token)).status,404);
+    await assertError(await reject(disabled.token), 404, "INVITATION_INVALID");
   } finally {
     if(server)await new Promise<void>(resolve=>{server!.close(()=>resolve());server!.closeAllConnections();});
     try{await pool.query("DELETE FROM chroniccare.users WHERE email=ANY($1::text[])",[emails]);}finally{await pool.end();}

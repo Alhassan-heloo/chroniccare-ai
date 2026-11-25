@@ -6,9 +6,18 @@ export interface QueryExecutor {
   query<Row extends pg.QueryResultRow>(text: string, values?: unknown[]): Promise<pg.QueryResult<Row>>;
 }
 
-export function createDatabasePool(config: Environment): pg.Pool {
+export type DatabasePoolEnvironment = Pick<Environment, "nodeEnv" | "databaseUrl" | "databaseSsl" | "databaseSslCaFile">;
+export type DatabaseLogin = { host: string; port: number; database: string; user: string; password: string };
+
+export function createDatabasePool(config: DatabasePoolEnvironment, transport: {
+  Client?: pg.PoolConfig["Client"];
+  login?: DatabaseLogin;
+  options?: string;
+} = {}): pg.Pool {
   const pool = new pg.Pool({
-    connectionString: config.databaseUrl,
+    ...(transport.login ?? { connectionString: config.databaseUrl }),
+    Client: transport.Client,
+    options: transport.options,
     ssl: config.databaseSsl === "verify-full"
       ? { rejectUnauthorized: true, ...(config.databaseSslCaFile
         ? { ca: readFileSync(config.databaseSslCaFile, "utf8") } : {}) }

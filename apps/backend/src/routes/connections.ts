@@ -22,6 +22,10 @@ export function connectionRoutes(auth: AuthStore, store: ConnectionStore) {
     await store.approveInvitation((response.locals as AuthLocals).user.id, invitationInput(request.body, "token"));
     response.status(204).end();
   });
+  router.post("/invitations/reject", requireRoles("patient"), limit(), async (request, response) => {
+    await store.rejectInvitation((response.locals as AuthLocals).user.id, invitationInput(request.body, "token"));
+    response.status(204).end();
+  });
   router.post("/codes", requireRoles("doctor"), limit(), async (_request, response) => {
     response.status(201).json(await store.generate((response.locals as AuthLocals).user.id));
   });

@@ -15,7 +15,7 @@ Patient care puts latest readings and their actual times before today's tasks an
 
 Doctor queries are scoped by account and patient ID, cancel superseded requests and validate response identity. Failed or revoked requests replace their record. Desktop shows list and record; mobile restores list position and focus on return. Clinical records remain read-only.
 
-Targeted links contain an opaque fragment token. Sign-in carries it in a fragment with an internal return path. Preview grants no access. Explicit confirmation checks intended account, role, state and expiry, then consumes the invitation and creates the relationship atomically. Reuse returns 409 with recovery through My Doctors and never restores revoked access. Manual codes remain secondary and backward compatible.
+Targeted links contain an opaque fragment token. Sign-in carries it in a fragment with an internal return path. Preview grants no access. Close review dismisses the screen and leaves the link eligible for reopening. Reject invitation opens a confirmation that names the permanent effect on that link. The review displays a terminal message for a rejected link. My Doctors remains the place to manage existing access. See [targeted invitation rules and outcomes](docs/patient-connections.md#targeted-patient-invitations).
 
 Admin creation preserves current role authorization and disable behavior. Direct creation produces a masked temporary password and requires a first-login change. Email invitation waits for activation. Both modes explain their actual outcome and grant no patient-record access.
 

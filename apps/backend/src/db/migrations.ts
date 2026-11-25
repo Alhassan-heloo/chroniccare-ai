@@ -21,19 +21,25 @@ export async function loadMigrations(directory = new URL("../../migrations/", im
   return migrations;
 }
 
-export async function applyMigrations(pool: pg.Pool, suppliedMigrations?: Migration[]): Promise<string[]> {
+export async function applyMigrations(
+  pool: pg.Pool,
+  suppliedMigrations?: Migration[],
+  expectedPending?: Pick<Migration, "version" | "checksum">,
+): Promise<string[]> {
   const migrations = suppliedMigrations ?? await loadMigrations();
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     // Serialize migrations across processes; all pending SQL and the ledger commit together.
     await client.query("SELECT pg_advisory_xact_lock(20261015, 1)");
-    await client.query(`CREATE TABLE IF NOT EXISTS public.chroniccare_schema_migrations (
-      version text PRIMARY KEY,
-      name text NOT NULL,
-      checksum text NOT NULL,
-      applied_at timestamptz NOT NULL DEFAULT now()
-    )`);
+    if (!expectedPending) {
+      await client.query(`CREATE TABLE IF NOT EXISTS public.chroniccare_schema_migrations (
+        version text PRIMARY KEY,
+        name text NOT NULL,
+        checksum text NOT NULL,
+        applied_at timestamptz NOT NULL DEFAULT now()
+      )`);
+    }
     const existing = await client.query<{ version: string; name: string; checksum: string }>(
       "SELECT version, name, checksum FROM public.chroniccare_schema_migrations ORDER BY version",
     );
@@ -46,6 +52,10 @@ export async function applyMigrations(pool: pg.Pool, suppliedMigrations?: Migrat
     const appliedVersions = new Set(existing.rows.map((row) => row.version));
     const latest = existing.rows.at(-1)?.version;
     const pending = migrations.filter((migration) => !appliedVersions.has(migration.version));
+    if (expectedPending && (pending.length !== 1 || pending[0]?.version !== expectedPending.version ||
+        pending[0].checksum !== expectedPending.checksum)) {
+      throw new Error("Expected exactly the authorized pending migration and checksum.");
+    }
     if (latest && pending.some((migration) => migration.version < latest)) {
       throw new Error("New migrations must follow the latest applied version.");
     }

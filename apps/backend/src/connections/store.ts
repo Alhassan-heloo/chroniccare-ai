@@ -23,7 +23,58 @@ export function invitationInput(body: unknown, field: "email" | "token") {
   return field === "email" ? value.toLowerCase() : value;
 }
 const invalidInvitation = () => new HttpError(404, "INVITATION_INVALID", "Invitation unavailable. Request a new link.");
+
+async function findInvitation(db: pg.Pool | pg.PoolClient, hash: string, patientId: string, lock = false) {
+  const result = await db.query<{ doctor_id: string; name: string; patient_id: string | null; consumed_at: Date | null; rejected: boolean }>(
+    `SELECT c.doctor_id,d.name,c.patient_id,c.consumed_at,c.rejected
+    FROM chroniccare.patient_invitations c JOIN chroniccare.users d ON d.id=c.doctor_id AND d.role='doctor' AND NOT d.disabled AND NOT d.must_change_password
+    WHERE c.token_hash=$1 AND c.expires_at>clock_timestamp()${lock ? " FOR UPDATE OF c FOR SHARE OF d" : ""}`,
+    [hash],
+  );
+  const invitation = result.rows[0];
+  if (!invitation) throw invalidInvitation();
+  if (invitation.patient_id !== patientId) {
+    throw new HttpError(403, "INVITATION_ACCOUNT_MISMATCH", "Sign in with the intended patient account.");
+  }
+  return invitation;
+}
+
+function invitationUnavailable(rejected: boolean) {
+  return rejected
+    ? new HttpError(409, "INVITATION_REJECTED", "Invitation rejected. This link can no longer be used.")
+    : new HttpError(409, "INVITATION_USED", "Already used. Check My Doctors or request a new link.");
+}
+
 export function postgresConnectionStore(pool: pg.Pool) {
+  async function decideInvitation(patientId: string, token: string, decision: "approve" | "reject") {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", ["connections:" + patientId]);
+      const hash = tokenHash(token);
+      const invitation = await findInvitation(client, hash, patientId, true);
+      const rejected = decision === "reject";
+      if (invitation.consumed_at && !(rejected && invitation.rejected)) {
+        throw invitationUnavailable(invitation.rejected);
+      }
+      const patient = await client.query("SELECT id FROM chroniccare.users WHERE id=$1 AND role='patient' AND NOT disabled FOR SHARE", [patientId]);
+      if (!patient.rowCount) throw invalidInvitation();
+      if (!invitation.consumed_at) {
+        // Both decisions consume the same token, including for servers that only read consumed_at.
+        const consumed = await client.query(`UPDATE chroniccare.patient_invitations SET consumed_at=clock_timestamp(),rejected=$2
+          WHERE token_hash=$1 AND consumed_at IS NULL AND expires_at>clock_timestamp()`, [hash, rejected]);
+        if (!consumed.rowCount) throw invalidInvitation();
+        if (!rejected) {
+          await client.query(`INSERT INTO chroniccare.doctor_patient_relationships(doctor_id,patient_id,patient_approved_at)
+            VALUES($1,$2,clock_timestamp()) ON CONFLICT(doctor_id,patient_id)
+            DO UPDATE SET patient_approved_at=COALESCE(chroniccare.doctor_patient_relationships.patient_approved_at,EXCLUDED.patient_approved_at)`, [invitation.doctor_id, patientId]);
+        }
+      }
+      await client.query("COMMIT");
+    } catch (error) { await client.query("ROLLBACK"); throw error; }
+    finally { client.release(); }
+  }
+
   return {
     async invite(doctorId: string, email: string) {
       const token = randomBytes(24).toString("base64url");
@@ -34,38 +85,15 @@ export function postgresConnectionStore(pool: pg.Pool) {
       return { token, expiresAt: result.rows[0]!.expiresAt.toISOString() };
     },
     async previewInvitation(patientId: string, token: string) {
-      const result = await pool.query<{ patientId: string | null; consumed: Date | null; id: string; name: string }>(`SELECT c.patient_id AS "patientId",c.consumed_at AS consumed,d.id,d.name
-        FROM chroniccare.patient_invitations c JOIN chroniccare.users d ON d.id=c.doctor_id AND d.role='doctor' AND NOT d.disabled AND NOT d.must_change_password
-        WHERE c.token_hash=$1 AND c.expires_at>clock_timestamp()`, [tokenHash(token)]);
-      const invitation = result.rows[0];
-      if (!invitation) throw invalidInvitation();
-      if (invitation.patientId !== patientId) throw new HttpError(403, "INVITATION_ACCOUNT_MISMATCH", "Sign in with the intended patient account.");
-      if (invitation.consumed) throw new HttpError(409, "INVITATION_USED", "Already used. Check My Doctors or request a new link.");
-      return { id: invitation.id, name: invitation.name };
+      const invitation = await findInvitation(pool, tokenHash(token), patientId);
+      if (invitation.consumed_at) throw invitationUnavailable(invitation.rejected);
+      return { id: invitation.doctor_id, name: invitation.name };
     },
-    async approveInvitation(patientId: string, token: string) {
-      const client = await pool.connect();
-      try {
-        await client.query("BEGIN");
-        await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", ["connections:" + patientId]);
-        const result = await client.query<{ doctor_id: string; patient_id: string | null; consumed_at: Date | null }>(`SELECT c.doctor_id,c.patient_id,c.consumed_at
-          FROM chroniccare.patient_invitations c JOIN chroniccare.users d ON d.id=c.doctor_id AND d.role='doctor' AND NOT d.disabled AND NOT d.must_change_password
-          WHERE c.token_hash=$1 AND c.expires_at>clock_timestamp() FOR UPDATE OF c FOR SHARE OF d`, [tokenHash(token)]);
-        const invitation = result.rows[0];
-        if (!invitation) throw invalidInvitation();
-        if (invitation.patient_id !== patientId) throw new HttpError(403, "INVITATION_ACCOUNT_MISMATCH", "Sign in with the intended patient account.");
-        if (invitation.consumed_at) throw new HttpError(409, "INVITATION_USED", "Already used. Check My Doctors or request a new link.");
-        const patient = await client.query("SELECT id FROM chroniccare.users WHERE id=$1 AND role='patient' AND NOT disabled FOR SHARE", [patientId]);
-        if (!patient.rowCount) throw invalidInvitation();
-        const consumed = await client.query(`UPDATE chroniccare.patient_invitations SET consumed_at=clock_timestamp()
-          WHERE token_hash=$1 AND consumed_at IS NULL AND expires_at>clock_timestamp()`, [tokenHash(token)]);
-        if (!consumed.rowCount) throw invalidInvitation();
-        await client.query(`INSERT INTO chroniccare.doctor_patient_relationships(doctor_id,patient_id,patient_approved_at)
-          VALUES($1,$2,clock_timestamp()) ON CONFLICT(doctor_id,patient_id)
-          DO UPDATE SET patient_approved_at=COALESCE(chroniccare.doctor_patient_relationships.patient_approved_at,EXCLUDED.patient_approved_at)`, [invitation.doctor_id, patientId]);
-        await client.query("COMMIT");
-      } catch (error) { await client.query("ROLLBACK"); throw error; }
-      finally { client.release(); }
+    approveInvitation(patientId: string, token: string) {
+      return decideInvitation(patientId, token, "approve");
+    },
+    rejectInvitation(patientId: string, token: string) {
+      return decideInvitation(patientId, token, "reject");
     },
     async generate(doctorId: string) {
       const code = randomBytes(24).toString("base64url");

@@ -1,9 +1,9 @@
 import { readEnvironment } from "../config/env.js";
-import { createDatabasePool } from "./pool.js";
+import { createMigrationPool } from "./migration-pool.js";
 import { applyMigrations } from "./migrations.js";
 
 async function main() {
-  const pool = createDatabasePool(readEnvironment());
+  const pool = createMigrationPool(readEnvironment());
   try {
     const applied = await applyMigrations(pool);
     console.log(applied.length ? `Applied: ${applied.join(", ")}` : "Database migrations are up to date.");

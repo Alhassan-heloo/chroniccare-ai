@@ -73,6 +73,55 @@ These baseline limits are per process; multi-instance production needs shared
 gateway limits. Use HTTPS outside loopback. Share codes privately: another signed-in
 patient possessing a code can approve it first; no patient identity is preassigned.
 
+## Targeted patient invitations
+
+A Doctor issues a ten-minute link with `POST /api/connections/invitations` and
+`{email}`. The patient identity is assigned by the server, and the link carries
+the opaque token in its fragment. PostgreSQL stores the token hash. Preview
+requires the intended signed-in Patient and grants no access. **Close review**
+only dismisses the screen. It sends no decision and leaves the link available
+while eligible.
+
+**Reject invitation** requires confirmation and submits only `{token}` to
+`POST /api/connections/invitations/reject`. Approval and rejection share the
+same patient advisory lock, invitation row lock, account checks and expiration
+checks. Both consume the token in that transaction. Approval records consent.
+Rejection marks the token rejected without touching the relationship. Patients
+can revoke previously granted access from My Doctors.
+
+| Result for preview, approval and rejection | Response |
+| --- | --- |
+| Missing authentication / non-Patient role | `401` / `403` |
+| Malformed request body | `400 INVALID_INPUT` |
+| Unknown or expired token, or Doctor no longer eligible | `404 INVITATION_INVALID` |
+| Token assigned to another account or no eligible account at issuance | `403 INVITATION_ACCOUNT_MISMATCH` |
+| Previously accepted token | `409 INVITATION_USED` |
+| Rejected token, preview or approval | `409 INVITATION_REJECTED` |
+| Rejection succeeds or the intended Patient repeats it while eligible | `204` |
+
+### Migration 018 rollout after review
+
+`018_patient_invitation_rejection.sql` adds a boolean defaulting to false so
+existing tokens retain their approval/expiry semantics. A rejected token must
+have a targeted patient and a consumption timestamp. Older server builds still
+recognize that timestamp and refuse reuse. No relationship backfill is needed.
+
+1. Review the SQL, application change and local PostgreSQL results. On an
+   isolated staging database, rehearse an upgrade from migration 017 with
+   existing pending and consumed invitations. Release the candidate to staging
+   after migrating and run the review, rejection, replay and existing-consent
+   checks with synthetic accounts.
+2. Verify the destination, recovery point, and migration ledger. If version
+   018, its reviewed checksum, and its schema are already verified, proceed to
+   the application release. An environment with 018 still pending requires
+   separate approval and the reviewed procedure scoped to that migration.
+   Schedule the schema change for a quiet window because `ALTER TABLE` locks
+   the invitations table while the constraint is validated. Verify the ledger
+   and schema after the change. Render does not run migrations automatically.
+3. Release the compatible application build and verify service readiness and
+   error rates. If the application needs a rollback, roll back its build and
+   leave migration 018 in place. The older build reports rejected links as used.
+
 ## Limitations
 
 Doctor lists, records and activity refresh on focus and every 15 seconds while
