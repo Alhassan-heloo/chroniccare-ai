@@ -54,15 +54,11 @@ never put server secrets in any `VITE_*` variable.
 service's environment does not rewrite old JavaScript: rebuild/redeploy after
 changing this value. See [Vite environment loading](https://vite.dev/guide/env-and-mode).
 
-Do not introduce a new migration step for this change. If the existing service
-already has a Pre-Deploy Command that runs migrations, retain that workflow and
-adjust its working-directory prefix for the new repository root, for example:
-
-```sh
-npm --prefix apps/backend run db:migrate
-```
-
-No Render setting was changed and nothing was deployed by this local task.
+For the v1.0.0 production release, Pre-Deploy Command is empty. Migration 018
+was already applied and verified through a separate approved database procedure.
+The Render application release uses the build and start commands above. Future
+schema changes require their own destination, backup, compatibility and ledger
+review before execution. See the [final acceptance checklist](../FINAL-ACCEPTANCE.md).
 
 ## What is served
 

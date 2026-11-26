@@ -1,316 +1,130 @@
 # ChronicCare AI
 
-Current frontend design: [Living Evolution — implementation and review](docs/living-evolution-redesign.md).
-
-## تشغيل المشروع كاملًا على Windows بنقرة مزدوجة
-
-بعد تثبيت Node.js 24 LTS وPostgreSQL وإعداد قاعدة `chroniccare`، شغّل مرة واحدة
-`npm.cmd ci` داخل كل من `apps/backend` و`apps/frontend`. يجب أن يكون
-`apps/backend/.env` مُعدًا محليًا وفق دليل Backend؛ لا تعرض محتواه أو ترفعه إلى Git.
-
-انقر مرتين على **`start-dev.bat`** في جذر المشروع. سيفحص Node/npm والاعتماديات
-وملف البيئة والمنافذ، ويفتح نافذتي **ChronicCare AI - Backend** و
-**ChronicCare AI - Frontend**، وينتظر نجاح الصحة وجاهزية PostgreSQL ثم يفتح المتصفح.
-لا ينفذ تثبيتًا أو مهاجرات أو إنشاء قواعد أو حسابات تلقائيًا.
-
-الواجهة تستخدم المنفذ `5173`، والخادم يستخدم `PORT` من إعداده المحلي (افتراضيًا
-`3001`). يجب أن تسمح `CORS_ORIGINS` بعنوان `http://localhost:5173` أو
-`http://127.0.0.1:5173`. يضبط المشغّل `VITE_API_URL` لعملية Vite فقط ليتوافق
-مع منفذ الخادم، دون تعديل أي ملف بيئة. ملف Frontend `.env` ليس مطلوبًا للتشغيل
-بهذه الطريقة. يمكن تخصيص منفذ الواجهة بمتغير العملية `CC_FRONTEND_PORT` مع إضافة
-أصل المنفذ نفسه إلى CORS محليًا. تُستخدم `--strictPort` لمنع انتقال Vite الصامت
-إلى منفذ آخر، ويقتصر عنوان استماعه على loopback.
-
-أبقِ نافذة التشغيل الرئيسية مفتوحة أثناء العمل. للإيقاف: اضغط **Ctrl+C داخل كل
-نافذة خادم**، وأكّد `Y` إن سأل Windows، ثم أغلق النافذتين واضغط Enter في نافذة
-التشغيل الرئيسية لإنهائها. لا يوقف المشغّل خدمة PostgreSQL أو أي عملية أخرى. إذا كان منفذ مشغولًا
-يرفض التشغيل بدل إنشاء نسخة مكررة أو قتل العملية الموجودة. عند الفشل بعد فتح
-النوافذ، راجع رسائلها وأوقفها بالطريقة نفسها قبل إعادة المحاولة. لا حاجة لتشغيل
-المشغّل كمسؤول. افحص خدمة PostgreSQL في Services أو pgAdmin إذا بقيت الجاهزية
-غير متاحة؛ لا تُعد إنشاء القاعدة أو تغيير كلمات المرور لمعالجة مشكلة تشغيل.
-
-الدخول والتسجيل وقياسات وأدوية وعادات المريض المسجّل متصلة بالخادم وPostgreSQL.
-مسارات المريض تتطلب المصادقة، ولا يوجد دخول عام كضيف.
-شغّل `npm.cmd run db:migrate` من `apps/backend` قبل تشغيل التطبيق لتطبيق مهاجرات
-القياسات `003_patient_measurements.sql` والأدوية `004_patient_medications.sql`
-والعادات `005_patient_habits.sql` وهوية قوالب العادات
-`006_habit_template_identity.sql`
-بأمان ومن دون حذف بيانات سابقة.
-راجع [دليل مصادقة الواجهة](apps/frontend/AUTHENTICATION.md) للتفاصيل.
-الأقسام التالية تتضمن توثيقًا تاريخيًا لمراحل الواجهة السابقة.
-
-### التحقق البصري من الواجهة الموحدة
-
-من `apps/frontend` شغّل `npm.cmd run test:design-browser` عند توفر Playwright وMicrosoft Edge.
-إذا كانت Playwright متاحة خارج اعتماديات المشروع، اضبط `PLAYWRIGHT_MODULE_PATH` لمسارها المحلي.
-الفحص يشغّل Vite مؤقتًا على `127.0.0.1:5178` ويوقف العملية التي بدأها فقط.
-لا يتصل بقاعدة البيانات ولا يقرأ ملفات البيئة؛ استجابات المصادقة فيه fixtures داخل المتصفح،
-بينما عمليات القياسات والأدوية والعادات تختبر مخازن العرض التجريبي الفعلية.
-لا تُعد نتائجه إعادة تحقق من مصادقة PostgreSQL. الصور والقياسات ونتائج التفاعل في
-`apps/frontend/artifacts/full-design/after/report.json`؛ الصور المرجعية في `before`.
-تبقى اختبارات المصادقة الخلفية منفصلة. لا تُشغّل اختبار `test:auth-browser` المتصل بقاعدة
-الاختبار إذا كان المطلوب التحقق دون أي كتابة لقاعدة البيانات.
-
-## Backend — المرحلة 1، المهمة 1A
-
-أساس Express + PostgreSQL مستقل في `apps/backend`. تعليمات Windows والتهيئة
-والمهاجرات والاختبارات موثقة في [دليل Backend](apps/backend/README.md).
-تتصل به واجهات المصادقة وقياسات وأدوية وعادات المريض المسجّل، وتُحمى صفحات
-المريض بسياسة المصادقة فقط.
-التوثيق التاريخي للواجهة أدناه يصف مراحلها السابقة.
-
-واجهة عربية لمشروع التخرج — لوحة المريض وإدارة القياسات والأدوية والعادات والتقارير الوصفية (المرحلة الخامسة).
-
-## التشغيل
-
-يتطلب Node.js 22.12+ (أو إصدار LTS أحدث) وnpm.
-
-```bash
-cd apps/frontend
-npm install
-npm run dev
-```
-
-افتح الرابط الذي يظهر من Vite (عادة http://localhost:5173)، ثم `/patient/dashboard`.
-لإعادة تثبيت الإصدارات المقفلة بدقة استخدم `npm ci`.
-
-```bash
-npm run build
-npm run lint
-npm run test:smoke
-npm run preview
-```
-
-`npm run build` يفحص TypeScript أولًا ثم ينتج `dist/`.
-
-### التحقق الفعلي من التصميم المتجاوب
-
-يُستضاف Cairo محليًا في `public/fonts/cairo` مع ترخيصه، دون طلبات Google Fonts.
-الأمر `npm run test:responsive -- --quick --fonts` يتحقق من الخط الفعلي عبر CDP
-للعربية واللاتينية والأرقام بالأوزان 400–800، مع منع الطلبات الخارجية، ويختبر
-جميع العروض واللغتين وأوضاع الثيم الأربعة (بما فيها تفضيلا System).
-
-شغّل نسخة اختبار مستقلة بالأمر `npm run dev -- --port 5174 --strictPort` داخل
-`apps/frontend`، ثم شغّل `npm run test:responsive` في نافذة أخرى. لا يوجد Backend
-في النسخة الحالية؛ يستخدم الاختبار نفس بيانات الواجهة التجريبية المؤقتة.
-
-يعيد الاختبار استخدام Playwright المتاح وEdge المثبت (`msedge`) دون تنزيل متصفح
-أو إضافة تبعيات للمشروع. إن كان Playwright في بيئة الأدوات بدل `node_modules`
-المحلي، اضبط `PLAYWRIGHT_MODULE_PATH` على المسار المطلق لمجلده. يمكن ضبط
-`RESPONSIVE_BASE_URL` و`RESPONSIVE_OUTPUT` و`PLAYWRIGHT_CHANNEL` حسب البيئة.
-
-التغطية: العروض 320/360/375/390/430/768/1024/1440، العربية والإنجليزية، Light/Dark
-وSystem مع تفضيلَي النظام. يشمل 14 مسارًا، نوافذ القياسات والعادات، المخططات،
-وتداخل عناصر التحكم. عند 320/768/1440 يختبر أيضًا تبديل اللغة، حفظ التفضيلات،
-عمليات القياسات ومزامنتها مع اللوحة والتقارير، والنص الطويل مختلط الاتجاه في العادات.
-تُحفظ اللقطات والقياسات والأخطاء في `apps/frontend/artifacts/responsive/`
-(مستثنى من Git). `--quick` يوفر فحصًا أوليًا للتخطيط بوضع Light فقط، وليس بديلًا
-عن الاختبار الكامل. فشل الخط الخارجي يُسجل منفصلًا؛ لا يخفي الاختبار أخطاء التطبيق.
-يمكن إضافة `--capture` لحفظ لقطة نافذة العرض الفعلية بجانب لقطة الصفحة الكاملة
-ولتوثيق Tooltip المخطط. مثال: `npm run test:responsive -- --quick --capture`.
-
-لا توجد حاجة إلى ملف `.env` للتجربة. عند ربط الخادم انسخ `.env.example` إلى `.env` واضبط `VITE_API_URL`. المتغيرات التي تبدأ بـ VITE عامة داخل المتصفح، فلا تضع أسرارًا فيها.
-
-## التنظيم
-
-```text
-chroniccare-ai/
-├── .gitignore
-├── README.md
-├── IMPLEMENTATION_REPORT.md
-└── apps/frontend/
-    ├── .env.example
-    ├── package.json + package-lock.json
-    ├── index.html
-    ├── vite.config.ts
-    ├── eslint.config.js
-    ├── tsconfig*.json
-    ├── scripts/                     # اختبارات smoke
-    └── src/
-        ├── app/
-        │   ├── router.tsx
-        │   ├── routes.tsx
-        │   └── providers/AppProviders.tsx
-        ├── components/
-        │   ├── ui/
-        │   ├── layout/
-        │   ├── health/
-        │   └── charts/
-        ├── pages/
-        │   ├── public/
-        │   ├── auth/
-        │   ├── patient/
-        │   ├── doctor/
-        │   └── admin/
-        ├── hooks/
-        │   ├── queries/
-        │   └── mutations/
-        ├── context/DashboardContext.ts
-        ├── lib/
-        │   ├── api/
-        │   ├── query/
-        │   ├── placeholder-data/
-        │   ├── types/
-        │   └── utils/
-        ├── styles/globals.css
-        ├── App.tsx
-        └── main.tsx
-```
-
-## القرارات الهندسية
-
-- مرجع التنظيم هو ملف ResuMax المرفق بإصدار **11**؛ الإصدار 12 غير مرفق. تمت مراجعة API client/endpoints، hooks، Query Keys، Providers، types وplaceholder data. لم يُنسخ كود المشروع أو مكوناته.
-- المرجع البصري هو `ChronicCare_AI_Final_Design(1).png`: أبيض وكحلي وتركواز، RTL، بطاقات صحية وقائمة جانبية وتنقل سفلي. هذه إعادة تنفيذ للهوية وليست نسخًا بكسليًا للصورة.
-- React + Vite + TypeScript strict، بما فيه `noUncheckedIndexedAccess`. alias واحد `@/` في Vite وTypeScript.
-- Tailwind v4 يعمل عبر إضافة Vite؛ الألوان والتصميم المركزي في CSS variables مع `@theme inline`. استُخدمت فئات CSS واضحة للأجزاء المركبة لتسهيل الشرح والتعديل.
-- `AppProviders` يركب QueryClientProvider وSonner. React Router مستقل عن جلب البيانات.
-- مسار البيانات: Page → Query/Mutation hook → mock adapter في `lib/api/patient.ts` → placeholder typed data. عند جاهزية الخادم استبدل وظائف الـadapter بطلبات `apiClient` دون تعديل البطاقات.
-- Axios مركزي ومجهز، لكنه لا يرسل طلبات في هذه المرحلة. لا توجد مصادقة حقيقية أو session tokens أو حماية أدوار بعد. مسارات الطبيب والإدارة ليست صفحات آمنة أو مكتملة.
-- Query staleTime = دقيقة، retries = 1، window refetch معطل، mutation retries = 0.
-- البيانات مؤقتة في الذاكرة؛ تعود للمثال عند إعادة التحميل. التنقل بين المسارات يحافظ عليها. تحديث قراءة يعكسها في Dashboard وقائمة القياسات. الملخص الأسبوعي مستقل وثابت، وموسوم بأنه بيانات توضيحية.
-- النموذج يستخدم React Hook Form + Zod + resolver. حدود الأرقام تتحقق من المدخلات فقط وليست حدودًا طبية. لا يُعرض تصنيف «طبيعي» للقراءات التي يدخلها المستخدم.
-- Modal يستخدم عنصر HTML dialog الأصلي لحصر التركيز وEscape. واجهة RTL وخصائص CSS منطقية، مع labels وحالات focus وskip link ونص بديل للمخططات وتقليل الحركة.
-- Cairo من Google Fonts مع بدائل Tahoma/Arial عند انقطاع الإنترنت. لا توجد مكتبة خطوط إضافية.
-- عند عرض ≤850px يختفي Sidebar وتظهر BottomNav؛ وعند ≤600px تصبح البطاقات 2×2 وتتراص أقسام اليوم. لا توجد جداول واسعة للجوال.
-- مخطط Recharts يُحمّل منفصلًا لتخفيف الحزمة الأولية.
-
-## المسارات
-
-| المسار | الحالة |
-|---|---|
-| `/` | صفحة تعريف فعلية وروابط تجربة |
-| `/login`, `/register` | صفحات توضيحية دون نموذج مصادقة أو ادعاء نجاح تسجيل |
-| `/patient/dashboard` | لوحة المريض الفعلية |
-| `/patient/measurements` | سجل القراءات مع الفلترة بالنوع والتاريخ والإضافة والتعديل والحذف |
-| `/patient/medications` | إدارة الأدوية والمواعيد اليومية وتسجيل تناول الجرعات |
-| `/patient/habits` | إضافة وتعديل وحذف العادات وتسجيل التقدم اليومي |
-| `/patient/reports` | تقارير وصفية مشتقة من سجل القياسات، مع حالة الأدوية والعادات لليوم فقط |
-| `/patient/assistant`, `/patient/profile` | Placeholder واضح |
-| `/doctor/dashboard`, `/doctor/patients` | Placeholder واضح |
-| `/admin/dashboard` | Placeholder واضح |
-| أي رابط غير موجود | صفحة 404 |
-
-## التحقق اليدوي المتبقي
-
-البيئة لا تتيح مسار اختبار المتصفح المعتمد؛ لم يُجر فحص مرئي أو console في متصفح فعلي. اختبارات SSR لا تعوض اختبار تفاعل DOM.
-
-1. افتح `/` ثم `/patient/dashboard` على 1440px و390px و320px، وتحقق من RTL وعدم التمرير الأفقي.
-2. أضف قراءة ضغط صحيحة، ثم قراءة سكر، وتأكد من تحديث البطاقات وصفحة القياسات.
-3. جرّب قيمة فارغة وسالبة وضغطًا انبساطيًا أعلى من الانقباضي، وتحقق من الرسائل.
-4. جرّب Tab وShift+Tab داخل الحوار، ثم Escape، وتحقق من عودة التركيز للزر.
-5. جرّب قائمة المزيد بالجوال، تنبيه الجرس، زر إتمام المشي والدواء، وتبديل المخططات.
-6. تأكد من خلو console من أخطاء React ومشكلات overflow.
-
-## حدود المرحلة
-
-لا Backend أو قاعدة بيانات أو Firebase أو AI أو PWA أو push notifications. لا حفظ دائم ولا تصدير تقارير. عند نشر SPA مستقبلًا يلزم توجيه المسارات غير المطابقة للملفات إلى `index.html`.
-
-## الخطوة التالية
-
-بعد اعتماد التقارير: تحديد نموذج السجل التاريخي للأدوية والعادات أو استكمال الملف الشخصي. لا يوجد ربط بالخادم بعد.
-
-## تحديث المرحلة الثانية — القياسات
-
-- سجل مرتب من الأحدث للأقدم، مع نوع القراءة ووحدتها وتاريخها ووقتها.
-- فلترة بالنوع وبفترة زمنية شاملة يوم البداية والنهاية وفق توقيت الجهاز؛ مع رسالة لتاريخ النهاية السابق للبداية.
-- نموذج مشترك للإضافة والتعديل. تعديل القيم أو النوع يحافظ على وقت التسجيل الأصلي؛ وقت الإضافة هو وقت الجهاز الحالي.
-- حذف بتأكيد يعرض نوع القراءة وقيمتها، وزر إلغاء يحصل على التركيز تلقائيًا.
-- تحديث Query Cache للقياسات وDashboard بعد كل عملية. تعديل قراءة قديمة لا يجعلها أحدث قراءة.
-- تغيير نوع القراءة يعيد حساب البطاقتين. حذف أحدث قراءة يعرض السابقة؛ حذف آخر قراءة من النوع يعيد المثال الافتراضي.
-- بيانات الأسبوع في الرسم لا تزال مثالًا ثابتًا وليست مشتقة من سجل هذه الجلسة.
-- حالات تحميل، فشل مع إعادة محاولة، سجل فارغ، وعدم وجود نتائج مطابقة.
-- أيقونة favicon.svg مرتبطة في index.html.
-
-### تثبيت النسخة الجديدة على جهازك
-
-للحفاظ على أي تغييرات أجريتها، احتفظ بنسخة من المجلد القديم أولًا. فك ZIP في مجلد جديد ثم شغّل npm install وnpm run dev من apps/frontend.
-إذا لم تعدّل الكود بنفسك، يمكنك بدلًا من ذلك نسخ مجلد src ومجلد public وملف index.html من النسخة الجديدة إلى apps/frontend القديم مع الاستبدال، وكذلك scripts لتحديث الاختبارات. لا تغييرات على المكتبات أو package-lock، ولا حاجة لإعادة تثبيتها عند استخدام هذه الطريقة. أعد تشغيل Vite وحدّث المتصفح.
-
-### تحقق يدوي لهذه المرحلة
-
-1. أضف قراءتي سكر بقيم مختلفة؛ تأكد من عرض الأحدث في Dashboard.
-2. عدّل القراءة الأقدم؛ يجب أن تبقى بطاقة Dashboard على الأحدث.
-3. عدّل الأحدث؛ يجب أن تتحدث البطاقة مع الحفاظ على تاريخ التسجيل.
-4. ألغِ نافذة الحذف وتأكد أن السجل لا يتغير، ثم أكد الحذف وتأكد من عودة البطاقة للقراءة السابقة.
-5. غيّر نوع قراءة بين السكر والضغط وتحقق من البطاقتين.
-6. جرّب فلترة النوع وتاريخ اليوم، ثم فترة بلا نتائج وفترة غير صحيحة وزر مسح الفلاتر.
-7. كرر على الجوال، واختبر Tab وEscape داخل النوافذ.
-
-## المرحلة الثالثة — الأدوية
-
-- صفحة أدويتي حقيقية بدل الصفحة التمهيدية: بطاقات للأدوية والجرعات ومواعيد اليوم وملخص عدد الجرعات المسجلة.
-- إضافة وتعديل الاسم والجرعة النصية حسب الوصفة، وملاحظات اختيارية، ومن موعد إلى 6 مواعيد يومية مختلفة بصيغة 24 ساعة.
-- المواعيد يومية فقط حاليًا؛ لا أيام أسبوع محددة أو مدة علاج أو أدوية عند الحاجة في هذه المرحلة.
-- حذف بتأكيد يلغي الدواء ومواعيده من ملخص اليوم. حذف جميع الأدوية يعرض حالة فارغة و0/0 في Dashboard دون قسمة على صفر.
-- تسجيل تناول كل موعد وإلغاء التسجيل عند الخطأ. التسجيل idempotent، فلا يزيد العدد إذا تكرر نفس الطلب.
-- التعديل يحافظ على سجل المواعيد غير المتغيرة؛ الموعد الجديد يبدأ دون تسجيل. وقت التناول ممثل بيوم محلي داخل الجلسة، ولا يوجد سجل تاريخي بعد.
-- الملخص في Dashboard مشتق من نفس مخزن الأدوية، وليس من قيمة mock منفصلة. مهمة اليوم تعرض أول موعد غير مسجل حسب ترتيب الوقت، ولا تدعي أنه تنبيه أو جرعة واجبة الآن.
-- يوم التسجيل بحسب توقيت الجهاز. القراءات من يوم سابق لا تُحسب لليوم الجديد. يتم تحديث الاستعلام أثناء فتح الصفحة كل دقيقة لإعادة حساب اليوم دون reload (ليس إشعارًا أو اتصالًا بخادم).
-- البيانات الافتراضية مثالان عامان بإجمالي 3 جرعات، مسجل منها 2؛ لا تتضمن توصيات دوائية أو جرعات علاجية.
-- الفصل: types/medication، placeholder-data/medications.placeholder، api/medications، hooks/queries/useMedications، hooks/mutations/useMedicationMutations، utils/medicationSchema وmedications. الواجهة مقسمة إلى MedicationForm وMedicationScheduleCard وملخص MedicationCard.
-- لا اعتماديات جديدة. البناء وESLint واختبارات smoke نجحت. يبقى فحص المتصفح المرئي والتفاعلي مطلوبًا على جهاز المستخدم.
-
-### تركيب تحديث الأدوية
-
-احتفظ بنسخة من مشروعك الحالي. إذا لم تُجر تعديلات خاصة على الكود، استبدل مجلدي src وscripts داخل apps/frontend بنظيريهما من ZIP الجديد. public وindex.html لم يتغيرا عن المرحلة الثانية. لا تنقل node_modules ولا تحتاج npm install مجددًا. أعد تشغيل npm run dev، ثم افتح /patient/medications.
-لمن يبدأ من الصفر: فك النسخة الكاملة في مجلد جديد، ثم npm install وnpm run dev داخل apps/frontend.
-
-### الاختبار اليدوي
-
-1. تحقق من ظهور المثالين وملخص 2/3.
-2. أضف دواء بمواعيد 12:30 و21:00: يصبح الإجمالي 5، ثم سجّل واحدًا وتحقق من Dashboard.
-3. ألغ التسجيل وتأكد من نقصان العدد؛ جرّب إتمام جرعة من Dashboard وتحقق في صفحة الأدوية.
-4. عدّل الاسم والجرعة وأبقِ أحد المواعيد المسجلة كما هو: يجب أن يحتفظ بحالته. غيّر الآخر: يبدأ دون تسجيل.
-5. جرّب وقتين متطابقين واسمًا أو جرعة فارغة وتحقق من رفض النموذج.
-6. افتح الحذف واضغط إلغاء، ثم أكد الحذف وتحقق من العدد. حذف الكل يعطي حالة فارغة سليمة.
-7. اختبر الجوال وTab وEscape والـConsole.
-
-## المرحلة الرابعة — العادات اليومية
-
-إضافة وتعديل وحذف العادات بتأكيد؛ عنوان، هدف يومي صحيح موجب، ووحدة (خطوات، دقائق، أكواب، مرات). تسجيل التقدم يستبدل إجمالي اليوم ولا يزيده تلقائيًا، ويمكن تصحيحه أو تصفيره. تجاوز الهدف مسموح ويظهر الرقم الحقيقي مع شريط capped at 100%. تغيير الهدف يحتفظ بالتقدم، وتغيير الوحدة يصفره مع توضيح ذلك في النموذج.
-
-بداية يوم محلي جديد تعيد التقدم المعروض إلى صفر؛ استعلامات العادات ولوحة المريض تتحدث كل دقيقة أثناء فتحها. كل البيانات مؤقتة؛ إعادة تحميل الصفحة تعيد الأمثلة. لا تتضمن الأهداف الافتراضية توصيات صحية أو إشعارات.
-
-مهام Dashboard تعرض العادات من نفس مخزن البيانات. بطاقة النشاط تجمع التقدم والأهداف للعادات التي وحدتها خطوات فقط، ولا تخلطها بدقائق المشي. عند حذف جميع عادات الخطوات تظهر 0/0 بلا قسمة على صفر. المخطط الأسبوعي يبقى مثالًا مستقلًا.
-
-### تركيب v4
-
-احتفظ بنسخة من مشروعك. استبدل src وscripts داخل apps/frontend بنظيريهما في هذه النسخة، لا تدمج محتوياتهما فقط، لأن الملف القديم hooks/mutations/usePatientMutations.ts أُزيل لصالح useHabitMutations.ts. لا مكتبات جديدة. شغّل npm run dev ثم افتح /patient/habits. هذا تسليم ZIP فقط؛ لم يُرفع أي تعديل إلى GitHub ولم يُغيّر أي اتصال حساب.
-
-### فحص يدوي
-
-جرّب إضافة عادة وتعديل هدفها ووحدتها، وتسجيل تقدم أقل من الهدف وأعلى منه وصفر. تأكد من تحديث لوحة المريض، ومن إلغاء الحذف ثم تأكيده، ومن حالات السجل الفارغ ورفض الأرقام السالبة والكسور. اختبر أحجام الجوال والتنقل بلوحة المفاتيح والـConsole. لم يتوفر فحص متصفح تفاعلي في بيئة التنفيذ.
-
-## المرحلة الخامسة — تقارير المريض
-
-- `/patient/reports` صفحة فعلية بعنوان تقاريري؛ آخر 7 أو 30 أو 90 يومًا شاملة اليوم وفق توقيت الجهاز (فترات أيام، لا أشهر تقويمية).
-- متوسط الضغط الانقباضي والانبساطي ومتوسط السكر وعدد القراءات من سجل الجلسة فقط. لا تُستخدم أمثلة Dashboard الافتراضية لسد السجل الفارغ.
-- مخططان لمتوسطات الأيام التي تحتوي قراءات، وأحدث خمس قراءات في الفترة. الأيام/الأنواع المفقودة لا تُحوّل لأصفار؛ الخط يربط الأيام المسجلة ولا يعني توفر قراءات بينهما.
-- الأدوية والعادات تعرضان اليوم فقط، مع بيان عدم وجود سجل تاريخي لحساب الالتزام عبر الفترة. تغيير الفترة لا يغير هاتين البطاقتين.
-- التقرير وصفي دون تقييم طبي أو توصيات أو تصدير. حالات تحميل وخطأ وإعادة محاولة وفراغ، وRTL ومكونات متجاوبة.
-- طبقات جديدة: types/report، utils/reports، api/reports، usePatientReport، ReportSummary، ReportChart وReportsPage. إبطال جميع فترات التقرير بعد عمليات القياسات والأدوية والعادات، وإعادة حساب اليوم كل دقيقة أثناء فتح الصفحة.
-- أصلح package-lock أثناء التثبيت لأن npm ci كشف اعتماديات مفقودة. لم يتغير package.json أو Stack.
-
-### تركيب تحديث التقارير
-
-احتفظ بنسخة من مشروعك. استبدل src وscripts داخل apps/frontend بالكامل بنظيريهما في هذه النسخة، وانسخ package-lock.json، ثم حدّث README.md وIMPLEMENTATION_REPORT.md في الجذر. من apps/frontend نفّذ npm ci ثم npm run build وnpm run lint وnpm run test:smoke. لا تنقل node_modules أو dist. افتح /patient/reports وأضف قياسات من صفحة صحتي للتجربة؛ جميع البيانات تعود للأمثلة عند إعادة التحميل.
-
-## تحسين عرض القياسات — v5.1
-
-- بيانات يوم واحد تظهر كمتوسطات كبيرة مع اسم القياس ووحدته وتاريخه، مع نقاط المتوسط على المخطط أيضًا. يظهر خط الاتجاه تلقائيًا عند توفر يومين أو أكثر لكل نوع.
-- مفتاح واضح للانقباضي والانبساطي؛ خط متصل للانقباضي ومتقطع للانبساطي، ووحدات ظاهرة.
-- محور زمني يحافظ على الفواصل الحقيقية بين الأيام، ومحور قيم يتكيف مع القراءات مع توضيح ذلك. ليست هذه الحدود تصنيفًا طبيًا.
-- قائمة متوسطات الأيام قابلة للفتح، للوصول إلى القيم دون الاعتماد على اللون أو تمرير المؤشر، ومناسبة للموبايل ولوحة المفاتيح.
-- تعديل العرض فقط؛ لا تغيير في احتساب القياسات أو إضافة بيانات. من نسخة v5 يكفي استبدال ReportChart.tsx وglobals.css وتحديث التوثيق، ولا تحتاج تثبيت مكتبات جديدة.
-- فحص المتصفح الفعلي ما زال مطلوبًا؛ بيئة التنفيذ لا توفر Chromium.
-
-### v5.2 — إظهار المخطط لليوم الواحد
-يبقى المخطط ظاهرًا عند وجود قياسات، حتى لو كانت ليوم واحد، مع ملخص القيم وملاحظة تفسيرية. محور الزمن لليوم الواحد يحتوي هامشًا بصريًا دون بيانات إضافية. من v5.1 يكفي استبدال ReportChart.tsx.
-
-### v5.3 — أسبوع تجريبي مؤقت
-
-السجل يبدأ بـ14 قراءة توضيحية: ضغط وسكر لكل يوم من آخر سبعة أيام المحلية، شاملة اليوم. التواريخ تتولد عند تحميل التطبيق ولا تشمل المستقبل. بيانات الأمثلة مأخوذة من placeholder الأسبوع الموجود، دون توصيات أو تصنيف طبي. الأمثلة تظهر في سجل القياسات والتقارير وتحدث بطاقات Dashboard من نفس المخزن، ويمكن تعديلها وحذفها كغيرها. إعادة التحميل تعيد أمثلة الأسبوع وتفقد تغييرات الجلسة.
-
-الأدوية والعادات لا تزال لليوم فقط؛ لم يُختلق سجل تاريخي لها. ملف الأمثلة مستقل: src/lib/placeholder-data/measurements.placeholder.ts. لإلغاء التهيئة لاحقًا اضبط DEMO_WEEK_ENABLED على false وأعد تحميل التطبيق (وعدّل نص ملاحظة الأمثلة عند إلغائها).
-
-من آخر نسخة تقارير استبدل src وscripts كاملين وحدّث التوثيق. لا اعتماديات جديدة. اختبارات Smoke تتحقق من 14 قراءة و7 أيام وتواريخ غير مستقبلية، ثم تمسح أمثلة التهيئة لاختبار CRUD والحالات الفارغة.
+A bilingual graduation project for everyday health tracking and patient-controlled sharing. Patients record readings and routines. Doctors see a read-only record after explicit consent. Administrators manage doctor accounts.
+
+**Production** · [Open ChronicCare AI](https://chroniccare-ai-api.onrender.com/)
+
+**Release candidate** · v1.0.0 · `bb99da73326d5a513343b001f4050105729a051b`
+
+**Project byline** · Alhassan Heloo · [GitHub commit history](https://github.com/Alhassan-heloo/chroniccare-ai/commits/main/)
+
+> Graduation software for tracking and education. Clinical validation and regulatory certification are outside the project's scope.
+
+## Overview
+
+The patient records blood pressure or glucose, follows a medication schedule, tracks daily habits and prepares a printable visit summary. Values retain their units and time. The doctor sees a selected patient's available records only while the patient has approved access. Arabic and English are available across role workspaces, with RTL/LTR layout, light/dark appearance and responsive navigation.
+
+![ChronicCare AI Arabic patient dashboard on desktop with fictional data](docs/release-assets/screenshots/patient-dashboard-ar.png)
+
+*Local render of the application UI with fictional API responses. [Public screenshot set and provenance](docs/release-assets/README.md).*
+
+| Role | Capabilities |
+| --- | --- |
+| Patient | Register and sign in, track readings, medications/doses and habits, review trends, manage doctor consent, and ask the educational assistant where configured. |
+| Doctor | Activate an invited or directly provisioned account, change a temporary password if required, issue connection invitations and open approved patients' read-only records and recent activity. |
+| Administrator | Manage doctor account creation, invitations and disablement. Clinical access requires a doctor role with patient consent. |
+
+## Stack and architecture
+
+| Layer | Technology |
+| --- | --- |
+| Interface | React 19, TypeScript 5.9, Vite 7, React Router 7, TanStack Query 5, Axios, Tailwind CSS 4, React Hook Form, Zod and Recharts. |
+| Server | Node.js, Express 5, `pg`, Argon2, Helmet, explicit CORS and request limits. |
+| Data | PostgreSQL on Neon, parameterized SQL and versioned migrations. |
+| Delivery and AI | Optional account-email transport, Firebase Cloud Messaging for browser push, and a server-side OpenAI or Groq assistant adapter. |
+| Verification and hosting | Node test runner, isolated PostgreSQL, Playwright with Edge, GitHub and a Render Web Service. |
+
+![System architecture showing the browser, same-origin Render service, Neon and optional integrations](docs/release-assets/diagrams/system-architecture.drawio.png)
+
+Express serves the compiled frontend at `/` and the API at `/api` on the same Render origin. Local development uses Vite on `5173` and Express on `3001` by default. The database holds user sessions, patient records and consent. External integrations are configured separately from this core flow. [Editable system diagram](docs/release-assets/diagrams/system-architecture.drawio) · [Deployment architecture](docs/render-same-origin.md)
+
+### Database
+
+Most tables live in `chroniccare`. The patient domain contains `measurements`, `medications` with schedules and dose logs, and `habits` with daily progress. `users`, `sessions` and `account_tokens` support identity and recovery. `doctor_patient_relationships` stores access approval, while `patient_invitations` and `doctor_connection_codes` support two separate connection methods. Notifications, browser registrations and push jobs have their own tables. Foreign keys, uniqueness and CHECK constraints reinforce the API's ownership, timing and state rules. The migration runner records filenames and SHA-256 hashes in `public.chroniccare_schema_migrations` and serializes migration execution with a transaction-scoped advisory lock.
+
+[Database relationship diagram](docs/release-assets/diagrams/database-relationships.drawio) · [SQL migrations](apps/backend/migrations/)
+
+### Authentication and consent
+
+Passwords are hashed with Argon2. Browser sessions use HttpOnly cookies with Secure on the deployed HTTPS origin, SameSite=Lax, idle and absolute expiry, and server-side session checks. Browser writes require a trusted origin and a CSRF token. PostgreSQL queries scope patient records by ownership and doctor access by current patient approval. The server checks the expected role independently of the UI route guard.
+
+1. A doctor issues a targeted ten-minute link. Only the intended signed-in patient can review it. Preview shows the doctor identity and grants zero record access.
+2. **Close review** dismisses the UI. **Approve** consumes the link and grants read-only access. **Reject invitation** consumes that link permanently and preserves any earlier approval.
+3. **Revoke access** removes the live relationship in My Doctors. A consumed link cannot restore access. Approval, rejection and revocation use transactional locks to serialize a patient's decisions.
+4. The separate manual code flow is also supported and requires patient approval. The code is a privately shared bearer artifact and is not bound to a specific patient at issuance.
+
+[Consent flow diagram](docs/release-assets/diagrams/invitation-consent.drawio) · [Connection rules and responses](docs/patient-connections.md) · [Account and session architecture](docs/production-account-foundation.md)
+
+### Educational assistant
+
+An authenticated patient sends a message and language to `POST /api/assistant/messages`. The server enforces bounded input, attempt limits, timeouts and output validation. When configured, it sends the question and fixed educational instructions to OpenAI or Groq. The server supplies the disclaimer and emergency guidance. The application does not query patient records for the assistant. Conversation state lives in the browser view, and earlier turns are not forwarded. Free text may still carry details typed by the patient, so use fictional or general questions in demos. Provider-side retention and response quality require a separate assessment.
+
+[Assistant backend design](docs/ai-assistant-backend.md) · [Assistant interface](docs/ai-assistant-frontend.md) · [Current provider adapter](apps/backend/src/assistant/provider.ts)
+
+## Local development
+
+Use Node.js **24 LTS**, npm and a local PostgreSQL server. The packages have independent lockfiles. Commands below use PowerShell at the repository root.
+
+~~~powershell
+npm.cmd --prefix apps/backend ci
+npm.cmd --prefix apps/frontend ci
+if (-not (Test-Path 'apps/backend/.env')) {
+  Copy-Item 'apps/backend/.env.example' 'apps/backend/.env'
+}
+~~~
+
+Create a privately credentialed PostgreSQL role and a dedicated **local** development database using the [backend setup instructions](apps/backend/README.md#initialize-local-postgresql). Set `DATABASE_URL` in the ignored backend `.env` to that local database. If using different ports/origins, keep `CORS_ORIGINS` aligned and set the frontend's public `VITE_API_URL`. Keep all secret values server-side and out of Git.
+
+**For the newly configured local development database only**, verify the destination before initializing its schema.
+
+~~~powershell
+npm.cmd --prefix apps/backend run db:check
+npm.cmd --prefix apps/backend run db:migrate
+npm.cmd --prefix apps/backend run dev
+~~~
+
+In a second terminal:
+
+~~~powershell
+$env:VITE_API_URL = 'http://127.0.0.1:3001/api'
+npm.cmd --prefix apps/frontend run dev -- --host 127.0.0.1 --strictPort
+~~~
+
+Keep the browser and API on the same local hostname. Adjust the API port in that command if you changed the backend port. Use the account setup guide for role provisioning. On Windows, `start-dev.bat` can start an already configured stack. The launcher performs readiness checks and leaves installations, account setup and schema changes to the operator. [Local application](http://127.0.0.1:5173/) · [Local account setup](docs/account-setup.md)
+
+## Testing
+
+~~~powershell
+npm.cmd --prefix apps/backend run typecheck
+npm.cmd --prefix apps/backend run lint
+npm.cmd --prefix apps/backend run build
+npm.cmd --prefix apps/frontend run typecheck
+npm.cmd --prefix apps/frontend run lint
+npm.cmd --prefix apps/frontend run build
+npm.cmd --prefix apps/frontend test
+npm.cmd --prefix apps/frontend run test:api-base
+~~~
+
+Run `npm.cmd --prefix apps/backend test` with a separate disposable `TEST_DATABASE_URL` ending in `_test` to include database integrations. Without this environment setting, database-dependent cases can be skipped. Preserve existing databases and use a fresh disposable database when a suite requires an initially empty schema.
+
+The browser suites require Microsoft Edge, Playwright and, for real-service suites, the documented isolated PostgreSQL setup. Set `PLAYWRIGHT_MODULE_PATH` if Playwright is supplied by a local tooling installation. `npm.cmd --prefix apps/frontend run test:assistant-browser` uses mocked responses. The `test:final-integration` wrapper provisions a loopback PostgreSQL test database and applies the schema there. [Demo and rehearsal setup](GRADUATION-DEMO.md#setup-and-fallback)
+
+The release review recorded **116 backend checks** passing and **20 production-style HTTPS checks** passing, alongside focused Edge suites for invitations, connections, doctor/admin and authentication. See the [test evidence and limitations](FINAL-PROJECT-STATUS.md#verification-carried-forward) for precise scope and the incomplete legacy suite.
+
+## Production, security and limitations
+
+The existing Render Web Service builds both packages and runs `npm --prefix apps/backend start`. The public readiness probe is `GET /api/health/ready`. GitHub `main` is configured for on-commit deployment. Migration 018 was separately applied and verified before this application release. The running service has no pre-deploy migration command. Use the [deployment guide](docs/render-same-origin.md) and [release acceptance checklist](FINAL-ACCEPTANCE.md) for separate schema and application release decisions.
+
+Keep production database TLS in `verify-full`, use a limited database role for runtime operations, and keep credentials, backups, private reports and live patient records out of demos and Git. HTTP readiness reports connectivity. The migration ledger is a separate source of schema evidence.
+
+The software supports record keeping and education. It has no clinical validation, medical device certification or measured health outcome evidence. Production verification covered public readiness, navigation and anonymous access denial. Live authenticated workflows, paid AI calls, email/push deliverability and physical-device behavior were tested only where identified in the [status report](FINAL-PROJECT-STATUS.md).
+
+Earlier interface phases are preserved in the [design history](docs/living-evolution-redesign.md), [graduation implementation notes](docs/graduation-experience.md) and [README at the deployed commit](https://github.com/Alhassan-heloo/chroniccare-ai/blob/bb99da73326d5a513343b001f4050105729a051b/README.md).
+
+## Credits and presentation
+
+Git history attributes the reviewed release to **Alhassan Heloo** under `Alhassan-heloo`. See the [portfolio contribution boundaries](PORTFOLIO-CASE-STUDY.md#individual-work-and-external-contributions) and [asset credits](apps/frontend/homepage-hybrid/DESIGN.md) for credit details. The repository has no project-wide license in the reviewed tree. Third-party assets and libraries retain their own terms.
+
+**نبذة عربية** · ChronicCare AI مشروع تخرج ثنائي اللغة لمتابعة القراءات والأدوية والعادات ومشاركة السجل مع الطبيب بعد موافقة صريحة من المريض. يضم المشروع لوحة مريض، وعرضًا للطبيب للقراءة فقط، وإدارة حسابات الأطباء، ومساعدًا للتثقيف الصحي. الصور المعروضة تستخدم بيانات خيالية.
+
+[Release notes](RELEASE-NOTES-v1.0.0.md) · [Graduation presentation](GRADUATION-DEMO.md) · [Portfolio](PORTFOLIO-CASE-STUDY.md) · [Final acceptance](FINAL-ACCEPTANCE.md)
